@@ -3,19 +3,16 @@ export type L10n = Record<string, string>;
 
 export type WallId = 'north' | 'south' | 'east' | 'west';
 
+export type PaintingGenerator = 'geometric' | 'fields' | 'lines' | 'circles' | 'mosaic' | 'landscape';
+export type SculptureGenerator = 'knot' | 'blob' | 'rings' | 'stack' | 'ribbon';
+export type SculptureMaterial = 'bronze' | 'marble' | 'patina' | 'lacquer';
+
 export type ImageSource =
   | { src: string }
-  | { generator: 'geometric' | 'fields' | 'lines'; seed: number };
+  | { generator: PaintingGenerator; seed: number; mono?: boolean };
 
-export interface ArtworkConfig {
+interface ArtworkBase {
   id: string;
-  type: 'painting';
-  wall: WallId;
-  /** Décalage horizontal le long du mur, en mètres, depuis son centre. */
-  offset: number;
-  width: number;
-  height: number;
-  image: ImageSource;
   title: L10n;
   artist: string;
   year: string;
@@ -23,12 +20,49 @@ export interface ArtworkConfig {
   description: L10n;
 }
 
+export interface PaintingConfig extends ArtworkBase {
+  type: 'painting';
+  wall: WallId;
+  /** Décalage le long du mur, en mètres, depuis son centre (positif = vers la droite quand on fait face au mur). */
+  offset: number;
+  width: number;
+  height: number;
+  image: ImageSource;
+}
+
+export interface SculptureConfig extends ArtworkBase {
+  type: 'sculpture';
+  /** Position dans la salle, en mètres, depuis son centre : [x, z]. */
+  position: [number, number];
+  /** Hauteur de la sculpture seule. */
+  height: number;
+  /** Hauteur du socle. */
+  plinth: number;
+  model: { generator: SculptureGenerator; seed: number };
+  material: SculptureMaterial;
+  color?: string;
+}
+
+export type ArtworkConfig = PaintingConfig | SculptureConfig;
+
 export interface RoomConfig {
   id: string;
   name: L10n;
+  /** Centre de la salle dans le musée : [x, z]. Le nord est vers les z négatifs. */
+  position: [number, number];
   /** Largeur (x), hauteur (y), profondeur (z), en mètres. */
   size: [number, number, number];
+  /** Couleur des murs, si différente de celle du thème. */
+  wall?: string;
   artworks: ArtworkConfig[];
+}
+
+/** Une porte se déclare d'un seul côté ; l'ouverture dans la salle voisine est déduite. */
+export interface DoorConfig {
+  room: string;
+  wall: WallId;
+  offset: number;
+  width: number;
 }
 
 export interface MuseumConfig {
@@ -39,6 +73,7 @@ export interface MuseumConfig {
   theme: { wall: string; floor: string; ceiling: string; frame: string; accent: string };
   start: { room: string; position: [number, number]; yaw: number };
   rooms: RoomConfig[];
+  doors: DoorConfig[];
 }
 
 export function tr(text: L10n, lang: string): string {

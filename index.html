@@ -13,7 +13,10 @@
         <h1 id="museum-name"></h1>
         <p id="room-name"></p>
       </div>
-      <select id="lang"></select>
+      <div class="tools">
+        <button id="map-open" type="button"></button>
+        <select id="lang"></select>
+      </div>
     </header>
 
     <p id="help" class="help"></p>
@@ -27,6 +30,15 @@
       <p id="p-meta" class="meta"></p>
       <p id="p-desc" class="desc"></p>
     </aside>
+
+    <div id="map" class="overlay" hidden>
+      <section class="map-card" role="dialog" aria-labelledby="map-title">
+        <button id="map-close" class="close" type="button">×</button>
+        <h2 id="map-title"></h2>
+        <p id="map-hint" class="meta"></p>
+        <div id="map-body"></div>
+      </section>
+    </div>
 
     <script type="module" src="/src/main.ts"></script>
   </body>

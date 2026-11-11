@@ -1,8 +1,10 @@
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import './style.css';
 import { Controls } from './engine/controls';
-import { buildRoom, updateLabels, type PlacedArtwork } from './engine/room';
-import { tr, type MuseumConfig } from './engine/types';
+import { buildMap } from './engine/map';
+import { tr, type MuseumConfig, type RoomConfig } from './engine/types';
+import { buildWorld, type PlacedArtwork } from './engine/world';
 
 const UI: Record<string, Record<string, string>> = {
   fr: {
@@ -10,6 +12,10 @@ const UI: Record<string, Record<string, string>> = {
     helpTouch: 'Glissez pour regarder · manette pour avancer · touchez une œuvre',
     close: 'Fermer',
     lang: 'Langue',
+    map: 'Plan',
+    mapTitle: 'Plan du musée',
+    mapHint: 'Choisissez une salle pour vous y rendre.',
+    height: 'H.',
     error: 'Impossible de charger ce musée.',
   },
   en: {
@@ -17,6 +23,10 @@ const UI: Record<string, Record<string, string>> = {
     helpTouch: 'Drag to look · joystick to move · tap an artwork',
     close: 'Close',
     lang: 'Language',
+    map: 'Map',
+    mapTitle: 'Museum map',
+    mapHint: 'Choose a room to go there.',
+    height: 'H.',
     error: 'This museum could not be loaded.',
   },
 };
@@ -34,6 +44,7 @@ async function start() {
   let lang = museum.langs.includes(navigator.language.slice(0, 2))
     ? navigator.language.slice(0, 2)
     : museum.defaultLang;
+  const ui = () => UI[lang] ?? UI.en;
   const touch = matchMedia('(pointer: coarse)').matches;
   document.documentElement.style.setProperty('--accent', museum.theme.accent);
 
@@ -44,16 +55,21 @@ async function start() {
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(museum.theme.ceiling);
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xe9e1d6, 2.6));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xe9e1d6, 2.7));
+  const sun = new THREE.DirectionalLight(0xfff3e0, 1.1);
+  sun.position.set(2, 6, 3);
+  scene.add(sun);
+  // Reflets des sculptures : un environnement neutre, calculé une fois.
+  const env = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 
-  const camera = new THREE.PerspectiveCamera(68, 1, 0.05, 100);
+  const camera = new THREE.PerspectiveCamera(68, 1, 0.05, 120);
   const controls = new Controls(camera, canvas, $('joystick'));
 
-  const roomCfg = museum.rooms.find((r) => r.id === museum.start.room) ?? museum.rooms[0];
-  const room = buildRoom(roomCfg, museum, lang, base);
-  scene.add(room.group);
-  controls.bounds = room.bounds;
-  controls.teleport(museum.start.position[0], museum.start.position[1], museum.start.yaw);
+  const world = buildWorld(museum, lang, base, env);
+  scene.add(world.group);
+  controls.walkable = world.walkable;
+  const first = world.spawn(museum.start.room);
+  controls.teleport(first.x, first.z, first.yaw);
 
   // --- Fiche d'œuvre -------------------------------------------------------
   const panel = $('panel');
@@ -62,9 +78,13 @@ async function start() {
   function renderPanel() {
     if (!current) return;
     const a = current.config;
+    const size =
+      a.type === 'painting'
+        ? `${Math.round(a.height * 100)} × ${Math.round(a.width * 100)} cm`
+        : `${ui().height} ${Math.round(a.height * 100)} cm`;
     $('p-title').textContent = tr(a.title, lang);
     $('p-artist').textContent = a.artist;
-    $('p-meta').textContent = `${a.year} · ${tr(a.medium, lang)} · ${Math.round(a.height * 100)} × ${Math.round(a.width * 100)} cm`;
+    $('p-meta').textContent = `${a.year} · ${tr(a.medium, lang)} · ${size}`;
     $('p-desc').textContent = tr(a.description, lang);
   }
   /** Part de l'écran laissée libre par la fiche : [largeur, hauteur], entre 0 et 1. */
@@ -91,12 +111,12 @@ async function start() {
     applyViewOffset();
     // Recul nécessaire pour que l'œuvre entière tienne dans la zone libre.
     const [fw, fh] = freeArea();
+    const a = art.config;
     const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
-    const distance = Math.max(
-      1.2,
-      1.5 * Math.max(art.config.height / (2 * tan * fh), art.config.width / (2 * tan * camera.aspect * fw)),
-    );
-    controls.glideTo(art.anchor.clone().addScaledVector(art.normal, distance), art.viewYaw);
+    const distance =
+      art.depth + Math.max(1.2, 1.5 * Math.max(a.height / (2 * tan * fh), art.span / (2 * tan * camera.aspect * fw)));
+    const view = world.viewpoint(art, camera.position, distance);
+    controls.glideTo(view.pos, view.yaw, view.pitch);
     $('p-close').focus({ preventScroll: true });
   }
   function closePanel() {
@@ -105,14 +125,15 @@ async function start() {
     applyViewOffset();
   }
   $('p-close').addEventListener('click', closePanel);
-  window.addEventListener('keydown', (e) => e.key === 'Escape' && closePanel());
 
   // --- Sélection des œuvres ------------------------------------------------
+  // On teste toute la scène : un mur placé devant une œuvre bloque le clic.
   const raycaster = new THREE.Raycaster();
-  const targets = room.artworks.map((a) => a.mesh);
   const pick = (ndc: THREE.Vector2): PlacedArtwork | null => {
     raycaster.setFromCamera(ndc, camera);
-    return raycaster.intersectObjects(targets)[0]?.object.userData.artwork ?? null;
+    let node: THREE.Object3D | null = raycaster.intersectObject(world.group, true)[0]?.object ?? null;
+    while (node && !node.userData.artwork) node = node.parent;
+    return node?.userData.artwork ?? null;
   };
   controls.onTap = (ndc) => {
     const art = pick(ndc);
@@ -123,20 +144,52 @@ async function start() {
     canvas.style.cursor = pick(ndc) ? 'pointer' : 'grab';
   };
 
+  // --- Plan du musée -------------------------------------------------------
+  const mapDialog = $('map');
+  const map = buildMap($('map-body'), museum, (roomId) => {
+    closeMap();
+    closePanel();
+    const s = world.spawn(roomId);
+    canvas.classList.add('fade');
+    setTimeout(() => {
+      controls.teleport(s.x, s.z, s.yaw);
+      canvas.classList.remove('fade');
+    }, 220);
+  });
+  function closeMap() {
+    mapDialog.hidden = true;
+  }
+  $('map-open').addEventListener('click', () => {
+    mapDialog.hidden = false;
+    $('map-close').focus();
+  });
+  $('map-close').addEventListener('click', closeMap);
+  mapDialog.addEventListener('click', (e) => e.target === mapDialog && closeMap());
+  window.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!mapDialog.hidden) closeMap();
+    else closePanel();
+  });
+
   // --- Langue --------------------------------------------------------------
+  let room: RoomConfig | null = null;
   const langSelect = $<HTMLSelectElement>('lang');
   for (const code of museum.langs) langSelect.add(new Option(code.toUpperCase(), code));
   function applyLang() {
-    const ui = UI[lang] ?? UI.en;
     document.documentElement.lang = lang;
     document.title = tr(museum.name, lang);
     $('museum-name').textContent = tr(museum.name, lang);
-    $('room-name').textContent = tr(roomCfg.name, lang);
-    $('help').textContent = touch ? ui.helpTouch : ui.help;
-    $('p-close').setAttribute('aria-label', ui.close);
-    langSelect.setAttribute('aria-label', ui.lang);
+    $('room-name').textContent = room ? tr(room.name, lang) : '';
+    $('help').textContent = touch ? ui().helpTouch : ui().help;
+    $('p-close').setAttribute('aria-label', ui().close);
+    $('map-close').setAttribute('aria-label', ui().close);
+    $('map-open').textContent = ui().map;
+    $('map-title').textContent = ui().mapTitle;
+    $('map-hint').textContent = ui().mapHint;
+    langSelect.setAttribute('aria-label', ui().lang);
     langSelect.value = lang;
-    updateLabels(room, lang);
+    world.setLang(lang);
+    map.setLang(lang);
     renderPanel();
   }
   langSelect.addEventListener('change', () => {
@@ -144,6 +197,12 @@ async function start() {
     applyLang();
   });
   applyLang();
+
+  // L'aide disparaît dès que le visiteur commence à se déplacer.
+  const hideHelp = () => ($('help').hidden = true);
+  canvas.addEventListener('pointerdown', hideHelp, { once: true });
+  $('joystick').addEventListener('pointerdown', hideHelp, { once: true });
+  window.addEventListener('keydown', hideHelp, { once: true });
 
   // --- Boucle de rendu -----------------------------------------------------
   function resize() {
@@ -162,8 +221,18 @@ async function start() {
   const clock = new THREE.Clock();
   renderer.setAnimationLoop(() => {
     controls.update(Math.min(clock.getDelta(), 0.1));
+    const p = camera.position;
+    const here = world.roomAt(p.x, p.z);
+    if (here && here !== room) {
+      room = here;
+      $('room-name').textContent = tr(room.name, lang);
+      map.setCurrent(room.id);
+    }
+    if (!mapDialog.hidden) map.update(p.x, p.z, controls.yaw);
     renderer.render(scene, camera);
   });
+  // Accès réservé aux tests automatisés, absent de la version publiée.
+  if (import.meta.env.DEV) Object.assign(window, { __museum: { controls, world, camera } });
   document.body.classList.add('ready');
 }
 

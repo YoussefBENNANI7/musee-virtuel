@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { EYE_HEIGHT } from './room';
+import { EYE_HEIGHT } from './world';
 
 const SPEED = 2.4; // m/s
 const TURN_SPEED = 1.6; // rad/s, rotation au clavier
@@ -14,7 +14,8 @@ const LOOK = 0.0032; // rad par pixel de glissement
 export class Controls {
   yaw = 0;
   pitch = 0;
-  bounds: [number, number, number, number] = [-5, 5, -5, 5];
+  /** Indique si le visiteur peut se tenir en ce point (salles, portes, obstacles). */
+  walkable: (x: number, z: number) => boolean = () => true;
   /** Appelé lors d'un clic sans glissement, avec les coordonnées normalisées. */
   onTap: (ndc: THREE.Vector2) => void = () => {};
   onHover: (ndc: THREE.Vector2) => void = () => {};
@@ -22,7 +23,7 @@ export class Controls {
   private keys = new Set<string>();
   private stick = new THREE.Vector2();
   private drag: { id: number; x: number; y: number; moved: number } | null = null;
-  private glide: { pos: THREE.Vector3; yaw: number } | null = null;
+  private glide: { pos: THREE.Vector3; yaw: number; pitch: number } | null = null;
 
   constructor(
     private camera: THREE.PerspectiveCamera,
@@ -118,10 +119,10 @@ export class Controls {
   }
 
   /** Amène le visiteur en douceur devant un point d'intérêt. */
-  glideTo(pos: THREE.Vector3, yaw: number) {
+  glideTo(pos: THREE.Vector3, yaw: number, pitch = 0) {
     // Tourne par le plus court chemin.
     const delta = Math.atan2(Math.sin(yaw - this.yaw), Math.cos(yaw - this.yaw));
-    this.glide = { pos: pos.clone(), yaw: this.yaw + delta };
+    this.glide = { pos: pos.clone().setY(EYE_HEIGHT), yaw: this.yaw + delta, pitch };
   }
 
   update(dt: number) {
@@ -139,7 +140,7 @@ export class Controls {
       const t = 1 - Math.exp(-dt * 4);
       this.camera.position.lerp(this.glide.pos, t);
       this.yaw += (this.glide.yaw - this.yaw) * t;
-      this.pitch += (0 - this.pitch) * t;
+      this.pitch += (this.glide.pitch - this.pitch) * t;
       if (this.camera.position.distanceTo(this.glide.pos) < 0.01) this.glide = null;
     } else {
       this.yaw += turn * TURN_SPEED * dt;
@@ -148,16 +149,17 @@ export class Controls {
         const scale = (SPEED * dt) / Math.max(1, len);
         const sin = Math.sin(this.yaw);
         const cos = Math.cos(this.yaw);
-        this.camera.position.x += (-sin * forward + cos * strafe) * scale;
-        this.camera.position.z += (-cos * forward - sin * strafe) * scale;
+        const p = this.camera.position;
+        const nx = p.x + (-sin * forward + cos * strafe) * scale;
+        const nz = p.z + (-cos * forward - sin * strafe) * scale;
+        // En cas d'obstacle, on glisse le long du mur plutôt que de s'arrêter net.
+        if (this.walkable(nx, nz)) p.set(nx, EYE_HEIGHT, nz);
+        else if (this.walkable(nx, p.z)) p.x = nx;
+        else if (this.walkable(p.x, nz)) p.z = nz;
       }
     }
 
-    const [minX, maxX, minZ, maxZ] = this.bounds;
-    const p = this.camera.position;
-    p.x = THREE.MathUtils.clamp(p.x, minX, maxX);
-    p.z = THREE.MathUtils.clamp(p.z, minZ, maxZ);
-    p.y = EYE_HEIGHT;
+    this.camera.position.y = EYE_HEIGHT;
     this.camera.rotation.set(this.pitch, this.yaw, 0);
   }
 }
