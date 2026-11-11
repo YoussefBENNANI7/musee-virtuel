@@ -422,6 +422,7 @@ html:has(body.simple) {
 .simple #help,
 .simple #map-open,
 .simple #tours-open,
+.simple #vr,
 .simple #room-name {
   display: none;
 }

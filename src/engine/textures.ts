@@ -209,10 +209,10 @@ export function paintingCanvas(image: Extract<ImageSource, { generator: string }
 }
 
 /** Texture d'une œuvre : image fournie par le musée, ou tableau fictif généré. */
-export function artworkTexture(image: ImageSource, ratio: number, base: string): THREE.Texture {
+export function artworkTexture(image: ImageSource, ratio: number, base: string, onLoad?: () => void): THREE.Texture {
   const tex =
     'src' in image
-      ? new THREE.TextureLoader().load(new URL(image.src, base).href)
+      ? new THREE.TextureLoader().load(new URL(image.src, base).href, onLoad)
       : new THREE.CanvasTexture(paintingCanvas(image, ratio));
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;

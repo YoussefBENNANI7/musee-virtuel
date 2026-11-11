@@ -186,7 +186,14 @@ function sculptureShape(cfg: SculptureConfig, mat: THREE.Material): THREE.Group 
 
 // --- Construction du musée ----------------------------------------------------
 
-export function buildWorld(museum: MuseumConfig, lang: string, base: string, env: THREE.Texture): World {
+export function buildWorld(
+  museum: MuseumConfig,
+  lang: string,
+  base: string,
+  env: THREE.Texture,
+  /** Appelé quand une image finit de charger, pour redessiner la scène. */
+  onLoad: () => void = () => {},
+): World {
   const group = new THREE.Group();
   const { theme } = museum;
   const { openings, corridors } = resolveOpenings(museum);
@@ -209,6 +216,7 @@ export function buildWorld(museum: MuseumConfig, lang: string, base: string, env
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55 }));
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(cx, 0, cz);
+    floor.userData.floor = true;
     const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(w, d), ceilingMat);
     ceiling.rotation.x = Math.PI / 2;
     ceiling.position.set(cx, h, cz);
@@ -219,7 +227,9 @@ export function buildWorld(museum: MuseumConfig, lang: string, base: string, env
       const f = wallFrame(room, wall);
       // Tout ce qui est posé sur ce mur se place dans son repère : x = décalage, z = vers la salle.
       const holder = new THREE.Group();
-      holder.position.copy(f.center);
+      // Les murs sont avancés de 2 cm dans la salle : deux salles voisines ne partagent
+      // ainsi jamais exactement le même plan, ce qui évite des traits parasites à l'affichage.
+      holder.position.copy(f.center).addScaledVector(f.normal, 0.02);
       holder.rotation.y = f.rotY;
       group.add(holder);
 
@@ -278,7 +288,7 @@ export function buildWorld(museum: MuseumConfig, lang: string, base: string, env
     frame.position.z = 0.03;
     const canvas = new THREE.Mesh(
       new THREE.PlaneGeometry(cfg.width, cfg.height),
-      new THREE.MeshStandardMaterial({ map: artworkTexture(cfg.image, cfg.width / cfg.height, base), roughness: 0.85 }),
+      new THREE.MeshStandardMaterial({ map: artworkTexture(cfg.image, cfg.width / cfg.height, base, onLoad), roughness: 0.85 }),
     );
     canvas.position.z = 0.062;
     const label = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.15), new THREE.MeshStandardMaterial({ roughness: 0.9 }));

@@ -5,6 +5,7 @@ import { buildMap } from './engine/map';
 import { tr, type RoomConfig, type TourConfig } from './engine/types';
 import { buildWorld, type PlacedArtwork } from './engine/world';
 import { $, metaLine, type App, type View } from './ui';
+import { setupVR } from './vr';
 
 /** Visite en 3D : déplacement libre, fiches d'œuvres, plan, parcours et audioguide. */
 export function startVisit(app: App): View {
@@ -13,8 +14,17 @@ export function startVisit(app: App): View {
   const touch = matchMedia('(pointer: coarse)').matches;
 
   const canvas = $<HTMLCanvasElement>('scene');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  // La définition de l'image baisse d'elle-même si l'appareil peine (voir la boucle de rendu).
+  let pixelRatio = Math.min(devicePixelRatio, 2);
+  renderer.setPixelRatio(pixelRatio);
+  renderer.xr.enabled = true;
+
+  // On ne redessine l'image que lorsqu'elle change : un visiteur immobile ne consomme presque rien.
+  let renderUntil = performance.now() + 3000;
+  const invalidate = (ms = 600) => {
+    renderUntil = Math.max(renderUntil, performance.now() + ms);
+  };
   renderer.toneMapping = THREE.NeutralToneMapping;
 
   const scene = new THREE.Scene();
@@ -27,14 +37,36 @@ export function startVisit(app: App): View {
   const env = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 
   const camera = new THREE.PerspectiveCamera(68, 1, 0.05, 120);
+  const rig = new THREE.Group();
+  rig.add(camera);
+  scene.add(rig);
   const controls = new Controls(camera, canvas, $('joystick'));
 
-  const world = buildWorld(museum, app.lang, app.base, env);
+  const world = buildWorld(museum, app.lang, app.base, env, invalidate);
   scene.add(world.group);
   controls.walkable = world.walkable;
   const first = world.spawn(museum.start.room);
   controls.teleport(first.x, first.z, first.yaw);
   const byId = new Map(world.artworks.map((a) => [a.config.id, a]));
+
+  // --- Casque VR -----------------------------------------------------------
+  const vr = setupVR({
+    renderer,
+    scene,
+    rig,
+    camera,
+    controls,
+    world,
+    app,
+    button: $('vr'),
+    onStart() {
+      closePanel();
+      camera.clearViewOffset();
+    },
+    onEnd() {
+      resize();
+    },
+  });
 
   // --- Fiche d'œuvre -------------------------------------------------------
   const panel = $('panel');
@@ -56,7 +88,10 @@ export function startVisit(app: App): View {
     $('p-desc').textContent = tr(a.description, app.lang);
     renderAudio();
   }
-  guide.onChange = renderAudio;
+  guide.onChange = () => {
+    renderAudio();
+    vr.refresh();
+  };
   $('p-audio').addEventListener('click', () => current && guide.toggle(current.config, app.lang, app.base));
 
   /**
@@ -80,6 +115,7 @@ export function startVisit(app: App): View {
     const { cx, cy } = freeArea();
     if (panel.hidden) camera.clearViewOffset();
     else camera.setViewOffset(w, h, w / 2 - cx, h / 2 - cy, w, h);
+    invalidate();
   }
   /** Ouvre la fiche et amène le visiteur devant l'œuvre, en douceur ou d'un coup. */
   function openArtwork(art: PlacedArtwork, instant = false) {
@@ -256,8 +292,11 @@ export function startVisit(app: App): View {
     $('tours-open').textContent = ui().tours;
     $('tours-title').textContent = ui().toursTitle;
     $('tours-hint').textContent = ui().toursHint;
+    $('vr').textContent = ui().vr;
     world.setLang(app.lang);
     map.setLang(app.lang);
+    vr.refresh();
+    invalidate();
     renderPanel();
     renderTour();
     renderTourList();
@@ -280,13 +319,25 @@ export function startVisit(app: App): View {
     camera.fov = w < h ? 82 : 68;
     applyViewOffset();
     camera.updateProjectionMatrix();
+    invalidate();
   }
   new ResizeObserver(resize).observe(canvas);
   resize();
 
-  const clock = new THREE.Clock();
+  const timer = new THREE.Timer();
+  let lastPose = '';
+  let slowTime = 0;
+  let slowFrames = 0;
   renderer.setAnimationLoop(() => {
-    controls.update(Math.min(clock.getDelta(), 0.1));
+    timer.update();
+    const raw = timer.getDelta();
+    const dt = Math.min(raw, 0.1);
+    if (renderer.xr.isPresenting) {
+      vr.update(dt);
+      renderer.render(scene, camera);
+      return;
+    }
+    controls.update(dt);
     const p = camera.position;
     const here = world.roomAt(p.x, p.z);
     if (here && here !== room) {
@@ -295,7 +346,27 @@ export function startVisit(app: App): View {
       map.setCurrent(room.id);
     }
     if (!mapDialog.hidden) map.update(p.x, p.z, controls.yaw);
+
+    const pose = `${p.x.toFixed(3)} ${p.z.toFixed(3)} ${controls.yaw.toFixed(4)} ${controls.pitch.toFixed(4)}`;
+    const moving = pose !== lastPose;
+    lastPose = pose;
+    if (moving) invalidate(300);
+    if (performance.now() > renderUntil) return;
     renderer.render(scene, camera);
+
+    // Si l'appareil reste sous 36 images par seconde en mouvement, on allège l'image par paliers.
+    if (moving && pixelRatio > 1) {
+      slowTime += raw;
+      if (++slowFrames >= 45) {
+        if (slowTime / slowFrames > 0.028) {
+          pixelRatio = Math.max(1, pixelRatio - 0.25);
+          renderer.setPixelRatio(pixelRatio);
+          resize();
+        }
+        slowTime = 0;
+        slowFrames = 0;
+      }
+    }
   });
 
   // Accès réservé aux tests et à la génération des vignettes, absent de la version publiée.
@@ -315,7 +386,7 @@ export function startVisit(app: App): View {
       renderer.render(scene, camera);
       return canvas.toDataURL('image/jpeg', 0.86);
     };
-    Object.assign(window, { __museum: { controls, world, camera, thumb } });
+    Object.assign(window, { __museum: { controls, world, camera, rig, renderer, thumb, pixelRatio: () => pixelRatio } });
   }
 
   return {
