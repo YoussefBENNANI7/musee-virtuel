@@ -46,7 +46,7 @@
           "type": "painting",
           "wall": "north",
           "offset": -1.3,
-          "width": 2.0,
+          "width": 2,
           "height": 1.5,
           "image": {
             "generator": "geometric",
@@ -248,7 +248,7 @@
           "wall": "east",
           "offset": -3.8,
           "width": 1.5,
-          "height": 1.0,
+          "height": 1,
           "image": {
             "generator": "landscape",
             "seed": 23,
@@ -301,7 +301,7 @@
           "type": "painting",
           "wall": "north",
           "offset": 0,
-          "width": 2.0,
+          "width": 2,
           "height": 1.2,
           "image": {
             "generator": "lines",
@@ -517,7 +517,8 @@
           "description": {
             "fr": "Une seule ligne de bronze qui se referme sur elle-même. Venier demandait qu'on en fasse le tour : la sculpture, disait-il, n'a ni face ni dos.",
             "en": "A single line of bronze closing on itself. Venier asked viewers to walk around it: the sculpture, he said, has neither front nor back."
-          }
+          },
+          "photo": "thumbs/noeud-sans-fin.jpg"
         },
         {
           "id": "galet-qui-respire",
@@ -527,7 +528,7 @@
             -2.7
           ],
           "height": 0.6,
-          "plinth": 1.0,
+          "plinth": 1,
           "model": {
             "generator": "blob",
             "seed": 8
@@ -546,7 +547,8 @@
           "description": {
             "fr": "Rahimi polit ses marbres à la main pendant des mois, jusqu'à ce que la pierre semble molle. Elle refuse toute arête vive.",
             "en": "Rahimi polishes her marbles by hand for months, until the stone looks soft. She rejects any sharp edge."
-          }
+          },
+          "photo": "thumbs/galet-qui-respire.jpg"
         },
         {
           "id": "orbites",
@@ -575,7 +577,8 @@
           "description": {
             "fr": "Trois anneaux qui ne se touchent qu'en deux points. Morvan, ancien horloger, calculait ses équilibres au dixième de millimètre.",
             "en": "Three rings that touch at only two points. Morvan, a former watchmaker, calculated his balances to a tenth of a millimetre."
-          }
+          },
+          "photo": "thumbs/orbites.jpg"
         },
         {
           "id": "totem-rouge",
@@ -605,7 +608,8 @@
             "fr": "Six blocs empilés, chacun légèrement tourné par rapport au précédent. C'est l'unique sculpture de Haddou, réalisée avec des chutes de l'atelier familial.",
             "en": "Six stacked blocks, each turned slightly from the one below. It is Haddou's only sculpture, made from offcuts of the family workshop."
           },
-          "color": "#8f231c"
+          "color": "#8f231c",
+          "photo": "thumbs/totem-rouge.jpg"
         },
         {
           "id": "ruban",
@@ -614,7 +618,7 @@
             2.7,
             -2.7
           ],
-          "height": 1.0,
+          "height": 1,
           "plinth": 0.8,
           "model": {
             "generator": "ribbon",
@@ -634,7 +638,8 @@
           "description": {
             "fr": "Une étude pour le Nœud sans fin, plus libre et plus nerveuse. Venier la gardait sur son bureau.",
             "en": "A study for the Endless Knot, freer and more restless. Venier kept it on his desk."
-          }
+          },
+          "photo": "thumbs/ruban.jpg"
         },
         {
           "id": "nocturne-en-quatre-temps",
@@ -683,6 +688,45 @@
       "wall": "west",
       "offset": 0,
       "width": 2.2
+    }
+  ],
+  "tours": [
+    {
+      "id": "essentiels",
+      "name": {
+        "fr": "Les essentiels",
+        "en": "The Essentials"
+      },
+      "description": {
+        "fr": "Cinq œuvres pour découvrir le musée en dix minutes.",
+        "en": "Five works to discover the museum in ten minutes."
+      },
+      "stops": [
+        "equilibre-no-7",
+        "le-pays-d-avant",
+        "crepuscule-interieur",
+        "partition-pour-le-vent",
+        "noeud-sans-fin"
+      ]
+    },
+    {
+      "id": "couleur",
+      "name": {
+        "fr": "La couleur avant tout",
+        "en": "Colour First"
+      },
+      "description": {
+        "fr": "De la chaleur de midi au rouge laqué : six artistes qui font de la couleur leur sujet.",
+        "en": "From midday heat to lacquered red: six artists who make colour their subject."
+      },
+      "stops": [
+        "midi-plein",
+        "carreaux-de-l-atelier",
+        "aube-interieure",
+        "soleils-multiples",
+        "zellige-imaginaire",
+        "totem-rouge"
+      ]
     }
   ]
 }

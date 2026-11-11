@@ -195,22 +195,25 @@ export function poolTexture(): THREE.Texture {
   return tex;
 }
 
+/** Dessine un tableau fictif à partir de sa graine. */
+export function paintingCanvas(image: Extract<ImageSource, { generator: string }>, ratio: number): HTMLCanvasElement {
+  const w = 1024;
+  const h = Math.round(w / ratio);
+  const { c, g } = canvasOf(w, h);
+  const r = rng(image.seed);
+  const picked = PALETTES[Math.floor(r() * PALETTES.length)];
+  const p = image.mono ? MONO : picked;
+  ({ geometric, fields, lines, circles, mosaic, landscape })[image.generator](g, w, h, r, p);
+  grain(g, w, h, r);
+  return c;
+}
+
 /** Texture d'une œuvre : image fournie par le musée, ou tableau fictif généré. */
 export function artworkTexture(image: ImageSource, ratio: number, base: string): THREE.Texture {
-  let tex: THREE.Texture;
-  if ('src' in image) {
-    tex = new THREE.TextureLoader().load(new URL(image.src, base).href);
-  } else {
-    const w = 1024;
-    const h = Math.round(w / ratio);
-    const { c, g } = canvasOf(w, h);
-    const r = rng(image.seed);
-    const picked = PALETTES[Math.floor(r() * PALETTES.length)];
-    const p = image.mono ? MONO : picked;
-    ({ geometric, fields, lines, circles, mosaic, landscape })[image.generator](g, w, h, r, p);
-    grain(g, w, h, r);
-    tex = new THREE.CanvasTexture(c);
-  }
+  const tex =
+    'src' in image
+      ? new THREE.TextureLoader().load(new URL(image.src, base).href)
+      : new THREE.CanvasTexture(paintingCanvas(image, ratio));
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;
   return tex;

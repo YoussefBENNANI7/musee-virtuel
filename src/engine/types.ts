@@ -18,6 +18,10 @@ interface ArtworkBase {
   year: string;
   medium: L10n;
   description: L10n;
+  /** Commentaire enregistré, un fichier par langue. Sans fichier, le texte est lu par une voix de synthèse. */
+  audio?: L10n;
+  /** Photo de l'œuvre pour la vue simplifiée (utile surtout pour les sculptures). */
+  photo?: string;
 }
 
 export interface PaintingConfig extends ArtworkBase {
@@ -65,6 +69,15 @@ export interface DoorConfig {
   width: number;
 }
 
+/** Parcours thématique : une suite d'œuvres à voir dans l'ordre. */
+export interface TourConfig {
+  id: string;
+  name: L10n;
+  description: L10n;
+  /** Identifiants des œuvres, dans l'ordre de visite. */
+  stops: string[];
+}
+
 export interface MuseumConfig {
   id: string;
   name: L10n;
@@ -74,6 +87,7 @@ export interface MuseumConfig {
   start: { room: string; position: [number, number]; yaw: number };
   rooms: RoomConfig[];
   doors: DoorConfig[];
+  tours?: TourConfig[];
 }
 
 export function tr(text: L10n, lang: string): string {

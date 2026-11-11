@@ -8,13 +8,15 @@
   <body>
     <canvas id="scene" aria-label="Visite virtuelle en 3D"></canvas>
 
-    <header class="bar">
+    <header id="bar" class="bar">
       <div>
         <h1 id="museum-name"></h1>
         <p id="room-name"></p>
       </div>
       <div class="tools">
+        <button id="tours-open" type="button"></button>
         <button id="map-open" type="button"></button>
+        <button id="mode" type="button"></button>
         <select id="lang"></select>
       </div>
     </header>
@@ -28,8 +30,22 @@
       <p id="p-artist" class="artist"></p>
       <h2 id="p-title"></h2>
       <p id="p-meta" class="meta"></p>
+      <button id="p-audio" class="btn" type="button"></button>
       <p id="p-desc" class="desc"></p>
+      <nav id="tour-nav" class="tour-nav" hidden>
+        <p id="tour-status"></p>
+        <div class="row">
+          <button id="tour-prev" class="btn" type="button"></button>
+          <button id="tour-next" class="btn primary" type="button"></button>
+        </div>
+        <button id="tour-quit" class="link" type="button"></button>
+      </nav>
     </aside>
+
+    <div id="tour-resume" class="resume" hidden>
+      <button id="tour-resume-btn" class="btn primary" type="button"></button>
+      <button id="tour-resume-quit" class="btn" type="button">×</button>
+    </div>
 
     <div id="map" class="overlay" hidden>
       <section class="map-card" role="dialog" aria-labelledby="map-title">
@@ -39,6 +55,17 @@
         <div id="map-body"></div>
       </section>
     </div>
+
+    <div id="tours" class="overlay" hidden>
+      <section class="map-card" role="dialog" aria-labelledby="tours-title">
+        <button id="tours-close" class="close" type="button">×</button>
+        <h2 id="tours-title"></h2>
+        <p id="tours-hint" class="meta"></p>
+        <div id="tours-body"></div>
+      </section>
+    </div>
+
+    <main id="simple" class="simple-page" hidden></main>
 
     <script type="module" src="/src/main.ts"></script>
   </body>
