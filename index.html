@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Musée virtuel</title>
+  </head>
+  <body>
+    <canvas id="scene" aria-label="Visite virtuelle en 3D"></canvas>
+
+    <header class="bar">
+      <div>
+        <h1 id="museum-name"></h1>
+        <p id="room-name"></p>
+      </div>
+      <select id="lang"></select>
+    </header>
+
+    <p id="help" class="help"></p>
+
+    <div id="joystick" class="joystick" aria-hidden="true"><span></span></div>
+
+    <aside id="panel" class="panel" role="dialog" aria-labelledby="p-title" hidden>
+      <button id="p-close" class="close" type="button">×</button>
+      <p id="p-artist" class="artist"></p>
+      <h2 id="p-title"></h2>
+      <p id="p-meta" class="meta"></p>
+      <p id="p-desc" class="desc"></p>
+    </aside>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

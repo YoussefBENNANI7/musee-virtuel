@@ -1,0 +1,74 @@
+{
+  "id": "demo",
+  "name": { "fr": "Musée des Horizons", "en": "Horizons Museum" },
+  "langs": ["fr", "en"],
+  "defaultLang": "fr",
+  "theme": {
+    "wall": "#f1ede6",
+    "floor": "#9a7450",
+    "ceiling": "#fbfaf7",
+    "frame": "#2b2420",
+    "accent": "#a8472a"
+  },
+  "start": { "room": "hall", "position": [0, 2.5], "yaw": 0 },
+  "rooms": [
+    {
+      "id": "hall",
+      "name": { "fr": "Salle des Horizons", "en": "Horizons Room" },
+      "size": [12, 4.2, 9],
+      "artworks": [
+        {
+          "id": "equilibre-no-7",
+          "type": "painting",
+          "wall": "north",
+          "offset": 0,
+          "width": 2.0,
+          "height": 1.5,
+          "image": { "generator": "geometric", "seed": 7 },
+          "title": { "fr": "Équilibre n° 7", "en": "Balance No. 7" },
+          "artist": "Hélène Varga",
+          "year": "1962",
+          "medium": { "fr": "Huile sur toile", "en": "Oil on canvas" },
+          "description": {
+            "fr": "Varga compose ses toiles comme des architectures suspendues : chaque forme semble retenir la suivante. Ici, un cercle unique déplace tout le poids de la composition vers la droite, et l'œil cherche sans cesse à rétablir l'équilibre annoncé par le titre.",
+            "en": "Varga builds her canvases like suspended architecture, each shape holding the next in place. Here a single circle shifts the whole weight of the composition to the right, and the eye keeps trying to restore the balance promised by the title."
+          }
+        },
+        {
+          "id": "crepuscule-interieur",
+          "type": "painting",
+          "wall": "west",
+          "offset": 0,
+          "width": 1.4,
+          "height": 1.8,
+          "image": { "generator": "fields", "seed": 21 },
+          "title": { "fr": "Crépuscule intérieur", "en": "Inner Dusk" },
+          "artist": "Idriss Belkacem",
+          "year": "1978",
+          "medium": { "fr": "Acrylique sur toile", "en": "Acrylic on canvas" },
+          "description": {
+            "fr": "Trois bandes de couleur, aux bords volontairement incertains, se superposent comme des heures de la journée. Belkacem disait peindre « la lumière qui reste dans une pièce après qu'on a éteint ».",
+            "en": "Three bands of colour with deliberately uncertain edges are layered like hours of the day. Belkacem said he painted “the light that stays in a room after it has been switched off”."
+          }
+        },
+        {
+          "id": "partition-pour-le-vent",
+          "type": "painting",
+          "wall": "east",
+          "offset": 0,
+          "width": 2.2,
+          "height": 1.3,
+          "image": { "generator": "lines", "seed": 4 },
+          "title": { "fr": "Partition pour le vent", "en": "Score for the Wind" },
+          "artist": "Mireille Okonjo",
+          "year": "2004",
+          "medium": { "fr": "Encre et pigments sur toile", "en": "Ink and pigment on canvas" },
+          "description": {
+            "fr": "Des centaines de lignes tracées à main levée, sans jamais se croiser tout à fait. Okonjo travaillait en extérieur et laissait le vent dévier son geste : la toile enregistre une après-midi de météo autant qu'un dessin.",
+            "en": "Hundreds of freehand lines that never quite cross. Okonjo worked outdoors and let the wind deflect her hand: the canvas records an afternoon of weather as much as a drawing."
+          }
+        }
+      ]
+    }
+  ]
+}
