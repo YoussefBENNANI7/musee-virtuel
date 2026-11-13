@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { Controls } from './engine/controls';
+import { SUN_AZIMUTH } from './engine/lighting';
 import { buildMap } from './engine/map';
+import { buildFloorReflection } from './engine/reflection';
 import { tr, type RoomConfig, type TourConfig } from './engine/types';
 import { buildWorld, type PlacedArtwork } from './engine/world';
 import { $, metaLine, type App, type View } from './ui';
@@ -31,9 +33,11 @@ export function startVisit(app: App): View {
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(style.palette.ceiling);
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xe9e1d6, 2.7));
-  const sun = new THREE.DirectionalLight(0xfff3e0, 1.1);
-  sun.position.set(2, 6, 3);
+  // Le bâtiment porte son propre éclairage (voir engine/lighting.ts). Ces deux lampes
+  // n'éclairent que les objets : sculptures, socles, cadres, mobilier.
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xe0dbd3, 2.0));
+  const sun = new THREE.DirectionalLight(0xfff1dd, 1.2);
+  sun.position.copy(SUN_AZIMUTH).multiplyScalar(3).setY(7);
   scene.add(sun);
   // Reflets des sculptures : un environnement neutre, calculé une fois.
   const env = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
@@ -46,6 +50,8 @@ export function startVisit(app: App): View {
 
   const world = buildWorld(museum, { lang: app.lang, base: app.base, style, quality, env, onLoad: invalidate });
   scene.add(world.group);
+  const reflection = quality.reflections ? buildFloorReflection(museum) : null;
+  if (reflection) scene.add(reflection.object);
   controls.walkable = world.walkable;
   const first = world.spawn(museum.start.room);
   controls.teleport(first.x, first.z, first.yaw);
@@ -64,8 +70,11 @@ export function startVisit(app: App): View {
     onStart() {
       closePanel();
       camera.clearViewOffset();
+      // Le reflet du sol n'est pas calculé dans le casque.
+      if (reflection) reflection.object.visible = false;
     },
     onEnd() {
+      if (reflection) reflection.object.visible = quality.reflections;
       resize();
     },
   });
@@ -316,6 +325,7 @@ export function startVisit(app: App): View {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
     renderer.setSize(w, h, false);
+    reflection?.resize(w * pixelRatio, h * pixelRatio);
     camera.aspect = w / h;
     // Sur un écran étroit, on élargit le champ pour garder la salle lisible.
     camera.fov = w < h ? 82 : 68;
@@ -363,6 +373,11 @@ export function startVisit(app: App): View {
         if (slowTime / slowFrames > 0.028) {
           pixelRatio = Math.max(1, pixelRatio - 0.25);
           renderer.setPixelRatio(pixelRatio);
+          // Au dernier palier, on renonce aussi au reflet du sol, qui double le travail de dessin.
+          if (pixelRatio === 1 && reflection) {
+            quality.reflections = false;
+            reflection.object.visible = false;
+          }
           resize();
         }
         slowTime = 0;
@@ -404,7 +419,7 @@ export function startVisit(app: App): View {
       return { x: ((v.x + 1) / 2) * canvas.clientWidth, y: ((1 - v.y) / 2) * canvas.clientHeight };
     };
     Object.assign(window, {
-      __museum: { style: style.id, quality: quality.tier, controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
+      __museum: { style: style.id, quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
     });
   }
 

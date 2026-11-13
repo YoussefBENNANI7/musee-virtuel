@@ -52,6 +52,13 @@ export interface SculptureConfig extends ArtworkBase {
 
 export type ArtworkConfig = PaintingConfig | SculptureConfig;
 
+export interface BenchConfig {
+  /** Position dans la salle, en mètres, depuis son centre : [x, z]. */
+  position: [number, number];
+  /** Par défaut le banc est allongé d'est en ouest ; `rotated` le tourne d'un quart de tour. */
+  rotated?: boolean;
+}
+
 export type CeilingConfig =
   | { type: 'flat' }
   /** Verrière centrale. `margin` : distance entre la verrière et les murs, en mètres. */
@@ -72,6 +79,10 @@ export interface RoomConfig {
   wall?: string;
   /** Plafond plat par défaut. */
   ceiling?: CeilingConfig;
+  /** Niveau d'éclairage de la salle : 1 = normal, moins pour une ambiance tamisée. */
+  light?: number;
+  /** Bancs, posés au sol. */
+  benches?: BenchConfig[];
   artworks: ArtworkConfig[];
 }
 
@@ -102,6 +113,7 @@ export interface ThemeConfig {
   trim?: string;
   frame?: string;
   plinth?: string;
+  wood?: string;
   /** Couleur de l'identité du musée : boutons, liens, repères. */
   accent?: string;
 }

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import { hangPainting, placeSculpture, type ArtworkContext, type PlacedArtwork } from './artworks';
+import { hangPainting, placeSculpture, TRACK_DISTANCE, type ArtworkContext, type PlacedArtwork } from './artworks';
 import { buildBuilding } from './building';
+import { benchFootprint, buildBench } from './furniture';
 import { EYE_HEIGHT, WALLS, buildLayout, type Layout } from './layout';
 import type { Quality } from './quality';
 import type { Style } from './styles';
@@ -42,26 +43,47 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
   const building = buildBuilding(museum, layout, style, quality);
   const group = building.group;
 
-  const ctx: ArtworkContext = { style, quality, base: options.base, env: options.env, onLoad: options.onLoad ?? (() => {}) };
+  const ctx: ArtworkContext = { style, quality, base: options.base, env: options.env, onLoad: options.onLoad ?? (() => {}), light: building.light };
+  const railMat = new THREE.MeshStandardMaterial({ color: '#161616', roughness: 0.5 });
+  /** Zones occupées par le mobilier et les socles : le visiteur les contourne. */
+  const blocked: ((x: number, z: number) => boolean)[] = [];
   const artworks: PlacedArtwork[] = [];
   for (const room of museum.rooms) {
     for (const wall of WALLS) {
       const { holder, frame } = building.wall(room.id, wall);
-      for (const cfg of room.artworks) {
-        if (cfg.type === 'painting' && cfg.wall === wall) artworks.push(hangPainting(cfg, room, holder, frame, ctx));
+      const hung = room.artworks.filter((cfg) => cfg.type === 'painting' && cfg.wall === wall);
+      for (const cfg of hung) {
+        if (cfg.type === 'painting') artworks.push(hangPainting(cfg, room, holder, frame, ctx));
       }
+      // Rail des projecteurs, au plafond, le long des murs qui portent des œuvres.
+      if (hung.length && !building.light(room.id).daylight) {
+        // Sa longueur le fait rejoindre exactement les rails des murs voisins, dans les angles.
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(frame.length - TRACK_DISTANCE * 2 + 0.025, 0.02, 0.025), railMat);
+        rail.position.set(0, room.size[1] - 0.01, TRACK_DISTANCE);
+        holder.add(rail);
+      }
+    }
+    for (const bench of room.benches ?? []) {
+      group.add(buildBench(bench, room, style));
+      const { hx, hz } = benchFootprint(bench);
+      const bx = room.position[0] + bench.position[0];
+      const bz = room.position[1] + bench.position[1];
+      blocked.push((x, z) => Math.abs(x - bx) < hx + 0.3 && Math.abs(z - bz) < hz + 0.3);
     }
     for (const cfg of room.artworks) {
       if (cfg.type === 'sculpture') artworks.push(placeSculpture(cfg, room, group, ctx));
     }
   }
-  const obstacles = artworks.flatMap((a) => (a.obstacle ? [a.obstacle] : []));
+  for (const art of artworks) {
+    const o = art.obstacle;
+    if (o) blocked.push((x, z) => Math.hypot(x - o.x, z - o.z) < o.r);
+  }
 
   const world: World = {
     group,
     layout,
     artworks,
-    walkable: (x, z) => layout.walkable(x, z) && !obstacles.some((o) => Math.hypot(x - o.x, z - o.z) < o.r),
+    walkable: (x, z) => layout.walkable(x, z) && !blocked.some((hit) => hit(x, z)),
     roomAt: layout.roomAt,
     spawn: layout.spawn,
 
@@ -78,16 +100,23 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
         dir.normalize();
       }
       const area = layout.standingArea(art.room);
-      const pos = target.clone().addScaledVector(dir, distance);
-      pos.x = THREE.MathUtils.clamp(pos.x, area.minX, area.maxX);
-      pos.z = THREE.MathUtils.clamp(pos.z, area.minZ, area.maxZ);
+      const pos = new THREE.Vector3();
+      // Si l'endroit idéal est occupé par un banc ou un socle, on s'approche de l'œuvre
+      // par petits pas, puis, à défaut, on recule.
+      const tries = [0, -0.4, -0.8, -1.2, -1.6, -2, 0.4, 0.8, 1.2].map((delta) => Math.max(art.depth + 1, distance + delta));
+      for (const d of tries) {
+        pos.copy(target).addScaledVector(dir, d);
+        pos.x = THREE.MathUtils.clamp(pos.x, area.minX, area.maxX);
+        pos.z = THREE.MathUtils.clamp(pos.z, area.minZ, area.maxZ);
+        if (world.walkable(pos.x, pos.z)) break;
+      }
       const reach = Math.hypot(pos.x - target.x, pos.z - target.z);
       return { pos, yaw: Math.atan2(dir.x, dir.z), pitch: Math.atan2(art.center.y - EYE_HEIGHT, reach) };
     },
 
     setLang(lang) {
       for (const art of artworks) {
-        const mat = art.label.material as THREE.MeshStandardMaterial;
+        const mat = art.label.material as THREE.MeshBasicMaterial;
         mat.map?.dispose();
         mat.map = labelTexture(tr(art.config.title, lang), art.config.artist, art.config.year, quality);
         mat.needsUpdate = true;

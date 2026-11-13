@@ -48,6 +48,33 @@ test('le socle d’une sculpture arrête le visiteur', async ({ page }) => {
   expect(stopped.x).toBeGreaterThan(-10.5);
 });
 
+test('un banc arrête le visiteur, qui peut le contourner', async ({ page }) => {
+  await openMuseum(page);
+  // Dans la galerie, un banc est posé en (10, 3.6), allongé du nord au sud. On marche vers lui depuis l'ouest.
+  await teleport(page, 7.5, 3.6, -WEST);
+  const stopped = await walkUntilBlocked(page);
+  expect(stopped.x).toBeGreaterThan(8.5);
+  expect(stopped.x).toBeLessThan(9.8);
+  // En se décalant au-delà du bout du banc, le passage est libre jusqu'au mur est (x = 14).
+  await teleport(page, 7.5, 1.5, -WEST);
+  const free = await walkUntilBlocked(page);
+  expect(free.x).toBeGreaterThan(12.5);
+});
+
+test('face à une œuvre, le visiteur n’est jamais placé dans un banc', async ({ page }) => {
+  await openMuseum(page);
+  const walkable = (x: number, z: number) => page.evaluate(([x, z]) => (window as any).__museum.world.walkable(x, z), [x, z]);
+  // « Ronds dans l'eau » est accroché sur le mur est (surface en x = 13,85), juste en face du banc :
+  // à quatre mètres de recul, l'emplacement naturel du visiteur tombe sur le banc.
+  expect(await walkable(13.85 - 4, 3.8)).toBe(false);
+  for (const distance of [2, 3, 3.5, 4, 4.5, 5]) {
+    await page.evaluate(([d]) => (window as any).__museum.standBefore('ronds-dans-l-eau', d), [distance]);
+    const p = await position(page);
+    expect(await walkable(p.x, p.z), `recul de ${distance} m`).toBe(true);
+    expect(p.z).toBeCloseTo(3.8, 1);
+  }
+});
+
 test('cliquer sur un tableau ouvre sa fiche et amène le visiteur devant', async ({ page }) => {
   await openMuseum(page);
   await clickArtwork(page, 'equilibre-no-7', 4.5);

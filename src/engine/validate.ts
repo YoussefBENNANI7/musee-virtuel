@@ -1,3 +1,4 @@
+import { benchFootprint } from './furniture';
 import { ART_CENTER_Y, MIN_DOOR_WIDTH, WALLS, buildLayout, inside, roomRect, wallFrame } from './layout';
 import { isStyleId, type Style } from './styles';
 import type { ArtworkConfig, L10n, MuseumConfig, RoomConfig } from './types';
@@ -61,6 +62,14 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
     else {
       if (h < 2.4) error(where, `plafond trop bas (${h} m, minimum 2,4 m)`);
       if (Math.min(w, d) < style.wallThickness + 2) error(where, 'salle trop étroite pour y circuler');
+    }
+    if (room.light !== undefined && !(room.light >= 0 && room.light <= 2)) error(where, 'niveau d\'éclairage invalide (entre 0 et 2)');
+    for (const [i, bench] of (room.benches ?? []).entries()) {
+      const { hx, hz } = benchFootprint(bench);
+      const clear = half + 0.3;
+      if (Math.abs(bench.position[0]) + hx > w / 2 - clear || Math.abs(bench.position[1]) + hz > d / 2 - clear) {
+        error(where, `banc n° ${i + 1} : posé hors de la salle ou trop près d'un mur`);
+      }
     }
     if (room.ceiling?.type === 'skylight') {
       const margin = room.ceiling.margin ?? 1.2;

@@ -24,8 +24,14 @@ test('le style d’architecture se change depuis l’adresse, sans toucher à la
 });
 
 test('le niveau de qualité suit l’appareil, et se force depuis l’adresse', async ({ page }) => {
-  await openMuseum(page);
+  // Un ordinateur reçoit le rendu complet, avec le reflet du sol.
+  await page.goto('/');
+  await page.waitForSelector('body.ready');
   expect(await hook(page, 'quality')).toBe('high');
+  expect(await page.evaluate(() => (window as any).__museum.reflections())).toBe(true);
+  await openMuseum(page);
+  expect(await hook(page, 'quality')).toBe('medium');
+  expect(await page.evaluate(() => (window as any).__museum.reflections())).toBe(false);
   await openMuseum(page, { query: '&q=low' });
   expect(await hook(page, 'quality')).toBe('low');
   expect(await page.evaluate(() => (window as any).__museum.pixelRatio())).toBe(1);

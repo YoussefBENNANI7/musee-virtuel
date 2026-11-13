@@ -10,6 +10,8 @@ export interface Palette {
   frame: string;
   /** Socles des sculptures. */
   plinth: string;
+  /** Bois du mobilier. */
+  wood: string;
   /** Couleur de l'identité du musée. */
   accent: string;
 }
@@ -46,6 +48,7 @@ export const STYLES: Record<StyleId, Style> = {
       trim: '#1b1b1a',
       frame: '#c9b28c',
       plinth: '#f7f6f3',
+      wood: '#c9b28c',
       accent: '#a8472a',
     },
     wallThickness: 0.4,
@@ -65,6 +68,7 @@ export const STYLES: Record<StyleId, Style> = {
       trim: '#2b2420',
       frame: '#2b2420',
       plinth: '#f4f1eb',
+      wood: '#6b4a2f',
       accent: '#a8472a',
     },
     wallThickness: 0.3,

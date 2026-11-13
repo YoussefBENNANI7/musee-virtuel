@@ -349,6 +349,15 @@
             "en": "Solberg, a trained cellist, draws her lines while listening to a single piece from start to finish. This one, she says, lasts exactly twenty-three minutes."
           }
         }
+      ],
+      "benches": [
+        {
+          "position": [
+            0,
+            3.6
+          ],
+          "rotated": true
+        }
       ]
     },
     {

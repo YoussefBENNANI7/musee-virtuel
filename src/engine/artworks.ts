@@ -1,5 +1,7 @@
 import * as THREE from 'three';
+import { groundShadow } from './furniture';
 import { ART_CENTER_Y, type WallFrame } from './layout';
+import type { RoomLight } from './lighting';
 import type { Quality } from './quality';
 import { sculptureMaterial, sculptureShape } from './sculptures';
 import type { Style } from './styles';
@@ -32,15 +34,55 @@ export interface ArtworkContext {
   env: THREE.Texture;
   /** Appelé quand une image finit de charger. */
   onLoad: () => void;
+  /** Éclairage de chaque salle. */
+  light(roomId: string): RoomLight;
 }
 
 const LABEL_W = 0.3;
 const LABEL_H = 0.15;
 const noRaycast = () => {};
-let poolMaterial: THREE.Material | null = null;
+/** Un matériau de halo par couleur de mur. */
+const poolMaterials = new Map<string, THREE.Material>();
+function poolMaterial(wallColor: string): THREE.Material {
+  let mat = poolMaterials.get(wallColor);
+  if (!mat) {
+    // Lumière ajoutée à la couleur du mur : un mur coloré s'éclaircit dans sa propre teinte.
+    const wall = new THREE.Color(wallColor);
+    // Un mur clair est déjà proche du blanc : son halo doit rester discret.
+    const brightness = wall.getHSL({ h: 0, s: 0, l: 0 }).l;
+    mat = new THREE.MeshBasicMaterial({
+      map: poolTexture(),
+      color: wall.clone().lerp(new THREE.Color('#fff4e2'), 0.25),
+      opacity: 0.5 - 0.3 * brightness,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      toneMapped: false,
+    });
+    poolMaterials.set(wallColor, mat);
+  }
+  return mat;
+}
 
 function label(): THREE.Mesh {
-  return new THREE.Mesh(new THREE.PlaneGeometry(LABEL_W, LABEL_H), new THREE.MeshStandardMaterial({ roughness: 0.9 }));
+  return new THREE.Mesh(new THREE.PlaneGeometry(LABEL_W, LABEL_H), new THREE.MeshBasicMaterial({ toneMapped: false }));
+}
+
+/** Distance entre le mur et le rail des projecteurs. */
+export const TRACK_DISTANCE = 1.5;
+const fixtureMat = new THREE.MeshStandardMaterial({ color: '#161616', roughness: 0.5 });
+const UP = new THREE.Vector3(0, 1, 0);
+
+/** Projecteur suspendu au rail, braqué sur le centre de l'œuvre. Repère du mur. */
+function spotFixture(offset: number, ceiling: number): THREE.Group {
+  const fixture = new THREE.Group();
+  fixture.position.set(offset, ceiling - 0.16, TRACK_DISTANCE);
+  const head = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.055, 0.16, 16), fixtureMat);
+  head.quaternion.setFromUnitVectors(UP, new THREE.Vector3(0, ceiling - 0.16 - ART_CENTER_Y, TRACK_DISTANCE).normalize());
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.12, 8), fixtureMat);
+  stem.position.y = 0.09;
+  fixture.add(head, stem);
+  return fixture;
 }
 
 /** Accroche un tableau sur un mur, dans le repère de ce mur. */
@@ -51,11 +93,15 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
   art.position.set(cfg.offset, ART_CENTER_Y, 0);
   holder.add(art);
 
-  // Halo d'éclairage peint sur le mur (remplace un vrai projecteur, bien plus coûteux).
-  poolMaterial ??= new THREE.MeshBasicMaterial({ map: poolTexture(), transparent: true, depthWrite: false });
-  const pool = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width + 1.5, cfg.height + 1.7), poolMaterial);
-  pool.position.set(0, 0.2, 0.006);
-  pool.raycast = noRaycast;
+  // Sous une verrière, la lumière du jour suffit. Ailleurs, chaque œuvre a son projecteur :
+  // son faisceau est peint sur le mur, ce qui coûte bien moins cher qu'une vraie lampe.
+  if (!ctx.light(room.id).daylight) {
+    const pool = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width + 1.7, cfg.height + 1.9), poolMaterial(room.wall ?? style.palette.wall));
+    pool.position.set(0, 0.15, 0.006);
+    pool.raycast = noRaycast;
+    art.add(pool);
+    holder.add(spotFixture(cfg.offset, room.size[1]));
+  }
 
   const border = gap + fw;
   const body = new THREE.Mesh(
@@ -63,7 +109,7 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
     new THREE.MeshStandardMaterial({ color: style.palette.frame, roughness: 0.5 }),
   );
   body.position.z = depth / 2;
-  art.add(pool, body);
+  art.add(body);
   if (gap > 0) {
     // Caisse américaine : un vide sombre sépare la toile du cadre.
     const recess = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width + gap * 2, cfg.height + gap * 2), new THREE.MeshBasicMaterial({ color: 0x050505 }));
@@ -72,7 +118,8 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
   }
   const canvas = new THREE.Mesh(
     new THREE.PlaneGeometry(cfg.width, cfg.height),
-    new THREE.MeshStandardMaterial({ map: artworkTexture(cfg.image, cfg.width / cfg.height, ctx.base, ctx.quality, ctx.onLoad), roughness: 0.85 }),
+    // Une œuvre est toujours montrée dans ses couleurs exactes, comme sous un éclairage de musée.
+    new THREE.MeshBasicMaterial({ map: artworkTexture(cfg.image, cfg.width / cfg.height, ctx.base, ctx.quality, ctx.onLoad), toneMapped: false }),
   );
   canvas.position.z = depth + 0.002;
 
@@ -119,7 +166,7 @@ export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: T
   const card = label();
   card.position.set(side / 2 + 0.002, Math.min(cfg.plinth - 0.12, 0.8), 0);
   card.rotation.y = Math.PI / 2;
-  art.add(shape, plinth, card);
+  art.add(shape, plinth, card, groundShadow(side, side));
 
   const placed: PlacedArtwork = {
     config: cfg,

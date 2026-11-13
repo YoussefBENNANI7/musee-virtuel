@@ -182,13 +182,14 @@ function landscape(g: CanvasRenderingContext2D, w: number, h: number, r: () => n
   g.globalAlpha = 1;
 }
 
-/** Halo d'éclairage peint sur le mur derrière une œuvre (remplace un vrai projecteur, bien plus coûteux). */
+/** Halo d'un projecteur sur le mur, derrière une œuvre : le faisceau vient du plafond et s'évase vers le bas. */
 export function poolTexture(): THREE.Texture {
   const { c, g } = canvasOf(256, 256);
-  const grad = g.createRadialGradient(128, 118, 10, 128, 128, 128);
-  grad.addColorStop(0, 'rgba(255, 246, 228, 0.75)');
-  grad.addColorStop(0.55, 'rgba(255, 246, 228, 0.32)');
-  grad.addColorStop(1, 'rgba(255, 246, 228, 0)');
+  const grad = g.createRadialGradient(128, 104, 8, 128, 128, 128);
+  grad.addColorStop(0, 'rgba(255, 247, 232, 0.9)');
+  grad.addColorStop(0.45, 'rgba(255, 247, 232, 0.5)');
+  grad.addColorStop(0.8, 'rgba(255, 247, 232, 0.12)');
+  grad.addColorStop(1, 'rgba(255, 247, 232, 0)');
   g.fillStyle = grad;
   g.fillRect(0, 0, 256, 256);
   const tex = new THREE.CanvasTexture(c);
@@ -285,6 +286,39 @@ export function skyTexture(): THREE.Texture {
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
+}
+
+/**
+ * Tache de soleil sous une verrière : un carreau de lumière par vitre,
+ * séparés par l'ombre des traverses. Les bords sont adoucis.
+ */
+export function sunPatchTexture(cols: number, rows: number): THREE.Texture {
+  const cell = 96;
+  const pad = cell * 0.5;
+  const { c, g } = canvasOf(Math.round(cols * cell + pad * 2), Math.round(rows * cell + pad * 2));
+  g.filter = `blur(${Math.round(cell * 0.09)}px)`;
+  g.fillStyle = '#ffffff';
+  const gap = cell * 0.07;
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < cols; i++) {
+      g.fillRect(pad + i * cell + gap, pad + j * cell + gap, cell - gap * 2, cell - gap * 2);
+    }
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+/** Ombre douce posée au sol sous un objet. */
+export function blobTexture(): THREE.Texture {
+  const { c, g } = canvasOf(128, 128);
+  const grad = g.createRadialGradient(64, 64, 6, 64, 64, 64);
+  grad.addColorStop(0, 'rgba(0, 0, 0, 0.55)');
+  grad.addColorStop(0.5, 'rgba(0, 0, 0, 0.3)');
+  grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
 }
 
 /** Parquet à lames décalées, teinté par la couleur du style. */

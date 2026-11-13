@@ -25,7 +25,9 @@ describe('styles', () => {
 
 describe('qualité du rendu', () => {
   it('donne le rendu complet à un ordinateur et un rendu allégé à un téléphone', () => {
-    expect(chooseTier({ touch: false })).toBe('high');
+    expect(chooseTier({ touch: false })).toBe("high");
+    expect(TIERS.high.reflections).toBe(true);
+    expect(TIERS.medium.reflections).toBe(false);
     expect(chooseTier({ touch: true })).toBe('medium');
     expect(chooseTier({ touch: true, memory: 8 })).toBe('medium');
     expect(chooseTier({ touch: true, memory: 2 })).toBe('low');

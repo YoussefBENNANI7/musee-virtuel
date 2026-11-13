@@ -91,6 +91,20 @@ describe('erreurs détectées', () => {
     expect(errorsOf(museum)).toContain('Œuvre "ruban" : posée hors de la salle ou trop près d\'un mur');
   });
 
+  it('un banc posé dans un mur, ou un niveau d’éclairage hors limites', () => {
+    const museum = fixture();
+    const galerie = museum.rooms.find((r) => r.id === 'galerie')!;
+    galerie.benches = [{ position: [0, 3.6], rotated: true }, { position: [3.6, 0], rotated: true }, { position: [3.2, 0] }];
+    galerie.light = 3;
+    const errors = errorsOf(museum);
+    // Le premier banc est bien placé ; le deuxième touche le mur est ; le troisième, en long, dépasse.
+    expect(errors.filter((e) => e.includes('banc'))).toEqual([
+      'Salle "galerie" : banc n° 2 : posé hors de la salle ou trop près d\'un mur',
+      'Salle "galerie" : banc n° 3 : posé hors de la salle ou trop près d\'un mur',
+    ]);
+    expect(errors).toContain('Salle "galerie" : niveau d\'éclairage invalide (entre 0 et 2)');
+  });
+
   it('des identifiants en double et une étape de parcours inconnue', () => {
     const museum = fixture();
     painting(museum, 'petite-fugue').id = 'equilibre-no-7';

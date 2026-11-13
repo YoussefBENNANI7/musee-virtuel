@@ -35,7 +35,9 @@ export async function openMuseum(page: Page, options: OpenOptions = {}): Promise
   await page.route('**/museums/fixture/museum.json', (route) =>
     route.fulfill({ contentType: 'application/json', body: fixture }),
   );
-  await page.goto(`/?m=fixture${options.query ?? ''}`);
+  // Qualité moyenne par défaut : le reflet du sol double le temps de rendu, calculé ici par le processeur.
+  const query = options.query ?? '';
+  await page.goto(`/?m=fixture${/[?&]q=/.test(query) ? '' : '&q=medium'}${query}`);
   await page.waitForSelector('body.ready');
   return errors;
 }
