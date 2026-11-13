@@ -33,7 +33,7 @@ interface Options {
  */
 export function setupVR(o: Options) {
   const { renderer, scene, rig, camera, controls, world, app } = o;
-  const idle = { update(_dt: number) {}, refresh() {} };
+  const idle = { update(_dt: number) {}, refresh() {}, panel: new THREE.Object3D() };
   const xr = navigator.xr;
   if (!xr) return idle;
 
@@ -258,5 +258,7 @@ export function setupVR(o: Options) {
     },
     /** Redessine la fiche (changement de langue, lecture audio démarrée ou terminée). */
     refresh: drawPanel,
+    /** La fiche flottante, exposée pour les tests. */
+    panel: panel as THREE.Object3D,
   };
 }

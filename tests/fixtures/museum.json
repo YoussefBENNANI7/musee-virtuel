@@ -1,0 +1,727 @@
+{
+  "id": "fixture",
+  "name": {
+    "fr": "Musée des Horizons",
+    "en": "Horizons Museum"
+  },
+  "langs": [
+    "fr",
+    "en"
+  ],
+  "defaultLang": "fr",
+  "theme": {
+    "wall": "#f1ede6",
+    "floor": "#9a7450",
+    "ceiling": "#fbfaf7",
+    "frame": "#2b2420",
+    "accent": "#a8472a"
+  },
+  "start": {
+    "room": "hall",
+    "position": [
+      0,
+      2.5
+    ],
+    "yaw": 0
+  },
+  "rooms": [
+    {
+      "id": "hall",
+      "name": {
+        "fr": "Salle des Horizons",
+        "en": "Horizons Room"
+      },
+      "position": [
+        0,
+        0
+      ],
+      "size": [
+        12,
+        4.2,
+        9
+      ],
+      "artworks": [
+        {
+          "id": "equilibre-no-7",
+          "type": "painting",
+          "wall": "north",
+          "offset": -1.3,
+          "width": 2,
+          "height": 1.5,
+          "image": {
+            "generator": "geometric",
+            "seed": 7
+          },
+          "title": {
+            "fr": "Équilibre n° 7",
+            "en": "Balance No. 7"
+          },
+          "artist": "Hélène Varga",
+          "year": "1962",
+          "medium": {
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
+          },
+          "description": {
+            "fr": "Varga compose ses toiles comme des architectures suspendues : chaque forme semble retenir la suivante. Ici, un cercle unique déplace tout le poids de la composition vers la droite, et l'œil cherche sans cesse à rétablir l'équilibre annoncé par le titre.",
+            "en": "Varga builds her canvases like suspended architecture, each shape holding the next in place. Here a single circle shifts the whole weight of the composition to the right, and the eye keeps trying to restore the balance promised by the title."
+          }
+        },
+        {
+          "id": "petite-fugue",
+          "type": "painting",
+          "wall": "north",
+          "offset": -4.4,
+          "width": 1.1,
+          "height": 1.4,
+          "image": {
+            "generator": "geometric",
+            "seed": 31
+          },
+          "title": {
+            "fr": "Petite fugue",
+            "en": "Little Fugue"
+          },
+          "artist": "Hélène Varga",
+          "year": "1958",
+          "medium": {
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
+          },
+          "description": {
+            "fr": "Une étude de jeunesse, peinte quatre ans avant la série des Équilibres. Les formes s'y répondent encore comme les voix d'une fugue, sans qu'aucune ne domine.",
+            "en": "An early study, painted four years before the Balance series. The shapes still answer one another like the voices of a fugue, none of them taking the lead."
+          }
+        },
+        {
+          "id": "le-pays-d-avant",
+          "type": "painting",
+          "wall": "south",
+          "offset": -3,
+          "width": 2.4,
+          "height": 1.4,
+          "image": {
+            "generator": "landscape",
+            "seed": 12
+          },
+          "title": {
+            "fr": "Le pays d'avant",
+            "en": "The Country Before"
+          },
+          "artist": "Tomás Arrieta",
+          "year": "1987",
+          "medium": {
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
+          },
+          "description": {
+            "fr": "Arrieta a quitté sa vallée natale à dix-sept ans et l'a peinte de mémoire toute sa vie. Les collines changent d'un tableau à l'autre ; seul le soleil garde toujours la même place.",
+            "en": "Arrieta left his native valley at seventeen and painted it from memory all his life. The hills change from one painting to the next; only the sun always keeps its place."
+          }
+        },
+        {
+          "id": "carreaux-de-l-atelier",
+          "type": "painting",
+          "wall": "south",
+          "offset": 3,
+          "width": 1.5,
+          "height": 1.5,
+          "image": {
+            "generator": "mosaic",
+            "seed": 5
+          },
+          "title": {
+            "fr": "Carreaux de l'atelier",
+            "en": "Studio Tiles"
+          },
+          "artist": "Salma Haddou",
+          "year": "1994",
+          "medium": {
+            "fr": "Acrylique sur toile",
+            "en": "Acrylic on canvas"
+          },
+          "description": {
+            "fr": "Haddou a grandi dans l'atelier de céramique de sa mère. Elle reprend ici le motif du quart de cercle, qu'elle fait pivoter au hasard jusqu'à ce que le mur entier semble en mouvement.",
+            "en": "Haddou grew up in her mother's ceramics workshop. Here she takes the quarter-circle motif and rotates it at random until the whole wall seems to move."
+          }
+        },
+        {
+          "id": "midi-plein",
+          "type": "painting",
+          "wall": "east",
+          "offset": -2.9,
+          "width": 1.2,
+          "height": 1.6,
+          "image": {
+            "generator": "circles",
+            "seed": 9
+          },
+          "title": {
+            "fr": "Midi plein",
+            "en": "High Noon"
+          },
+          "artist": "Karim El Fassi",
+          "year": "1971",
+          "medium": {
+            "fr": "Acrylique sur toile",
+            "en": "Acrylic on canvas"
+          },
+          "description": {
+            "fr": "El Fassi disait vouloir peindre la chaleur plutôt que la lumière. Les disques se chevauchent comme les taches que laisse le soleil derrière les paupières.",
+            "en": "El Fassi said he wanted to paint heat rather than light. The discs overlap like the spots the sun leaves behind closed eyelids."
+          }
+        },
+        {
+          "id": "rive-gauche-rive-droite",
+          "type": "painting",
+          "wall": "west",
+          "offset": -2.9,
+          "width": 1.2,
+          "height": 1.6,
+          "image": {
+            "generator": "fields",
+            "seed": 44
+          },
+          "title": {
+            "fr": "Rive gauche, rive droite",
+            "en": "Left Bank, Right Bank"
+          },
+          "artist": "Anouk Deschamps",
+          "year": "1983",
+          "medium": {
+            "fr": "Acrylique sur toile",
+            "en": "Acrylic on canvas"
+          },
+          "description": {
+            "fr": "Deux masses de couleur se font face sans se toucher. Entre elles, une bande plus claire que Deschamps appelait simplement « le fleuve ».",
+            "en": "Two masses of colour face each other without touching. Between them lies a paler band that Deschamps simply called “the river”."
+          }
+        }
+      ]
+    },
+    {
+      "id": "galerie",
+      "name": {
+        "fr": "Galerie des Lignes",
+        "en": "Gallery of Lines"
+      },
+      "position": [
+        10,
+        0
+      ],
+      "size": [
+        8,
+        4.2,
+        12
+      ],
+      "wall": "#e6e6e2",
+      "artworks": [
+        {
+          "id": "partition-pour-le-vent",
+          "type": "painting",
+          "wall": "east",
+          "offset": 0,
+          "width": 2.2,
+          "height": 1.3,
+          "image": {
+            "generator": "lines",
+            "seed": 4
+          },
+          "title": {
+            "fr": "Partition pour le vent",
+            "en": "Score for the Wind"
+          },
+          "artist": "Mireille Okonjo",
+          "year": "2004",
+          "medium": {
+            "fr": "Encre et pigments sur toile",
+            "en": "Ink and pigment on canvas"
+          },
+          "description": {
+            "fr": "Des centaines de lignes tracées à main levée, sans jamais se croiser tout à fait. Okonjo travaillait en extérieur et laissait le vent dévier son geste : la toile enregistre une après-midi de météo autant qu'un dessin.",
+            "en": "Hundreds of freehand lines that never quite cross. Okonjo worked outdoors and let the wind deflect her hand: the canvas records an afternoon of weather as much as a drawing."
+          }
+        },
+        {
+          "id": "dunes-04h12",
+          "type": "painting",
+          "wall": "east",
+          "offset": -3.8,
+          "width": 1.5,
+          "height": 1,
+          "image": {
+            "generator": "landscape",
+            "seed": 23,
+            "mono": true
+          },
+          "title": {
+            "fr": "Dunes, 04 h 12",
+            "en": "Dunes, 4:12 a.m."
+          },
+          "artist": "Yuki Tanabe",
+          "year": "1999",
+          "medium": {
+            "fr": "Tirage argentique",
+            "en": "Gelatin silver print"
+          },
+          "description": {
+            "fr": "Tanabe photographiait uniquement avant l'aube, en pose longue. L'heure exacte de la prise de vue tient lieu de titre à chacune de ses images.",
+            "en": "Tanabe photographed only before dawn, with long exposures. The exact time of the shot serves as the title of each image."
+          }
+        },
+        {
+          "id": "ronds-dans-l-eau",
+          "type": "painting",
+          "wall": "east",
+          "offset": 3.8,
+          "width": 1.2,
+          "height": 1.2,
+          "image": {
+            "generator": "circles",
+            "seed": 17,
+            "mono": true
+          },
+          "title": {
+            "fr": "Ronds dans l'eau",
+            "en": "Rings on Water"
+          },
+          "artist": "Yuki Tanabe",
+          "year": "2001",
+          "medium": {
+            "fr": "Tirage argentique",
+            "en": "Gelatin silver print"
+          },
+          "description": {
+            "fr": "Une pluie fine sur un bassin, photographiée à la verticale. L'image hésite entre document et abstraction.",
+            "en": "Fine rain on a pond, photographed from directly above. The image hovers between document and abstraction."
+          }
+        },
+        {
+          "id": "maree-basse",
+          "type": "painting",
+          "wall": "north",
+          "offset": 0,
+          "width": 2,
+          "height": 1.2,
+          "image": {
+            "generator": "lines",
+            "seed": 28
+          },
+          "title": {
+            "fr": "Marée basse",
+            "en": "Low Tide"
+          },
+          "artist": "Mireille Okonjo",
+          "year": "2009",
+          "medium": {
+            "fr": "Encre et pigments sur toile",
+            "en": "Ink and pigment on canvas"
+          },
+          "description": {
+            "fr": "Les lignes se resserrent vers le bas de la toile, comme le sable ridé que la mer découvre en se retirant.",
+            "en": "The lines tighten towards the bottom of the canvas, like the rippled sand the sea uncovers as it withdraws."
+          }
+        },
+        {
+          "id": "portee",
+          "type": "painting",
+          "wall": "south",
+          "offset": 0,
+          "width": 1.2,
+          "height": 1.7,
+          "image": {
+            "generator": "lines",
+            "seed": 51
+          },
+          "title": {
+            "fr": "Portée",
+            "en": "Staff"
+          },
+          "artist": "Ingrid Solberg",
+          "year": "2012",
+          "medium": {
+            "fr": "Encre et pigments sur toile",
+            "en": "Ink and pigment on canvas"
+          },
+          "description": {
+            "fr": "Solberg, violoncelliste de formation, trace ses lignes en écoutant une seule œuvre du début à la fin. Celle-ci dure, selon elle, exactement vingt-trois minutes.",
+            "en": "Solberg, a trained cellist, draws her lines while listening to a single piece from start to finish. This one, she says, lasts exactly twenty-three minutes."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cabinet",
+      "name": {
+        "fr": "Cabinet des Couleurs",
+        "en": "Colour Cabinet"
+      },
+      "position": [
+        0,
+        -8.5
+      ],
+      "size": [
+        10,
+        4.2,
+        8
+      ],
+      "wall": "#a9573f",
+      "artworks": [
+        {
+          "id": "crepuscule-interieur",
+          "type": "painting",
+          "wall": "north",
+          "offset": -2.4,
+          "width": 1.4,
+          "height": 1.8,
+          "image": {
+            "generator": "fields",
+            "seed": 21
+          },
+          "title": {
+            "fr": "Crépuscule intérieur",
+            "en": "Inner Dusk"
+          },
+          "artist": "Idriss Belkacem",
+          "year": "1978",
+          "medium": {
+            "fr": "Acrylique sur toile",
+            "en": "Acrylic on canvas"
+          },
+          "description": {
+            "fr": "Trois bandes de couleur, aux bords volontairement incertains, se superposent comme des heures de la journée. Belkacem disait peindre « la lumière qui reste dans une pièce après qu'on a éteint ».",
+            "en": "Three bands of colour with deliberately uncertain edges are layered like hours of the day. Belkacem said he painted “the light that stays in a room after it has been switched off”."
+          }
+        },
+        {
+          "id": "aube-interieure",
+          "type": "painting",
+          "wall": "north",
+          "offset": 2.4,
+          "width": 1.4,
+          "height": 1.8,
+          "image": {
+            "generator": "fields",
+            "seed": 63
+          },
+          "title": {
+            "fr": "Aube intérieure",
+            "en": "Inner Dawn"
+          },
+          "artist": "Idriss Belkacem",
+          "year": "1979",
+          "medium": {
+            "fr": "Acrylique sur toile",
+            "en": "Acrylic on canvas"
+          },
+          "description": {
+            "fr": "Pendant du Crépuscule, peint l'année suivante. Les deux toiles ont été conçues pour être accrochées côte à côte et n'avaient jamais été séparées.",
+            "en": "The companion to Inner Dusk, painted the following year. The two canvases were designed to hang side by side and have never been separated."
+          }
+        },
+        {
+          "id": "soleils-multiples",
+          "type": "painting",
+          "wall": "west",
+          "offset": 0,
+          "width": 1.5,
+          "height": 1.5,
+          "image": {
+            "generator": "circles",
+            "seed": 36
+          },
+          "title": {
+            "fr": "Soleils multiples",
+            "en": "Many Suns"
+          },
+          "artist": "Karim El Fassi",
+          "year": "1974",
+          "medium": {
+            "fr": "Acrylique sur toile",
+            "en": "Acrylic on canvas"
+          },
+          "description": {
+            "fr": "La toile la plus joyeuse d'El Fassi, peinte à la naissance de sa fille. Il y a exactement douze disques, un par mois de l'année.",
+            "en": "El Fassi's most joyful canvas, painted when his daughter was born. There are exactly twelve discs, one for each month of the year."
+          }
+        },
+        {
+          "id": "zellige-imaginaire",
+          "type": "painting",
+          "wall": "east",
+          "offset": 0,
+          "width": 1.6,
+          "height": 1.2,
+          "image": {
+            "generator": "mosaic",
+            "seed": 40
+          },
+          "title": {
+            "fr": "Zellige imaginaire",
+            "en": "Imaginary Zellige"
+          },
+          "artist": "Salma Haddou",
+          "year": "2002",
+          "medium": {
+            "fr": "Acrylique sur toile",
+            "en": "Acrylic on canvas"
+          },
+          "description": {
+            "fr": "Haddou invente ici un carrelage qui ne pourrait pas exister : aucun motif ne s'y répète, alors que tout l'art du zellige repose sur la répétition.",
+            "en": "Here Haddou invents a tiling that could not exist: no motif repeats, although the whole art of zellige rests on repetition."
+          }
+        }
+      ]
+    },
+    {
+      "id": "rotonde",
+      "name": {
+        "fr": "Salon des Sculptures",
+        "en": "Sculpture Room"
+      },
+      "position": [
+        -10.5,
+        0
+      ],
+      "size": [
+        9,
+        4.2,
+        9
+      ],
+      "wall": "#2f3c47",
+      "artworks": [
+        {
+          "id": "noeud-sans-fin",
+          "type": "sculpture",
+          "position": [
+            0,
+            0
+          ],
+          "height": 1.5,
+          "plinth": 0.4,
+          "model": {
+            "generator": "knot",
+            "seed": 3
+          },
+          "material": "bronze",
+          "title": {
+            "fr": "Nœud sans fin",
+            "en": "Endless Knot"
+          },
+          "artist": "Paolo Venier",
+          "year": "1991",
+          "medium": {
+            "fr": "Bronze",
+            "en": "Bronze"
+          },
+          "description": {
+            "fr": "Une seule ligne de bronze qui se referme sur elle-même. Venier demandait qu'on en fasse le tour : la sculpture, disait-il, n'a ni face ni dos.",
+            "en": "A single line of bronze closing on itself. Venier asked viewers to walk around it: the sculpture, he said, has neither front nor back."
+          }
+        },
+        {
+          "id": "galet-qui-respire",
+          "type": "sculpture",
+          "position": [
+            -2.7,
+            -2.7
+          ],
+          "height": 0.6,
+          "plinth": 1,
+          "model": {
+            "generator": "blob",
+            "seed": 8
+          },
+          "material": "marble",
+          "title": {
+            "fr": "Galet qui respire",
+            "en": "Breathing Pebble"
+          },
+          "artist": "Noor Rahimi",
+          "year": "2015",
+          "medium": {
+            "fr": "Marbre",
+            "en": "Marble"
+          },
+          "description": {
+            "fr": "Rahimi polit ses marbres à la main pendant des mois, jusqu'à ce que la pierre semble molle. Elle refuse toute arête vive.",
+            "en": "Rahimi polishes her marbles by hand for months, until the stone looks soft. She rejects any sharp edge."
+          }
+        },
+        {
+          "id": "orbites",
+          "type": "sculpture",
+          "position": [
+            -2.7,
+            2.7
+          ],
+          "height": 0.9,
+          "plinth": 0.9,
+          "model": {
+            "generator": "rings",
+            "seed": 14
+          },
+          "material": "patina",
+          "title": {
+            "fr": "Orbites",
+            "en": "Orbits"
+          },
+          "artist": "Lucien Morvan",
+          "year": "1968",
+          "medium": {
+            "fr": "Bronze patiné",
+            "en": "Patinated bronze"
+          },
+          "description": {
+            "fr": "Trois anneaux qui ne se touchent qu'en deux points. Morvan, ancien horloger, calculait ses équilibres au dixième de millimètre.",
+            "en": "Three rings that touch at only two points. Morvan, a former watchmaker, calculated his balances to a tenth of a millimetre."
+          }
+        },
+        {
+          "id": "totem-rouge",
+          "type": "sculpture",
+          "position": [
+            2.7,
+            2.7
+          ],
+          "height": 1.2,
+          "plinth": 0.6,
+          "model": {
+            "generator": "stack",
+            "seed": 6
+          },
+          "material": "lacquer",
+          "title": {
+            "fr": "Totem rouge",
+            "en": "Red Totem"
+          },
+          "artist": "Salma Haddou",
+          "year": "2008",
+          "medium": {
+            "fr": "Bois laqué",
+            "en": "Lacquered wood"
+          },
+          "description": {
+            "fr": "Six blocs empilés, chacun légèrement tourné par rapport au précédent. C'est l'unique sculpture de Haddou, réalisée avec des chutes de l'atelier familial.",
+            "en": "Six stacked blocks, each turned slightly from the one below. It is Haddou's only sculpture, made from offcuts of the family workshop."
+          },
+          "color": "#8f231c"
+        },
+        {
+          "id": "ruban",
+          "type": "sculpture",
+          "position": [
+            2.7,
+            -2.7
+          ],
+          "height": 1,
+          "plinth": 0.8,
+          "model": {
+            "generator": "ribbon",
+            "seed": 11
+          },
+          "material": "bronze",
+          "title": {
+            "fr": "Ruban",
+            "en": "Ribbon"
+          },
+          "artist": "Paolo Venier",
+          "year": "1996",
+          "medium": {
+            "fr": "Bronze",
+            "en": "Bronze"
+          },
+          "description": {
+            "fr": "Une étude pour le Nœud sans fin, plus libre et plus nerveuse. Venier la gardait sur son bureau.",
+            "en": "A study for the Endless Knot, freer and more restless. Venier kept it on his desk."
+          }
+        },
+        {
+          "id": "nocturne-en-quatre-temps",
+          "type": "painting",
+          "wall": "west",
+          "offset": 0,
+          "width": 2.2,
+          "height": 1.4,
+          "image": {
+            "generator": "geometric",
+            "seed": 52
+          },
+          "title": {
+            "fr": "Nocturne en quatre temps",
+            "en": "Nocturne in Four Beats"
+          },
+          "artist": "Hélène Varga",
+          "year": "1969",
+          "medium": {
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
+          },
+          "description": {
+            "fr": "La seule toile de Varga conçue pour un mur sombre. Elle l'a peinte pour accompagner les sculptures de son ami Lucien Morvan.",
+            "en": "The only Varga canvas designed for a dark wall. She painted it to accompany the sculptures of her friend Lucien Morvan."
+          }
+        }
+      ]
+    }
+  ],
+  "doors": [
+    {
+      "room": "hall",
+      "wall": "north",
+      "offset": 3.5,
+      "width": 2.2
+    },
+    {
+      "room": "hall",
+      "wall": "east",
+      "offset": 0,
+      "width": 2.2
+    },
+    {
+      "room": "hall",
+      "wall": "west",
+      "offset": 0,
+      "width": 2.2
+    }
+  ],
+  "tours": [
+    {
+      "id": "essentiels",
+      "name": {
+        "fr": "Les essentiels",
+        "en": "The Essentials"
+      },
+      "description": {
+        "fr": "Cinq œuvres pour découvrir le musée en dix minutes.",
+        "en": "Five works to discover the museum in ten minutes."
+      },
+      "stops": [
+        "equilibre-no-7",
+        "le-pays-d-avant",
+        "crepuscule-interieur",
+        "partition-pour-le-vent",
+        "noeud-sans-fin"
+      ]
+    },
+    {
+      "id": "couleur",
+      "name": {
+        "fr": "La couleur avant tout",
+        "en": "Colour First"
+      },
+      "description": {
+        "fr": "De la chaleur de midi au rouge laqué : six artistes qui font de la couleur leur sujet.",
+        "en": "From midday heat to lacquered red: six artists who make colour their subject."
+      },
+      "stops": [
+        "midi-plein",
+        "carreaux-de-l-atelier",
+        "aube-interieure",
+        "soleils-multiples",
+        "zellige-imaginaire",
+        "totem-rouge"
+      ]
+    }
+  ]
+}

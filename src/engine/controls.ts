@@ -113,6 +113,8 @@ export class Controls {
 
   /** Place le visiteur sans animation. */
   teleport(x: number, z: number, yaw: number) {
+    // Un déplacement en douceur encore en cours ramènerait le visiteur à son ancienne destination.
+    this.glide = null;
     this.camera.position.set(x, EYE_HEIGHT, z);
     this.yaw = yaw;
     this.pitch = 0;

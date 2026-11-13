@@ -386,7 +386,24 @@ export function startVisit(app: App): View {
       renderer.render(scene, camera);
       return canvas.toDataURL('image/jpeg', 0.86);
     };
-    Object.assign(window, { __museum: { controls, world, camera, rig, renderer, thumb, pixelRatio: () => pixelRatio } });
+    /** Place le visiteur face à une œuvre, à la distance voulue. */
+    const standBefore = (id: string, distance = 3) => {
+      const view = world.viewpoint(byId.get(id)!, camera.position, distance);
+      controls.teleport(view.pos.x, view.pos.z, view.yaw);
+    };
+    /** Position à l'écran, en pixels, d'un point cliquable de l'œuvre. */
+    const screenOf = (id: string) => {
+      const art = byId.get(id)!;
+      const target = art.center.clone();
+      // Une sculpture peut être ajourée en son centre : on vise son socle.
+      if (art.config.type === 'sculpture') target.y = art.config.plinth / 2;
+      camera.updateMatrixWorld();
+      const v = target.project(camera);
+      return { x: ((v.x + 1) / 2) * canvas.clientWidth, y: ((1 - v.y) / 2) * canvas.clientHeight };
+    };
+    Object.assign(window, {
+      __museum: { controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
+    });
   }
 
   return {
