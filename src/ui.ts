@@ -1,4 +1,6 @@
 import type { AudioGuide } from './audio';
+import type { Quality } from './engine/quality';
+import type { Style } from './engine/styles';
 import type { MuseumConfig } from './engine/types';
 
 /** Textes de l'interface. Les textes du musée, eux, viennent de sa configuration. */
@@ -31,6 +33,7 @@ export const UI: Record<string, Record<string, string>> = {
     noWebgl: 'La visite en 3D n’est pas disponible sur cet appareil. Voici le musée en vue simplifiée.',
     height: 'H.',
     error: 'Impossible de charger ce musée.',
+    configErrors: 'La configuration de ce musée contient des erreurs',
   },
   en: {
     help: 'Drag to look · WASD or arrows to move · click an artwork',
@@ -60,6 +63,7 @@ export const UI: Record<string, Record<string, string>> = {
     noWebgl: 'The 3D visit is not available on this device. Here is the museum in simple view.',
     height: 'H.',
     error: 'This museum could not be loaded.',
+    configErrors: 'This museum’s configuration contains errors',
   },
 };
 
@@ -68,6 +72,10 @@ export const $ = <T extends HTMLElement>(id: string) => document.getElementById(
 /** Ce que partagent la visite 3D et la vue simplifiée. */
 export interface App {
   museum: MuseumConfig;
+  /** Style d'architecture effectif, couleurs du musée comprises. */
+  style: Style;
+  /** Niveau de qualité du rendu pour cet appareil. */
+  quality: Quality;
   /** Adresse du dossier du musée, pour résoudre images et sons. */
   base: string;
   lang: string;

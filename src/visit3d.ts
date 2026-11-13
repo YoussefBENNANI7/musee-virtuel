@@ -14,9 +14,11 @@ export function startVisit(app: App): View {
   const touch = matchMedia('(pointer: coarse)').matches;
 
   const canvas = $<HTMLCanvasElement>('scene');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  // La définition de l'image baisse d'elle-même si l'appareil peine (voir la boucle de rendu).
-  let pixelRatio = Math.min(devicePixelRatio, 2);
+  const { style, quality } = app;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: quality.antialias, powerPreference: 'high-performance' });
+  // La définition de l'image part du plafond fixé par le niveau de qualité, puis baisse
+  // d'elle-même si l'appareil peine (voir la boucle de rendu).
+  let pixelRatio = Math.min(devicePixelRatio, quality.maxPixelRatio);
   renderer.setPixelRatio(pixelRatio);
   renderer.xr.enabled = true;
 
@@ -28,7 +30,7 @@ export function startVisit(app: App): View {
   renderer.toneMapping = THREE.NeutralToneMapping;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(museum.theme.ceiling);
+  scene.background = new THREE.Color(style.palette.ceiling);
   scene.add(new THREE.HemisphereLight(0xffffff, 0xe9e1d6, 2.7));
   const sun = new THREE.DirectionalLight(0xfff3e0, 1.1);
   sun.position.set(2, 6, 3);
@@ -42,7 +44,7 @@ export function startVisit(app: App): View {
   scene.add(rig);
   const controls = new Controls(camera, canvas, $('joystick'));
 
-  const world = buildWorld(museum, app.lang, app.base, env, invalidate);
+  const world = buildWorld(museum, { lang: app.lang, base: app.base, style, quality, env, onLoad: invalidate });
   scene.add(world.group);
   controls.walkable = world.walkable;
   const first = world.spawn(museum.start.room);
@@ -402,7 +404,7 @@ export function startVisit(app: App): View {
       return { x: ((v.x + 1) / 2) * canvas.clientWidth, y: ((1 - v.y) / 2) * canvas.clientHeight };
     };
     Object.assign(window, {
-      __museum: { controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
+      __museum: { style: style.id, quality: quality.tier, controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
     });
   }
 

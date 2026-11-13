@@ -3,6 +3,9 @@ export type L10n = Record<string, string>;
 
 export type WallId = 'north' | 'south' | 'east' | 'west';
 
+/** Style d'architecture du musée : voir styles.ts. */
+export type StyleId = 'contemporary' | 'classic';
+
 export type PaintingGenerator = 'geometric' | 'fields' | 'lines' | 'circles' | 'mosaic' | 'landscape';
 export type SculptureGenerator = 'knot' | 'blob' | 'rings' | 'stack' | 'ribbon';
 export type SculptureMaterial = 'bronze' | 'marble' | 'patina' | 'lacquer';
@@ -49,6 +52,15 @@ export interface SculptureConfig extends ArtworkBase {
 
 export type ArtworkConfig = PaintingConfig | SculptureConfig;
 
+export type CeilingConfig =
+  | { type: 'flat' }
+  /** Verrière centrale. `margin` : distance entre la verrière et les murs, en mètres. */
+  | { type: 'skylight'; margin?: number };
+
+/**
+ * Une salle est un rectangle du plan. Les salles voisines se touchent : l'épaisseur
+ * des murs, définie par le style, est prise à parts égales de chaque côté de la limite.
+ */
 export interface RoomConfig {
   id: string;
   name: L10n;
@@ -56,8 +68,10 @@ export interface RoomConfig {
   position: [number, number];
   /** Largeur (x), hauteur (y), profondeur (z), en mètres. */
   size: [number, number, number];
-  /** Couleur des murs, si différente de celle du thème. */
+  /** Couleur des murs, si différente de celle du style. */
   wall?: string;
+  /** Plafond plat par défaut. */
+  ceiling?: CeilingConfig;
   artworks: ArtworkConfig[];
 }
 
@@ -67,6 +81,8 @@ export interface DoorConfig {
   wall: WallId;
   offset: number;
   width: number;
+  /** Hauteur en mètres, ou "full" pour une ouverture jusqu'au plafond. Par défaut : celle du style. */
+  height?: number | 'full';
 }
 
 /** Parcours thématique : une suite d'œuvres à voir dans l'ordre. */
@@ -78,12 +94,26 @@ export interface TourConfig {
   stops: string[];
 }
 
+/** Couleurs que le musée peut imposer par-dessus celles de son style. */
+export interface ThemeConfig {
+  wall?: string;
+  floor?: string;
+  ceiling?: string;
+  trim?: string;
+  frame?: string;
+  plinth?: string;
+  /** Couleur de l'identité du musée : boutons, liens, repères. */
+  accent?: string;
+}
+
 export interface MuseumConfig {
   id: string;
   name: L10n;
   langs: string[];
   defaultLang: string;
-  theme: { wall: string; floor: string; ceiling: string; frame: string; accent: string };
+  /** Style d'architecture. Par défaut : "contemporary". */
+  style?: StyleId;
+  theme?: ThemeConfig;
   start: { room: string; position: [number, number]; yaw: number };
   rooms: RoomConfig[];
   doors: DoorConfig[];

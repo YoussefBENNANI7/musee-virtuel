@@ -104,7 +104,7 @@ export function setupVR(o: Options) {
   function drawPanel() {
     if (!current) return;
     const a = current.config;
-    const accent = app.museum.theme.accent;
+    const accent = app.style.palette.accent;
     const buttonTop = PANEL_H * (1 - BUTTON_ZONE);
     g.fillStyle = '#fbfaf6';
     g.fillRect(0, 0, PANEL_W, PANEL_H);
@@ -160,7 +160,7 @@ export function setupVR(o: Options) {
   const rotation = new THREE.Matrix4();
   const rayLine = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, 0, -1)]);
   const reticleGeo = new THREE.RingGeometry(0.16, 0.22, 40).rotateX(-Math.PI / 2);
-  const reticleMat = new THREE.MeshBasicMaterial({ color: app.museum.theme.accent, toneMapped: false });
+  const reticleMat = new THREE.MeshBasicMaterial({ color: app.style.palette.accent, toneMapped: false });
 
   function cast(controller: THREE.Object3D) {
     rotation.identity().extractRotation(controller.matrixWorld);

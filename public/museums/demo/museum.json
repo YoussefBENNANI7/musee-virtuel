@@ -9,11 +9,8 @@
     "en"
   ],
   "defaultLang": "fr",
+  "style": "contemporary",
   "theme": {
-    "wall": "#f1ede6",
-    "floor": "#9a7450",
-    "ceiling": "#fbfaf7",
-    "frame": "#2b2420",
     "accent": "#a8472a"
   },
   "start": {
@@ -667,7 +664,11 @@
             "en": "The only Varga canvas designed for a dark wall. She painted it to accompany the sculptures of her friend Lucien Morvan."
           }
         }
-      ]
+      ],
+      "ceiling": {
+        "type": "skylight",
+        "margin": 1.6
+      }
     }
   ],
   "doors": [

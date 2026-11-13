@@ -9,6 +9,7 @@
     "en"
   ],
   "defaultLang": "fr",
+  "style": "classic",
   "theme": {
     "wall": "#f1ede6",
     "floor": "#9a7450",

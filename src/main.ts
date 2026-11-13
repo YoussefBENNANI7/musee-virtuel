@@ -1,9 +1,19 @@
 import './style.css';
 import { AudioGuide } from './audio';
+import { detectQuality } from './engine/quality';
+import { resolveStyle } from './engine/styles';
 import { tr, type MuseumConfig } from './engine/types';
+import { validateMuseum, type Issue } from './engine/validate';
 import { startSimple } from './simple';
 import { $, UI, type App } from './ui';
 import { startVisit } from './visit3d';
+
+/** La configuration du musée contient des erreurs qui empêchent de le construire. */
+class ConfigError extends Error {
+  constructor(readonly issues: Issue[]) {
+    super('configuration invalide');
+  }
+}
 
 function hasWebGL(): boolean {
   try {
@@ -22,15 +32,26 @@ async function start() {
   if (!res.ok) throw new Error(`museum.json: ${res.status}`);
   const museum: MuseumConfig = await res.json();
 
+  // ?style=… montre le même musée dans un autre style d'architecture, sans toucher à sa configuration.
+  const style = resolveStyle(museum, params.get('style'));
+  const issues = validateMuseum(museum, style);
+  for (const issue of issues) {
+    (issue.level === 'error' ? console.error : console.warn)(`[musée] ${issue.where} : ${issue.message}`);
+  }
+  const errors = issues.filter((i) => i.level === 'error');
+  if (errors.length) throw new ConfigError(errors);
+
   const browserLang = navigator.language.slice(0, 2);
   const app: App = {
     museum,
+    style,
+    quality: detectQuality(params),
     base,
     lang: museum.langs.includes(browserLang) ? browserLang : museum.defaultLang,
     ui: () => UI[app.lang] ?? UI.en,
     guide: new AudioGuide(),
   };
-  document.documentElement.style.setProperty('--accent', museum.theme.accent);
+  document.documentElement.style.setProperty('--accent', style.palette.accent);
 
   // La vue simplifiée est choisie par le visiteur (?vue=simple) ou imposée si la 3D est impossible.
   const webgl = hasWebGL();
@@ -68,6 +89,25 @@ async function start() {
 
 start().catch((err) => {
   console.error(err);
-  const lang = navigator.language.startsWith('fr') ? 'fr' : 'en';
-  $('help').textContent = UI[lang].error;
+  const ui = UI[navigator.language.startsWith('fr') ? 'fr' : 'en'];
+  // Le détail des erreurs n'est montré qu'à la personne qui configure le musée :
+  // pendant le développement, ou avec ?debug dans l'adresse. Un visiteur voit un message simple.
+  const detailed = import.meta.env.DEV || new URLSearchParams(location.search).has('debug');
+  if (err instanceof ConfigError && detailed) {
+    const box = $('config-errors');
+    const title = document.createElement('h2');
+    title.textContent = ui.configErrors;
+    const list = document.createElement('ul');
+    for (const issue of err.issues) {
+      const item = document.createElement('li');
+      const where = document.createElement('strong');
+      where.textContent = issue.where;
+      item.append(where, ` : ${issue.message}`);
+      list.append(item);
+    }
+    box.replaceChildren(title, list);
+    box.hidden = false;
+  } else {
+    $('help').textContent = ui.error;
+  }
 });

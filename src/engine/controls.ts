@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { EYE_HEIGHT } from './world';
+import { EYE_HEIGHT } from './layout';
 
 const SPEED = 2.4; // m/s
 const TURN_SPEED = 1.6; // rad/s, rotation au clavier

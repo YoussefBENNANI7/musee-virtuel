@@ -1,6 +1,6 @@
 import type { MuseumConfig } from './types';
 import { tr } from './types';
-import { wallFrame } from './world';
+import { wallFrame } from './layout';
 
 const NS = 'http://www.w3.org/2000/svg';
 

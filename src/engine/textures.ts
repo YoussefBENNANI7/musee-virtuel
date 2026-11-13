@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { TIERS, type Quality } from './quality';
 import type { ImageSource } from './types';
 
 /** Générateur pseudo-aléatoire déterministe : une même graine donne la même œuvre. */
@@ -195,11 +196,13 @@ export function poolTexture(): THREE.Texture {
   return tex;
 }
 
-/** Dessine un tableau fictif à partir de sa graine. */
-export function paintingCanvas(image: Extract<ImageSource, { generator: string }>, ratio: number): HTMLCanvasElement {
+/** Dessine un tableau fictif à partir de sa graine. `size` : largeur de l'image produite, en pixels. */
+export function paintingCanvas(image: Extract<ImageSource, { generator: string }>, ratio: number, size = 1024): HTMLCanvasElement {
+  // Le dessin est toujours composé sur 1024 unités de large, puis mis à l'échelle de l'image demandée.
   const w = 1024;
   const h = Math.round(w / ratio);
-  const { c, g } = canvasOf(w, h);
+  const { c, g } = canvasOf(size, Math.round(size / ratio));
+  g.scale(size / w, size / w);
   const r = rng(image.seed);
   const picked = PALETTES[Math.floor(r() * PALETTES.length)];
   const p = image.mono ? MONO : picked;
@@ -209,18 +212,83 @@ export function paintingCanvas(image: Extract<ImageSource, { generator: string }
 }
 
 /** Texture d'une œuvre : image fournie par le musée, ou tableau fictif généré. */
-export function artworkTexture(image: ImageSource, ratio: number, base: string, onLoad?: () => void): THREE.Texture {
+export function artworkTexture(image: ImageSource, ratio: number, base: string, quality: Quality, onLoad?: () => void): THREE.Texture {
   const tex =
     'src' in image
       ? new THREE.TextureLoader().load(new URL(image.src, base).href, onLoad)
-      : new THREE.CanvasTexture(paintingCanvas(image, ratio));
+      : new THREE.CanvasTexture(paintingCanvas(image, ratio, quality.textureSize));
   tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 8;
+  tex.anisotropy = quality.anisotropy;
   return tex;
 }
 
-/** Parquet à chevrons simples, teinté par la couleur du thème. */
-export function floorTexture(color: string): THREE.Texture {
+/** Sol à motif répétable. */
+function tiling(c: HTMLCanvasElement, quality: Quality): THREE.Texture {
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = quality.anisotropy;
+  return tex;
+}
+
+/**
+ * Béton ciré clair : une dalle de trois mètres de côté, légèrement nuagée,
+ * bordée d'un fin joint de sciage. La texture se répète d'une dalle à l'autre.
+ */
+export function concreteTexture(color: string, quality: Quality = TIERS.high): THREE.Texture {
+  const size = quality.textureSize;
+  const { c, g } = canvasOf(size, size);
+  const r = rng(41);
+  g.fillStyle = color;
+  g.fillRect(0, 0, size, size);
+  // Nuages : de grandes taches floues, plus claires ou plus sombres. Dessinées aussi
+  // de l'autre côté du bord, elles se raccordent quand la texture se répète.
+  g.filter = `blur(${Math.round(size * 0.05)}px)`;
+  for (let i = 0; i < 40; i++) {
+    const x = r() * size;
+    const y = r() * size;
+    const rad = size * (0.05 + r() * 0.12);
+    g.fillStyle = r() > 0.5 ? '#ffffff' : '#000000';
+    g.globalAlpha = 0.01 + r() * 0.018;
+    for (const dx of [-size, 0, size]) {
+      for (const dy of [-size, 0, size]) {
+        g.beginPath();
+        g.arc(x + dx, y + dy, rad, 0, Math.PI * 2);
+        g.fill();
+      }
+    }
+  }
+  g.filter = 'none';
+  // Grain fin du béton.
+  for (let i = 0; i < size * 14; i++) {
+    g.fillStyle = r() > 0.5 ? '#ffffff' : '#000000';
+    g.globalAlpha = 0.03 + r() * 0.05;
+    g.fillRect(r() * size, r() * size, 1.5, 1.5);
+  }
+  // Joint de sciage sur deux bords : la répétition dessine le quadrillage des dalles.
+  g.globalAlpha = 0.16;
+  g.fillStyle = '#000000';
+  g.fillRect(0, 0, size, Math.max(1.5, size / 400));
+  g.fillRect(0, 0, Math.max(1.5, size / 400), size);
+  g.globalAlpha = 1;
+  return tiling(c, quality);
+}
+
+/** Ciel vu à travers une verrière : un blanc lumineux à peine bleuté. */
+export function skyTexture(): THREE.Texture {
+  const { c, g } = canvasOf(64, 64);
+  const grad = g.createLinearGradient(0, 0, 64, 64);
+  grad.addColorStop(0, '#ffffff');
+  grad.addColorStop(1, '#e6f0f8');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 64, 64);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+/** Parquet à lames décalées, teinté par la couleur du style. */
+export function parquetTexture(color: string, quality: Quality = TIERS.high): THREE.Texture {
   const { c, g } = canvasOf(512, 512);
   const r = rng(99);
   g.fillStyle = color;
@@ -239,15 +307,11 @@ export function floorTexture(color: string): THREE.Texture {
     for (let x = -256; x < 512; x += 256) g.fillRect(x + shift, row * plank, 1.5, plank);
   }
   g.globalAlpha = 1;
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.anisotropy = 8;
-  return tex;
+  return tiling(c, quality);
 }
 
 /** Cartel posé à côté de l'œuvre. */
-export function labelTexture(title: string, artist: string, year: string): THREE.Texture {
+export function labelTexture(title: string, artist: string, year: string, quality: Quality = TIERS.high): THREE.Texture {
   const { c, g } = canvasOf(512, 256);
   g.fillStyle = '#fbfaf6';
   g.fillRect(0, 0, 512, 256);
@@ -261,6 +325,6 @@ export function labelTexture(title: string, artist: string, year: string): THREE
   g.fillText(year, 32, 190, 448);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 8;
+  tex.anisotropy = quality.anisotropy;
   return tex;
 }
