@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { imageUrl } from './images';
 import { TIERS, type Quality } from './quality';
 import type { ImageSource } from './types';
 
@@ -216,7 +217,9 @@ export function paintingCanvas(image: Extract<ImageSource, { generator: string }
 export function artworkTexture(image: ImageSource, ratio: number, base: string, quality: Quality, onLoad?: () => void): THREE.Texture {
   const tex =
     'src' in image
-      ? new THREE.TextureLoader().load(new URL(image.src, base).href, onLoad)
+      ? new THREE.TextureLoader().load(imageUrl(image, base, quality.imageSize), onLoad, undefined, () =>
+          console.error(`[musée] image introuvable : ${image.src}`),
+        )
       : new THREE.CanvasTexture(paintingCanvas(image, ratio, quality.textureSize));
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = quality.anisotropy;

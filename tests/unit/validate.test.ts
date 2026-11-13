@@ -141,6 +141,16 @@ describe('avertissements', () => {
     expect(errorsOf(museum)).toEqual([]);
   });
 
+  it('un tableau dont les proportions ne sont plus celles de son image', () => {
+    const museum = fixture();
+    // « Portée » est accrochée avec les proportions de son image (300 × 450) : aucun avertissement.
+    expect(warningsOf(museum)).toEqual([]);
+    painting(museum, 'portee').width = 1.5;
+    expect(warningsOf(museum)).toEqual([
+      'Œuvre "portee" : ses proportions ne sont pas celles de son image, qui sera déformée : relancez « npm run images »',
+    ]);
+  });
+
   it('deux tableaux qui se recouvrent', () => {
     const museum = fixture();
     painting(museum, 'petite-fugue').offset = -2.4;

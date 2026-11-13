@@ -136,7 +136,7 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
       translated(where, 'technique', art.medium);
       translated(where, 'description', art.description);
       if (!art.artist) warning(where, 'artiste manquant');
-      if (art.type === 'painting') checkPainting(art, room, layout, style, where, error);
+      if (art.type === 'painting') checkPainting(art, room, layout, style, where, error, warning);
       else if (art.type === 'sculpture') checkSculpture(art, room, half, where, error);
       else error(where, `type inconnu : "${(art as ArtworkConfig).type}"`);
     }
@@ -168,6 +168,7 @@ function checkPainting(
   style: Style,
   where: string,
   error: Report,
+  warning: Report,
 ) {
   if (!WALLS.includes(art.wall)) return error(where, 'mur inconnu (north, south, east ou west)');
   if (!(art.width > 0 && art.height > 0)) return error(where, 'dimensions invalides');
@@ -183,6 +184,13 @@ function checkPainting(
   const image = art.image as { src?: unknown; generator?: unknown } | undefined;
   if (typeof image?.src === 'string') {
     if (!image.src.trim()) error(where, 'image : chemin vide');
+    const { width, height } = image as { width?: number; height?: number };
+    if (width !== undefined || height !== undefined) {
+      if (!(width! > 0 && height! > 0)) error(where, 'image : dimensions invalides');
+      else if (Math.abs(art.width / art.height / (width! / height!) - 1) > 0.02) {
+        warning(where, 'ses proportions ne sont pas celles de son image, qui sera déformée : relancez « npm run images »');
+      }
+    }
   } else if (!PAINTING_GENERATORS.includes(image?.generator as string)) {
     error(where, 'image : indiquez "src" (fichier) ou un "generator" connu');
   }

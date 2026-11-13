@@ -14,14 +14,16 @@ export interface Quality {
   textureSize: number;
   /** Netteté des textures vues en biais (sols, tableaux vus de côté). */
   anisotropy: number;
+  /** Taille des images des œuvres chargées dans la visite : grand côté, en pixels. */
+  imageSize: number;
   /** Reflet du musée dans le sol. */
   reflections: boolean;
 }
 
 export const TIERS: Record<Tier, Quality> = {
-  high: { tier: 'high', maxPixelRatio: 2, antialias: true, textureSize: 1024, anisotropy: 8, reflections: true },
-  medium: { tier: 'medium', maxPixelRatio: 1.5, antialias: true, textureSize: 1024, anisotropy: 4, reflections: false },
-  low: { tier: 'low', maxPixelRatio: 1, antialias: false, textureSize: 512, anisotropy: 2, reflections: false },
+  high: { tier: 'high', maxPixelRatio: 2, antialias: true, textureSize: 1024, anisotropy: 8, imageSize: 1600, reflections: true },
+  medium: { tier: 'medium', maxPixelRatio: 1.5, antialias: true, textureSize: 1024, anisotropy: 4, imageSize: 1024, reflections: false },
+  low: { tier: 'low', maxPixelRatio: 1, antialias: false, textureSize: 512, anisotropy: 2, imageSize: 640, reflections: false },
 };
 
 export interface Device {

@@ -21,6 +21,8 @@ export interface PlacedArtwork {
   normal?: THREE.Vector3;
   /** Cartel : son texte est redessiné à chaque changement de langue. */
   label: THREE.Mesh;
+  /** Faux tant que l'image de l'œuvre n'a pas fini de charger. */
+  ready: boolean;
   /** Pour une sculpture : rayon au sol que le visiteur doit contourner. */
   obstacle?: { x: number; z: number; r: number };
 }
@@ -116,11 +118,9 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
     recess.position.z = depth + 0.001;
     art.add(recess);
   }
-  const canvas = new THREE.Mesh(
-    new THREE.PlaneGeometry(cfg.width, cfg.height),
-    // Une œuvre est toujours montrée dans ses couleurs exactes, comme sous un éclairage de musée.
-    new THREE.MeshBasicMaterial({ map: artworkTexture(cfg.image, cfg.width / cfg.height, ctx.base, ctx.quality, ctx.onLoad), toneMapped: false }),
-  );
+  // Une œuvre est toujours montrée dans ses couleurs exactes, comme sous un éclairage de musée.
+  const surface = new THREE.MeshBasicMaterial({ toneMapped: false });
+  const canvas = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width, cfg.height), surface);
   canvas.position.z = depth + 0.002;
 
   const card = label();
@@ -135,7 +135,21 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
     depth: 0,
     normal: frame.normal,
     label: card,
+    ready: !('src' in cfg.image),
   };
+  if ('src' in cfg.image) {
+    // Le fichier arrive après la construction : en attendant, la toile reste d'un gris neutre.
+    surface.color.set('#d9d5cd');
+    const texture = artworkTexture(cfg.image, cfg.width / cfg.height, ctx.base, ctx.quality, () => {
+      surface.map = texture;
+      surface.color.set('#ffffff');
+      surface.needsUpdate = true;
+      placed.ready = true;
+      ctx.onLoad();
+    });
+  } else {
+    surface.map = artworkTexture(cfg.image, cfg.width / cfg.height, ctx.base, ctx.quality);
+  }
   art.userData.artwork = placed;
   return placed;
 }
@@ -175,6 +189,7 @@ export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: T
     span: footprint,
     depth: footprint / 2,
     label: card,
+    ready: true,
     obstacle: { x, z, r: side * 0.71 + 0.25 },
   };
   art.userData.artwork = placed;

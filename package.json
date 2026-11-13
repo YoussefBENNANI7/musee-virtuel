@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "check": "tsc --noEmit && vitest run",
-    "vignettes": "node scripts/vignettes.mjs"
+    "vignettes": "node scripts/vignettes.mjs",
+    "images": "node scripts/images.mjs"
   },
   "dependencies": {
     "three": "^0.187.0"
@@ -20,6 +21,7 @@
     "@types/node": "^26.6.6",
     "@types/three": "^0.187.0",
     "iwer": "^2.8.0",
+    "sharp": "^0.35.5",
     "typescript": "^7.0.2",
     "vite": "^8.3.8",
     "vitest": "^5.1.0"

@@ -7,12 +7,16 @@ import { fileURLToPath } from 'node:url';
  * du musée de démonstration, pour que les tests ne cassent pas quand la démo change.
  */
 const fixture = readFileSync(fileURLToPath(new URL('../fixtures/museum.json', import.meta.url)), 'utf8');
+/** Image servie pour toute œuvre du musée de test dont l'image est un fichier (le tableau « Portée »). */
+const fixtureImage = readFileSync(fileURLToPath(new URL('../fixtures/image.webp', import.meta.url)));
 
 export interface OpenOptions {
   /** Paramètres d'adresse supplémentaires, par exemple "&vue=simple". */
   query?: string;
   /** Remplace la voix de synthèse par un enregistreur : window.__spoken liste les textes lus. */
   spySpeech?: boolean;
+  /** Fait comme si les fichiers d'images des œuvres n'existaient pas. */
+  missingImages?: boolean;
 }
 
 /** Ouvre le musée de test et renvoie la liste (vivante) des erreurs survenues dans la page. */
@@ -34,6 +38,9 @@ export async function openMuseum(page: Page, options: OpenOptions = {}): Promise
   }
   await page.route('**/museums/fixture/museum.json', (route) =>
     route.fulfill({ contentType: 'application/json', body: fixture }),
+  );
+  await page.route('**/museums/fixture/images/**', (route) =>
+    options.missingImages ? route.fulfill({ status: 404, body: '' }) : route.fulfill({ contentType: 'image/webp', body: fixtureImage }),
   );
   // Qualité moyenne par défaut : le reflet du sol double le temps de rendu, calculé ici par le processeur.
   const query = options.query ?? '';

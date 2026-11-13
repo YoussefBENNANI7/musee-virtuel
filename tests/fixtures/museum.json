@@ -328,11 +328,17 @@
           "type": "painting",
           "wall": "south",
           "offset": 0,
-          "width": 1.2,
+          "width": 1.13,
           "height": 1.7,
           "image": {
-            "generator": "lines",
-            "seed": 51
+            "src": "images/portee.webp",
+            "width": 300,
+            "height": 450,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
           },
           "title": {
             "fr": "Portée",

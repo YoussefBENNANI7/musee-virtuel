@@ -1,3 +1,4 @@
+import { imageSrcset, imageUrl } from './engine/images';
 import { paintingCanvas } from './engine/textures';
 import { tr, type ArtworkConfig } from './engine/types';
 import { $, metaLine, type App, type View } from './ui';
@@ -48,8 +49,14 @@ export function startSimple(app: App, fallback: boolean): View {
       const img = h('img', { alt });
       img.style.aspectRatio = `${a.width} / ${a.height}`;
       if ('src' in a.image) {
+        // Le navigateur choisit la version la plus légère qui suffit à la taille affichée.
         img.loading = 'lazy';
-        img.src = new URL(a.image.src, app.base).href;
+        const srcset = imageSrcset(a.image, app.base);
+        if (srcset) {
+          img.srcset = srcset;
+          img.sizes = '(max-width: 560px) 100vw, 260px';
+        }
+        img.src = imageUrl(a.image, app.base, 640);
       } else {
         img.dataset.art = a.id;
         lazy.observe(img);

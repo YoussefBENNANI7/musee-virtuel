@@ -11,7 +11,12 @@ export type SculptureGenerator = 'knot' | 'blob' | 'rings' | 'stack' | 'ribbon';
 export type SculptureMaterial = 'bronze' | 'marble' | 'patina' | 'lacquer';
 
 export type ImageSource =
-  | { src: string }
+  /**
+   * Image fournie par le musée. `npm run images` complète les autres champs :
+   * dimensions du fichier en pixels, et versions allégées disponibles (grand côté, en pixels).
+   */
+  | { src: string; width?: number; height?: number; variants?: number[] }
+  /** Tableau fictif dessiné par le moteur à partir d'une graine. */
   | { generator: PaintingGenerator; seed: number; mono?: boolean };
 
 interface ArtworkBase {

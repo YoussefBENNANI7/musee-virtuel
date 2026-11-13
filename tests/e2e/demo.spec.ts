@@ -15,6 +15,10 @@ test('démo : chaque œuvre s’ouvre depuis le point de vue qui lui fait face',
     return m.world.artworks.map((a: any) => ({ id: a.config.id as string, title: a.config.title.fr as string }));
   });
   expect(works.length).toBeGreaterThan(0);
+  // Toutes les images des œuvres finissent de charger.
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__museum.world.artworks.filter((a: any) => !a.ready).length), { timeout: 30_000 })
+    .toBe(0);
   for (const work of works) {
     await page.evaluate((id) => (window as any).__museum.standBefore(id, 3), work.id);
     await page.waitForTimeout(250);
