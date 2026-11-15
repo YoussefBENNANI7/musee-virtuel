@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { Style } from './styles';
+import { objectLight, type Decor } from './decors';
 import { blobTexture } from './textures';
 import type { BenchConfig, RoomConfig } from './types';
 
@@ -23,18 +23,19 @@ export function benchFootprint(bench: BenchConfig): { hx: number; hz: number } {
 }
 
 /** Banc monolithe en bois, détaché du sol par un socle en retrait. */
-export function buildBench(bench: BenchConfig, room: RoomConfig, style: Style): THREE.Group {
+export function buildBench(bench: BenchConfig, room: RoomConfig, decor: Decor): THREE.Group {
+  const lit = (color: string) => new THREE.Color(color).multiplyScalar(objectLight(decor)).multiply(new THREE.Color(decor.light.tint));
   const group = new THREE.Group();
   group.position.set(room.position[0] + bench.position[0], 0, room.position[1] + bench.position[1]);
   if (bench.rotated) group.rotation.y = Math.PI / 2;
   const seat = new THREE.Mesh(
     new THREE.BoxGeometry(BENCH.length, BENCH.height - 0.05, BENCH.width),
-    new THREE.MeshStandardMaterial({ color: style.palette.wood, roughness: 0.7 }),
+    new THREE.MeshStandardMaterial({ color: lit(decor.colors.wood), roughness: 0.7 }),
   );
   seat.position.y = 0.05 + (BENCH.height - 0.05) / 2;
   const base = new THREE.Mesh(
     new THREE.BoxGeometry(BENCH.length - 0.12, 0.05, BENCH.width - 0.1),
-    new THREE.MeshStandardMaterial({ color: style.palette.trim, roughness: 0.8 }),
+    new THREE.MeshStandardMaterial({ color: lit(decor.colors.trim), roughness: 0.8 }),
   );
   base.position.y = 0.025;
   group.add(seat, base, groundShadow(BENCH.length, BENCH.width));

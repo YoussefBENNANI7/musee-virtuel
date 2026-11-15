@@ -1,4 +1,4 @@
-import type { MuseumConfig, StyleId } from './types';
+import type { Baseboard, Flooring, FrameShape, MuseumConfig, StyleId } from './types';
 
 export interface Palette {
   wall: string;
@@ -12,6 +12,8 @@ export interface Palette {
   plinth: string;
   /** Bois du mobilier. */
   wood: string;
+  /** Rails et projecteurs. */
+  fixture: string;
   /** Couleur de l'identité du musée. */
   accent: string;
 }
@@ -19,7 +21,8 @@ export interface Palette {
 /**
  * Un style d'architecture : tout ce qui donne son caractère au bâtiment,
  * indépendamment du plan et des œuvres. Un même musée peut changer de style
- * sans que sa configuration bouge.
+ * sans que sa configuration bouge. Chaque salle peut ensuite recevoir son propre
+ * décor, qui s'écarte du style sur les points qu'il choisit (voir decors.ts).
  */
 export interface Style {
   id: StyleId;
@@ -28,13 +31,11 @@ export interface Style {
   wallThickness: number;
   /** Hauteur des portes quand la configuration n'en précise pas. */
   doorHeight: number;
-  floor: 'parquet' | 'concrete';
-  /** Bas des murs : plinthe rapportée, joint creux, ou rien. */
-  baseboard: 'skirting' | 'shadow-gap' | 'none';
+  floor: Flooring;
+  baseboard: Baseboard;
   /** Encadrement en saillie autour des portes. */
   doorCasing: boolean;
-  /** Cadre des tableaux : largeur du montant, épaisseur, et vide entre la toile et le cadre. */
-  frame: { width: number; depth: number; gap: number };
+  frame: FrameShape;
 }
 
 export const STYLES: Record<StyleId, Style> = {
@@ -49,6 +50,7 @@ export const STYLES: Record<StyleId, Style> = {
       frame: '#c9b28c',
       plinth: '#f7f6f3',
       wood: '#c9b28c',
+      fixture: '#161616',
       accent: '#a8472a',
     },
     wallThickness: 0.4,
@@ -69,6 +71,7 @@ export const STYLES: Record<StyleId, Style> = {
       frame: '#2b2420',
       plinth: '#f4f1eb',
       wood: '#6b4a2f',
+      fixture: '#161616',
       accent: '#a8472a',
     },
     wallThickness: 0.3,

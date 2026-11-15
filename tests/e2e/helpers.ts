@@ -17,6 +17,8 @@ export interface OpenOptions {
   spySpeech?: boolean;
   /** Fait comme si les fichiers d'images des œuvres n'existaient pas. */
   missingImages?: boolean;
+  /** Configuration à servir à la place de celle du musée de test, par exemple une variante modifiée. */
+  museum?: unknown;
 }
 
 /** Ouvre le musée de test et renvoie la liste (vivante) des erreurs survenues dans la page. */
@@ -37,7 +39,7 @@ export async function openMuseum(page: Page, options: OpenOptions = {}): Promise
     });
   }
   await page.route('**/museums/fixture/museum.json', (route) =>
-    route.fulfill({ contentType: 'application/json', body: fixture }),
+    route.fulfill({ contentType: 'application/json', body: options.museum ? JSON.stringify(options.museum) : fixture }),
   );
   await page.route('**/museums/fixture/images/**', (route) =>
     options.missingImages ? route.fulfill({ status: 404, body: '' }) : route.fulfill({ contentType: 'image/webp', body: fixtureImage }),

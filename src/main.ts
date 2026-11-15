@@ -1,5 +1,6 @@
 import './style.css';
 import { AudioGuide } from './audio';
+import { withDecorOverrides } from './engine/decors';
 import { detectQuality } from './engine/quality';
 import { resolveStyle } from './engine/styles';
 import { tr, type MuseumConfig } from './engine/types';
@@ -30,9 +31,9 @@ async function start() {
   const base = new URL(`museums/${encodeURIComponent(museumId)}/`, document.baseURI).href;
   const res = await fetch(new URL('museum.json', base));
   if (!res.ok) throw new Error(`museum.json: ${res.status}`);
-  const museum: MuseumConfig = await res.json();
-
-  // ?style=… montre le même musée dans un autre style d'architecture, sans toucher à sa configuration.
+  // ?decor=… montre une salle dans un autre décor, et ?style=… tout le musée dans un autre
+  // style d'architecture, sans toucher à sa configuration.
+  const museum: MuseumConfig = withDecorOverrides(await res.json(), params.get('decor'));
   const style = resolveStyle(museum, params.get('style'));
   const issues = validateMuseum(museum, style);
   for (const issue of issues) {

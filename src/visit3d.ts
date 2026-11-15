@@ -50,7 +50,7 @@ export function startVisit(app: App): View {
 
   const world = buildWorld(museum, { lang: app.lang, base: app.base, style, quality, env, onLoad: invalidate });
   scene.add(world.group);
-  const reflection = quality.reflections ? buildFloorReflection(museum) : null;
+  const reflection = quality.reflections ? buildFloorReflection(museum, world.decors) : null;
   if (reflection) scene.add(reflection.object);
   controls.walkable = world.walkable;
   const first = world.spawn(museum.start.room);
@@ -419,7 +419,7 @@ export function startVisit(app: App): View {
       return { x: ((v.x + 1) / 2) * canvas.clientWidth, y: ((1 - v.y) / 2) * canvas.clientHeight };
     };
     Object.assign(window, {
-      __museum: { style: style.id, quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
+      __museum: { style: style.id, decors: Object.fromEntries([...world.decors].map(([id, d]) => [id, d.preset])), quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
     });
   }
 

@@ -40,6 +40,7 @@ Pour voir le musée sur un téléphone branché au même réseau wifi, utiliser 
 |---|---|
 | `?m=demo` | Musée à ouvrir : nom de son dossier dans `public/museums/` |
 | `?style=classic` | Montre le musée dans un autre style d'architecture |
+| `?decor=cabinet:nuit` | Montre une salle dans un autre décor (`?decor=nuit` pour toutes les salles) |
 | `?q=high`, `?q=medium`, `?q=low` | Force un niveau de qualité du rendu |
 | `?vue=simple` | Ouvre la vue simplifiée, sans 3D |
 | `?debug` | Affiche le détail des erreurs de configuration |
@@ -75,7 +76,8 @@ public/museums/demo/
 ### L'essentiel de `museum.json`
 
 - **Repère** : le nord est en haut du plan. Une position s'écrit `[x, z]` en mètres ; une taille de salle `[largeur, hauteur, profondeur]`.
-- **Salles** (`rooms`) : nom, position, taille, plafond plat ou verrière, bancs, et la liste des œuvres.
+- **Salles** (`rooms`) : nom, position, taille, plafond (plat, verrière ou plafond flottant), bancs, et la liste des œuvres.
+- **Décor d'une salle** (`decor`) : le nom d'un décor de la bibliothèque, par exemple `"decor": "terre-cuite"`. Il règle d'un coup le sol, les murs, le plafond, la lumière et les cadres. Décors disponibles : `argile-claire`, `terre-cuite`, `nuit`. Sans décor, la salle suit le style du musée.
 - **Portes** (`doors`) : déclarées une seule fois, sur le mur d'une salle. L'ouverture dans la salle voisine est déduite.
 - **Tableaux** : mur, décalage le long du mur, taille en mètres, image, titre, artiste, date, technique, texte. Un enregistrement audio par langue est facultatif : sans lui, le texte est lu par une voix de synthèse.
 - **Sculptures** : position dans la salle, hauteur, socle, forme et matériau.

@@ -6,6 +6,19 @@ export type WallId = 'north' | 'south' | 'east' | 'west';
 /** Style d'architecture du musée : voir styles.ts. */
 export type StyleId = 'contemporary' | 'classic';
 
+/** Revêtement de sol : béton ciré, parquet à lames droites, parquet en chevrons (point de Hongrie). */
+export type Flooring = 'concrete' | 'parquet' | 'chevron';
+/** Finition des murs : peinture unie, ou badigeon de chaux légèrement nuagé. */
+export type WallFinish = 'paint' | 'limewash';
+/** Bas des murs : plinthe rapportée, joint creux, ou rien. */
+export type Baseboard = 'skirting' | 'shadow-gap' | 'none';
+/** Cadre des tableaux : largeur du montant, épaisseur, et vide entre la toile et le cadre. */
+export interface FrameShape {
+  width: number;
+  depth: number;
+  gap: number;
+}
+
 export type PaintingGenerator = 'geometric' | 'fields' | 'lines' | 'circles' | 'mosaic' | 'landscape';
 export type SculptureGenerator = 'knot' | 'blob' | 'rings' | 'stack' | 'ribbon';
 export type SculptureMaterial = 'bronze' | 'marble' | 'patina' | 'lacquer';
@@ -67,7 +80,58 @@ export interface BenchConfig {
 export type CeilingConfig =
   | { type: 'flat' }
   /** Verrière centrale. `margin` : distance entre la verrière et les murs, en mètres. */
-  | { type: 'skylight'; margin?: number };
+  | { type: 'skylight'; margin?: number }
+  /**
+   * Plafond flottant : un panneau abaissé de `drop` mètres, détaché des murs par une gorge
+   * lumineuse large de `inset` mètres. La lumière cachée dans la gorge lave le haut des murs.
+   */
+  | { type: 'cove'; inset?: number; drop?: number };
+
+/** Couleurs d'une salle. Celles qui manquent sont celles du style du musée. */
+export interface DecorColors {
+  wall?: string;
+  floor?: string;
+  ceiling?: string;
+  /** Plinthes, joints creux, piétement des bancs. */
+  trim?: string;
+  /** Cadres des tableaux. */
+  frame?: string;
+  /** Socles des sculptures. */
+  plinth?: string;
+  /** Bois du mobilier. */
+  wood?: string;
+  /** Rails et projecteurs. */
+  fixture?: string;
+}
+
+/**
+ * Décor d'une salle : ce qui lui donne son ambiance, sans toucher à son plan ni à ses œuvres.
+ * On part d'un décor de la bibliothèque (`preset`, voir decors.ts), puis on corrige au besoin
+ * réglage par réglage. Tout est facultatif : sans décor, la salle suit le style du musée.
+ */
+export interface DecorConfig {
+  /** Nom d'un décor de la bibliothèque. */
+  preset?: string;
+  colors?: DecorColors;
+  floor?: Flooring;
+  walls?: WallFinish;
+  /** Brillance du sol : 0 = mat, 1 = miroir. Visible au niveau de qualité le plus élevé. */
+  gloss?: number;
+  baseboard?: Baseboard;
+  /** Plafond proposé par le décor. Celui que la salle déclare elle-même (`ceiling`) l'emporte. */
+  ceiling?: Exclude<CeilingConfig, { type: 'skylight' }>;
+  frame?: Partial<FrameShape>;
+  light?: {
+    /** Niveau général : 1 = galerie claire, moins pour une salle tamisée. */
+    level?: number;
+    /** Teinte de la lumière, par exemple "#fff1e0" pour une lumière chaude. */
+    tint?: string;
+    /** Force du faisceau des projecteurs sur les murs : 1 = normal, 0 = aucun. */
+    spots?: number;
+  };
+  /** Cartels clairs (par défaut) ou sombres, pour une salle obscure. */
+  labels?: 'light' | 'dark';
+}
 
 /**
  * Une salle est un rectangle du plan. Les salles voisines se touchent : l'épaisseur
@@ -80,11 +144,13 @@ export interface RoomConfig {
   position: [number, number];
   /** Largeur (x), hauteur (y), profondeur (z), en mètres. */
   size: [number, number, number];
-  /** Couleur des murs, si différente de celle du style. */
+  /** Décor de la salle : le nom d'un décor de la bibliothèque, ou un décor détaillé. */
+  decor?: string | DecorConfig;
+  /** Couleur des murs, si différente de celle du décor. */
   wall?: string;
   /** Plafond plat par défaut. */
   ceiling?: CeilingConfig;
-  /** Niveau d'éclairage de la salle : 1 = normal, moins pour une ambiance tamisée. */
+  /** Niveau d'éclairage de la salle : 1 = normal, moins pour une ambiance tamisée. Remplace celui du décor. */
   light?: number;
   /** Bancs, posés au sol. */
   benches?: BenchConfig[];
@@ -119,6 +185,7 @@ export interface ThemeConfig {
   frame?: string;
   plinth?: string;
   wood?: string;
+  fixture?: string;
   /** Couleur de l'identité du musée : boutons, liens, repères. */
   accent?: string;
 }

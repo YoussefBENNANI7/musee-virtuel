@@ -317,6 +317,14 @@
       ],
       "wall": "#9c4a35",
       "light": 0.92,
+      "benches": [
+        {
+          "position": [
+            0,
+            0.3
+          ]
+        }
+      ],
       "artworks": [
         {
           "id": "crepuscule-interieur",

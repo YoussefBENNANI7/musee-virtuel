@@ -347,18 +347,170 @@ export function parquetTexture(color: string, quality: Quality = TIERS.high): TH
   return tiling(c, quality);
 }
 
+/** Éclaircit (k > 0) ou assombrit (k < 0) une couleur, pour varier la teinte d'une lame à l'autre. */
+function shade(color: string, k: number, warm = 0): string {
+  const c = new THREE.Color(color);
+  const hsl = { h: 0, s: 0, l: 0 };
+  c.getHSL(hsl, THREE.SRGBColorSpace);
+  c.setHSL(hsl.h + warm, hsl.s, THREE.MathUtils.clamp(hsl.l * (1 + k), 0, 1), THREE.SRGBColorSpace);
+  return `#${c.getHexString(THREE.SRGBColorSpace)}`;
+}
+
+/** Côté, en mètres, de la surface couverte par une répétition de chaque texture de sol. */
+export const FLOOR_TILE = { concrete: 3, parquet: 2, chevron: 0.9 } as const;
+
+/**
+ * Parquet en chevrons (point de Hongrie) : des travées de lames coupées en biais, qui se
+ * rejoignent en pointe. Une répétition couvre deux travées de 45 cm, soit des lames
+ * d'environ 8 cm sur 64 cm. Chaque lame a sa nuance et son fil.
+ */
+export function chevronTexture(color: string, quality: Quality = TIERS.high): THREE.Texture {
+  const size = quality.textureSize;
+  const { c, g } = canvasOf(size, size);
+  const col = size / 2;
+  const rows = 8;
+  const pitch = size / rows;
+  const px = size / 1024;
+  // Un bois sombre montre moins son fil qu'un bois clair.
+  const lightness = new THREE.Color(color).getHSL({ h: 0, s: 0, l: 0 }, THREE.SRGBColorSpace).l;
+  const contrast = 0.5 + 0.8 * lightness;
+  g.fillStyle = color;
+  g.fillRect(0, 0, size, size);
+
+  for (let j = 0; j < 2; j++) {
+    // Travée de gauche : les lames montent vers la droite ; travée de droite : elles redescendent.
+    const rise = j === 0 ? -col : col;
+    const x0 = j * col;
+    for (let k = 0; k < rows; k++) {
+      const r = rng(1 + j * 97 + k * 13);
+      const tone = shade(color, (r() - 0.5) * 0.24 * contrast, (r() - 0.5) * 0.014);
+      // Fil du bois : quelques veines fines, et deux ou trois plages plus larges à peine teintées.
+      const veins = Array.from({ length: 9 }, () => ({ at: r(), width: (0.6 + r() * 1.2) * px, alpha: (0.025 + r() * 0.05) * contrast, light: r() > 0.7 }));
+      const bands = Array.from({ length: 3 }, () => ({ at: r(), width: (0.16 + r() * 0.3) * pitch, alpha: (0.015 + r() * 0.035) * contrast, light: r() > 0.5 }));
+      // La même lame est dessinée une rangée plus haut et plus bas, pour que la texture se raccorde.
+      for (const wrap of [-size, 0, size]) {
+        const y = k * pitch + wrap + (j === 0 ? col : 0);
+        g.save();
+        g.beginPath();
+        g.moveTo(x0, y);
+        g.lineTo(x0 + col, y + rise);
+        g.lineTo(x0 + col, y + rise + pitch);
+        g.lineTo(x0, y + pitch);
+        g.closePath();
+        g.clip();
+        g.fillStyle = tone;
+        g.fillRect(x0, Math.min(y, y + rise), col, Math.abs(rise) + pitch);
+        // Le fil suit la longueur de la lame.
+        for (const line of [...bands, ...veins]) {
+          g.globalAlpha = line.alpha;
+          g.strokeStyle = line.light ? '#fff4e0' : '#1a0f06';
+          g.lineWidth = line.width;
+          g.beginPath();
+          g.moveTo(x0, y + line.at * pitch);
+          g.lineTo(x0 + col, y + rise + line.at * pitch);
+          g.stroke();
+        }
+        g.restore();
+        // Joint entre deux lames : une ombre fine, doublée d'un reflet sur l'arête voisine.
+        const joint = Math.max(1.2, 2.2 * px);
+        g.globalAlpha = 0.55;
+        g.strokeStyle = '#120a05';
+        g.lineWidth = joint;
+        g.beginPath();
+        g.moveTo(x0, y);
+        g.lineTo(x0 + col, y + rise);
+        g.stroke();
+        g.globalAlpha = 0.09 * contrast;
+        g.strokeStyle = '#fff4e0';
+        g.lineWidth = joint * 0.8;
+        g.beginPath();
+        g.moveTo(x0, y + joint * 1.3);
+        g.lineTo(x0 + col, y + rise + joint * 1.3);
+        g.stroke();
+        g.globalAlpha = 1;
+      }
+    }
+  }
+  // Joints entre les travées.
+  g.globalAlpha = 0.55;
+  g.fillStyle = '#120a05';
+  const seam = Math.max(1.2, 2.2 * px);
+  g.fillRect(-seam / 2, 0, seam, size);
+  g.fillRect(size - seam / 2, 0, seam, size);
+  g.fillRect(col - seam / 2, 0, seam, size);
+  g.globalAlpha = 1;
+  return tiling(c, quality);
+}
+
+/**
+ * Badigeon de chaux : une peinture mate passée à la brosse, à peine nuagée.
+ * La texture est presque blanche ; elle se multiplie avec la couleur du mur.
+ */
+let limewash: THREE.Texture | null = null;
+export const WALL_TILE = 2.6;
+export function limewashTexture(quality: Quality = TIERS.high): THREE.Texture {
+  if (limewash) return limewash;
+  const size = 512;
+  const { c, g } = canvasOf(size, size);
+  const r = rng(73);
+  g.fillStyle = '#f7f7f7';
+  g.fillRect(0, 0, size, size);
+  const wrapped = (draw: (dx: number, dy: number) => void) => {
+    for (const dx of [-size, 0, size]) for (const dy of [-size, 0, size]) draw(dx, dy);
+  };
+  // Nuages : des plages molles, à peine plus claires ou plus sombres que le fond.
+  g.filter = `blur(${Math.round(size * 0.05)}px)`;
+  for (let i = 0; i < 90; i++) {
+    const x = r() * size;
+    const y = r() * size;
+    const rx = size * (0.04 + r() * 0.14);
+    const ry = rx * (0.6 + r() * 0.8);
+    const angle = r() * Math.PI;
+    g.fillStyle = r() > 0.45 ? '#000000' : '#ffffff';
+    g.globalAlpha = 0.004 + r() * 0.007;
+    wrapped((dx, dy) => {
+      g.beginPath();
+      g.ellipse(x + dx, y + dy, rx, ry, angle, 0, Math.PI * 2);
+      g.fill();
+    });
+  }
+  // Passes de brosse : de courts traits en tous sens, presque invisibles un à un.
+  g.filter = `blur(${Math.round(size * 0.012)}px)`;
+  g.lineCap = 'round';
+  for (let i = 0; i < 260; i++) {
+    const x = r() * size;
+    const y = r() * size;
+    const length = size * (0.03 + r() * 0.07);
+    const angle = r() * Math.PI;
+    g.strokeStyle = r() > 0.5 ? '#000000' : '#ffffff';
+    g.globalAlpha = 0.006 + r() * 0.01;
+    g.lineWidth = size * (0.01 + r() * 0.02);
+    wrapped((dx, dy) => {
+      g.beginPath();
+      g.moveTo(x + dx, y + dy);
+      g.lineTo(x + dx + Math.cos(angle) * length, y + dy + Math.sin(angle) * length);
+      g.stroke();
+    });
+  }
+  g.filter = 'none';
+  g.globalAlpha = 1;
+  limewash = tiling(c, quality);
+  return limewash;
+}
+
 /** Cartel posé à côté de l'œuvre. */
-export function labelTexture(title: string, artist: string, year: string, quality: Quality = TIERS.high): THREE.Texture {
+export function labelTexture(title: string, artist: string, year: string, quality: Quality = TIERS.high, dark = false): THREE.Texture {
   const { c, g } = canvasOf(512, 256);
-  g.fillStyle = '#fbfaf6';
+  // Dans une salle obscure, un cartel blanc éblouirait : il devient sombre, à lettres claires.
+  g.fillStyle = dark ? '#191a1d' : '#fbfaf6';
   g.fillRect(0, 0, 512, 256);
-  g.fillStyle = '#1c1b19';
+  g.fillStyle = dark ? '#ece7dc' : '#1c1b19';
   g.font = '600 40px Georgia, serif';
   g.fillText(artist, 32, 78, 448);
   g.font = 'italic 34px Georgia, serif';
   g.fillText(title, 32, 136, 448);
   g.font = '28px Georgia, serif';
-  g.fillStyle = '#5b5852';
+  g.fillStyle = dark ? '#a9a498' : '#5b5852';
   g.fillText(year, 32, 190, 448);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;

@@ -1,10 +1,11 @@
 import * as THREE from 'three';
+import { coveOf, objectLight, type Decor } from './decors';
 import { WALLS, wallFrame, type Layout, type WallFrame } from './layout';
-import { lightAt, roomLight, skylightOpening, sunPatch, type RoomLight } from './lighting';
+import { MAX_LIGHT, colorAt, doorSpill, roomLight, skylightOpening, sunPatch, type RoomLight } from './lighting';
 import type { Quality } from './quality';
 import type { Style } from './styles';
-import { concreteTexture, parquetTexture, skyTexture, sunPatchTexture } from './textures';
-import type { MuseumConfig, RoomConfig, WallId } from './types';
+import { FLOOR_TILE, WALL_TILE, chevronTexture, concreteTexture, limewashTexture, parquetTexture, skyTexture, sunPatchTexture } from './textures';
+import type { Baseboard, MuseumConfig, RoomConfig, WallId } from './types';
 
 /**
  * Le bâtiment nu : sols, plafonds, murs épais et passages de portes.
@@ -13,6 +14,10 @@ import type { MuseumConfig, RoomConfig, WallId } from './types';
  *
  * L'éclairage est calculé ici, une fois, et inscrit dans la couleur de chaque sommet
  * (voir lighting.ts). Les matériaux du bâtiment ne dépendent donc d'aucune lampe.
+ *
+ * Chaque salle est bâtie selon son décor (voir decors.ts) : revêtement et couleur du sol,
+ * finition des murs, plafond, bas de mur. Les passages entre deux salles gardent
+ * les couleurs du style du musée : ils appartiennent au bâtiment, pas à une salle.
  */
 export interface Building {
   group: THREE.Group;
@@ -39,17 +44,23 @@ function knots(length: number): number[] {
   return out.map((v) => v - length / 2);
 }
 
-/** Rectangle quadrillé dans le plan XY, tourné vers +Z, prêt à recevoir une couleur par sommet. */
-function gridGeometry(width: number, height: number): THREE.BufferGeometry {
+/**
+ * Rectangle quadrillé dans le plan XY, tourné vers +Z, prêt à recevoir une couleur par sommet.
+ * Par défaut la texture couvre le rectangle une fois. Avec `metric`, elle garde sa taille réelle :
+ * `tile` mètres par répétition, comptés depuis le point (`u0`, `v0`) où se trouve le centre du rectangle.
+ */
+function gridGeometry(width: number, height: number, metric?: { u0: number; v0: number; tile: number }, rows?: number[]): THREE.BufferGeometry {
   const xs = knots(width);
-  const ys = knots(height);
+  // `rows` impose les hauteurs des rangées de sommets, quand un pan doit se raccorder à son voisin.
+  const ys = rows ?? knots(height);
   const position: number[] = [];
   const uv: number[] = [];
   const index: number[] = [];
   for (const y of ys) {
     for (const x of xs) {
       position.push(x, y, 0);
-      uv.push(x / width + 0.5, y / height + 0.5);
+      if (metric) uv.push((x + metric.u0) / metric.tile, (y + metric.v0) / metric.tile);
+      else uv.push(x / width + 0.5, y / height + 0.5);
     }
   }
   const cols = xs.length;
@@ -70,11 +81,14 @@ function gridGeometry(width: number, height: number): THREE.BufferGeometry {
 
 /** Matériau du bâtiment : sa couleur est multipliée par la lumière inscrite dans les sommets. */
 function litMaterial(color: string, map?: THREE.Texture): THREE.MeshBasicMaterial {
-  return new THREE.MeshBasicMaterial({ color, map, vertexColors: true, toneMapped: false });
+  const material = new THREE.MeshBasicMaterial({ color, vertexColors: true, toneMapped: false });
+  if (map) material.map = map;
+  return material;
 }
 
 const point = new THREE.Vector3();
 const normal = new THREE.Vector3();
+const shade: [number, number, number] = [0, 0, 0];
 
 /** Inscrit dans les sommets d'une surface la lumière qu'elle reçoit (moyenne des salles données). */
 function bake(mesh: THREE.Mesh, lights: RoomLight[]) {
@@ -84,20 +98,26 @@ function bake(mesh: THREE.Mesh, lights: RoomLight[]) {
   normal.set(0, 0, 1).transformDirection(mesh.matrixWorld);
   for (let i = 0; i < pos.count; i++) {
     point.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
-    let value = 0;
-    for (const light of lights) value += lightAt(light, point, normal);
-    value /= lights.length;
-    color.setXYZ(i, value, value, value);
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    for (const light of lights) {
+      colorAt(light, point, normal, shade);
+      r += shade[0];
+      g += shade[1];
+      b += shade[2];
+    }
+    color.setXYZ(i, r / lights.length, g / lights.length, b / lights.length);
   }
   color.needsUpdate = true;
 }
 
-export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style, quality: Quality): Building {
+export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style, quality: Quality, decors: Map<string, Decor>): Building {
   const group = new THREE.Group();
   const { palette } = style;
   const half = layout.wallThickness / 2;
   const walls = new Map<string, { holder: THREE.Group; frame: WallFrame }>();
-  const lights = new Map(museum.rooms.map((r) => [r.id, roomLight(r, layout.wallThickness)]));
+  const lights = new Map(museum.rooms.map((r) => [r.id, roomLight(r, layout.wallThickness, decors.get(r.id)!)]));
   /** Surfaces à éclairer une fois tout le bâtiment assemblé. */
   const pending: { mesh: THREE.Mesh; lights: RoomLight[] }[] = [];
   const lit = (mesh: THREE.Mesh, ...roomLights: RoomLight[]) => {
@@ -105,30 +125,48 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
     return mesh;
   };
 
-  const floorTex = (style.floor === 'concrete' ? concreteTexture : parquetTexture)(palette.floor, quality);
-  /** Taille réelle, en mètres, de la surface couverte par une répétition de la texture de sol. */
-  const floorTile = style.floor === 'concrete' ? 3 : 2;
-  const ceilingMat = litMaterial(palette.ceiling);
+  // Matériaux partagés entre les salles de même décor : une texture ou une couleur ne se fabrique qu'une fois.
+  const cache = new Map<string, unknown>();
+  const once = <T>(key: string, make: () => T): T => {
+    if (!cache.has(key)) cache.set(key, make());
+    return cache.get(key) as T;
+  };
+  const floorTexture = (decor: Decor) =>
+    once(`sol:${decor.floor}:${decor.colors.floor}`, () =>
+      ({ concrete: concreteTexture, parquet: parquetTexture, chevron: chevronTexture })[decor.floor](decor.colors.floor, quality),
+    );
+  const ceilingMaterial = (decor: Decor) => once(`plafond:${decor.colors.ceiling}`, () => litMaterial(decor.colors.ceiling));
+  const wallMaterial = (decor: Decor) =>
+    once(`mur:${decor.walls}:${decor.colors.wall}`, () => litMaterial(decor.colors.wall, decor.walls === 'limewash' ? limewashTexture(quality) : undefined));
+  /** Matière sombre et mate, dont la teinte ne dépend d'aucune lampe : elle ne brille jamais, même dans une salle obscure. */
+  const matte = (color: string, light = 1) =>
+    once(`mat:${color}:${light}`, () => new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(0.8 * light), toneMapped: false }));
   const trimMat = new THREE.MeshStandardMaterial({ color: palette.trim, roughness: 0.6 });
   const revealMat = litMaterial(palette.wall);
+  const soleMat = new THREE.MeshBasicMaterial({ color: '#14120f', toneMapped: false });
 
   for (const room of museum.rooms) {
     const [w, h, d] = room.size;
     const [cx, cz] = room.position;
     const light = lights.get(room.id)!;
+    const decor = decors.get(room.id)!;
 
     // Le sol va jusqu'à la limite de la salle : sous une porte, il rejoint celui de la salle voisine.
-    const tex = floorTex.clone();
-    tex.repeat.set(w / floorTile, d / floorTile);
+    const tile = FLOOR_TILE[decor.floor];
+    const tex = floorTexture(decor).clone();
+    tex.repeat.set(w / tile, d / tile);
     const floor = lit(new THREE.Mesh(gridGeometry(w, d), litMaterial('#ffffff', tex)), light);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(cx, 0, cz);
     floor.userData.floor = true;
     group.add(floor);
-    buildCeiling(room);
+    buildCeiling(room, decor);
     buildSunPatch(room);
 
-    const wallMat = litMaterial(room.wall ?? palette.wall);
+    const wallMat = wallMaterial(decor);
+    const baseMat = matte(decor.colors.trim, objectLight(decor));
+    /** Hauteurs des rangées de sommets d'un mur de la salle, du sol au plafond. */
+    const wallRows = knots(h).map((v) => v + h / 2);
     for (const wall of WALLS) {
       // Surface visible du mur : en retrait d'une demi-épaisseur par rapport à la limite de la salle.
       const frame = wallFrame(room, wall, half);
@@ -139,25 +177,40 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
       walls.set(`${room.id}:${wall}`, { holder, frame });
 
       let cursor = -frame.length / 2;
+      /**
+       * Pan de mur plein, centré en (x, y) dans le repère du mur. Sa texture garde sa taille réelle
+       * d'un pan à l'autre, et ses rangées de sommets sont celles du mur entier : la lumière d'un
+       * linteau se raccorde ainsi exactement à celle des pans qui l'encadrent.
+       */
+      const face = (width: number, height: number, x: number, y: number) => {
+        const bottom = y - height / 2;
+        const rows = [bottom, ...wallRows.filter((row) => row > bottom + 0.02)].map((row) => row - y);
+        const mesh = lit(new THREE.Mesh(gridGeometry(width, height, { u0: x, v0: y, tile: WALL_TILE }, rows), wallMat), light);
+        mesh.position.set(x, y, 0);
+        holder.add(mesh);
+      };
       const solid = (from: number, to: number) => {
         if (to - from < 0.01) return;
-        const face = lit(new THREE.Mesh(gridGeometry(to - from, h), wallMat), light);
-        face.position.set((from + to) / 2, h / 2, 0);
-        holder.add(face);
-        const base = baseboard(to - from, style, trimMat);
+        face(to - from, h, (from + to) / 2, h / 2);
+        const base = baseboard(to - from, decor.baseboard, baseMat);
         if (base) {
           base.position.x = (from + to) / 2;
           holder.add(base);
         }
+        // Semelle sombre dans l'épaisseur du mur, au ras du sol. On ne la voit jamais directement :
+        // elle empêche le reflet du sol de laisser filtrer, au pied du mur, la clarté de la salle voisine.
+        const start = from <= -frame.length / 2 + 0.01 ? from - half : from;
+        const end = to >= frame.length / 2 - 0.01 ? to + half : to;
+        const sole = new THREE.Mesh(new THREE.PlaneGeometry(end - start, half), soleMat);
+        sole.rotation.x = Math.PI / 2;
+        sole.position.set((start + end) / 2, 0.02, -half / 2);
+        sole.raycast = noRaycast;
+        holder.add(sole);
       };
       for (const gap of layout.openings(room.id, wall)) {
         solid(cursor, gap.offset - gap.width / 2);
         cursor = gap.offset + gap.width / 2;
-        if (h - gap.height > 0.01) {
-          const lintel = lit(new THREE.Mesh(gridGeometry(gap.width, h - gap.height), wallMat), light);
-          lintel.position.set(gap.offset, (h + gap.height) / 2, 0);
-          holder.add(lintel);
-        }
+        if (h - gap.height > 0.01) face(gap.width, h - gap.height, gap.offset, (h + gap.height) / 2);
       }
       solid(cursor, frame.length / 2);
     }
@@ -166,7 +219,8 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
   // Traversée des murs : les deux tableaux de la porte, son dessous de linteau, et l'encadrement éventuel.
   for (const passage of layout.passages) {
     const t = layout.wallThickness;
-    const both = passage.rooms.map((r) => lights.get(r.id)!);
+    // L'embrasure est éclairée par les deux salles, avant que l'une ne reçoive la lumière de l'autre.
+    const both = passage.rooms.map((r) => ({ ...lights.get(r.id)!, extra: [...lights.get(r.id)!.extra] }));
     const portal = new THREE.Group();
     portal.position.copy(passage.center);
     portal.rotation.y = passage.rotY;
@@ -193,23 +247,62 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
       top.position.y = passage.height - 0.06;
       portal.add(top);
     }
+
+    // Deux sols différents se rejoignent sous la porte : une barre de seuil couvre leur jonction.
+    const [a, b] = passage.rooms.map((r) => decors.get(r.id)!);
+    if (a.floor !== b.floor || a.colors.floor !== b.colors.floor) {
+      const sill = new THREE.Mesh(new THREE.BoxGeometry(passage.width, 0.006, 0.07), matte(palette.trim));
+      sill.position.y = 0.003;
+      portal.add(sill);
+    }
   }
 
-  function buildCeiling(room: RoomConfig) {
+  // Une salle sombre reçoit, par chaque porte, la lumière de sa voisine plus claire.
+  for (const passage of layout.passages) {
+    const [a, b] = passage.rooms.map((r) => lights.get(r.id)!);
+    const { center, tangent, normal: toA, width, height } = passage;
+    // La « fenêtre » est au nu du mur de la salle claire : le seuil lui-même est ainsi éclairé.
+    const intoA = doorSpill(a, b, center.clone().addScaledVector(toA, -half), tangent, width, height);
+    const intoB = doorSpill(b, a, center.clone().addScaledVector(toA, half), tangent, width, height);
+    if (intoA) a.extra.push(intoA);
+    if (intoB) b.extra.push(intoB);
+  }
+
+  function buildCeiling(room: RoomConfig, decor: Decor) {
     const [w, h, d] = room.size;
     const light = lights.get(room.id)!;
+    const ceilingMat = ceilingMaterial(decor);
     const ceiling = new THREE.Group();
     ceiling.position.set(room.position[0], h, room.position[1]);
     group.add(ceiling);
-    /** Panneau horizontal tourné vers le bas, centré en (x, z) dans le repère de la salle. */
-    const panel = (width: number, depth: number, x: number, z: number) => {
-      const m = lit(new THREE.Mesh(gridGeometry(width, depth), ceilingMat), light);
+    /**
+     * Panneau horizontal tourné vers le bas, centré en (x, z) dans le repère de la salle, à la hauteur `y`
+     * comptée depuis le plafond. Il reçoit l'éclairage de la salle, sauf s'il est lui-même lumineux (`glow`).
+     */
+    const panel = (width: number, depth: number, x: number, z: number, y = 0, glow?: THREE.Material) => {
+      const m = glow ? new THREE.Mesh(new THREE.PlaneGeometry(width, depth), glow) : lit(new THREE.Mesh(gridGeometry(width, depth), ceilingMat), light);
       m.rotation.x = Math.PI / 2;
-      m.position.set(x, 0, z);
+      m.position.set(x, y, z);
       ceiling.add(m);
     };
 
+    const cove = coveOf(room, decor);
     const sky = skylightOpening(room);
+    if (cove && !sky) {
+      // Plafond flottant : un panneau abaissé, et tout autour le fond de gorge, en pleine lumière.
+      const edge = half + cove.inset;
+      panel(w - edge * 2, d - edge * 2, 0, 0, -cove.drop);
+      // Le fond de gorge prolonge le haut des murs : même teinte, poussée à la pleine lumière.
+      const glow = once(`gorge:${decor.colors.wall}:${decor.light.tint}`, () => {
+        const color = new THREE.Color(decor.colors.wall).multiplyScalar(MAX_LIGHT).multiply(new THREE.Color(decor.light.tint));
+        return new THREE.MeshBasicMaterial({ color, toneMapped: false });
+      });
+      panel(w, edge, 0, -(d - edge) / 2, 0, glow);
+      panel(w, edge, 0, (d - edge) / 2, 0, glow);
+      panel(edge, d - edge * 2, -(w - edge) / 2, 0, 0, glow);
+      panel(edge, d - edge * 2, (w - edge) / 2, 0, 0, glow);
+      return;
+    }
     if (!sky) return panel(w, d, 0, 0);
 
     // Verrière : le plafond devient un cadre, percé d'un puits de lumière fermé par un vitrage.
@@ -220,7 +313,7 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
     panel(margin, od, (w - margin) / 2, 0);
 
     // Les parois du puits reçoivent le ciel de plein fouet : elles sont à pleine lumière.
-    const wellMat = new THREE.MeshBasicMaterial({ color: palette.ceiling, toneMapped: false });
+    const wellMat = new THREE.MeshBasicMaterial({ color: decor.colors.ceiling, toneMapped: false });
     for (const [length, x, z, rotY] of [
       [ow, 0, -od / 2, 0],
       [ow, 0, od / 2, Math.PI],
@@ -289,13 +382,13 @@ function skylightBars(width: number, depth: number): [number, number] {
 }
 
 /** Bas de mur, dans le repère du mur. */
-function baseboard(length: number, style: Style, mat: THREE.Material): THREE.Mesh | null {
-  if (style.baseboard === 'skirting') {
+function baseboard(length: number, kind: Baseboard, mat: THREE.Material): THREE.Mesh | null {
+  if (kind === 'skirting') {
     const m = new THREE.Mesh(new THREE.BoxGeometry(length, 0.08, 0.02), mat);
     m.position.set(0, 0.04, 0.01);
     return m;
   }
-  if (style.baseboard === 'shadow-gap') {
+  if (kind === 'shadow-gap') {
     // Joint creux : une fine bande sombre au ras du sol, comme si le mur flottait.
     const m = new THREE.Mesh(new THREE.BoxGeometry(length, 0.018, 0.004), mat);
     m.position.set(0, 0.009, 0.002);

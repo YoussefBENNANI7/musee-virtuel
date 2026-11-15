@@ -2,14 +2,17 @@ import * as THREE from 'three';
 import { rng } from './textures';
 import type { SculptureConfig } from './types';
 
-export function sculptureMaterial(cfg: SculptureConfig, env: THREE.Texture): THREE.Material {
+/** `light` : part de lumière que la sculpture reçoit dans sa salle, entre 0 et 1. */
+export function sculptureMaterial(cfg: SculptureConfig, env: THREE.Texture, light = 1): THREE.Material {
   const presets = {
     bronze: { color: '#8a5a2e', metalness: 1, roughness: 0.36 },
     marble: { color: '#efebe3', metalness: 0, roughness: 0.32 },
     patina: { color: '#3f8073', metalness: 0.85, roughness: 0.5 },
     lacquer: { color: cfg.color ?? '#8f231c', metalness: 0.05, roughness: 0.22 },
   };
-  return new THREE.MeshStandardMaterial({ ...presets[cfg.material], envMap: env, envMapIntensity: 1.1 });
+  const material = new THREE.MeshStandardMaterial({ ...presets[cfg.material], envMap: env, envMapIntensity: 1.1 * light });
+  material.color.multiplyScalar(light);
+  return material;
 }
 
 /** Sculpture fictive générée à partir d'une graine. Les vrais musées fourniront des modèles 3D. */

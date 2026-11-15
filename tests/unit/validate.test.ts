@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DECORS, withDecorOverrides } from '../../src/engine/decors';
 import { resolveStyle, STYLES } from '../../src/engine/styles';
 import type { MuseumConfig, PaintingConfig } from '../../src/engine/types';
 import { validateMuseum } from '../../src/engine/validate';
@@ -30,6 +31,15 @@ describe('configurations livrées', () => {
 
   it('le musée de test est valide', () => {
     expect(validateMuseum(fixture(), classic)).toEqual([]);
+  });
+
+  it('les deux musées restent valides dans chaque décor de la bibliothèque', () => {
+    for (const decor of Object.keys(DECORS)) {
+      for (const style of Object.values(STYLES)) {
+        expect(errorsOf(withDecorOverrides(demo(), decor), style), `démo, ${decor}, ${style.id}`).toEqual([]);
+        expect(errorsOf(withDecorOverrides(fixture(), decor), style), `test, ${decor}, ${style.id}`).toEqual([]);
+      }
+    }
   });
 });
 
@@ -103,6 +113,52 @@ describe('erreurs détectées', () => {
       'Salle "galerie" : banc n° 3 : posé hors de la salle ou trop près d\'un mur',
     ]);
     expect(errors).toContain('Salle "galerie" : niveau d\'éclairage invalide (entre 0 et 2)');
+  });
+
+  it('un décor inconnu, ou un décor dont un réglage est faux', () => {
+    const museum = fixture();
+    const [hall, galerie, cabinet, rotonde] = museum.rooms;
+    hall.decor = 'rococo';
+    galerie.decor = { preset: 'nuit', colors: { wall: 'bleu' }, floor: 'moquette' as never, light: { level: 5, tint: 'chaud' }, gloss: 2 };
+    cabinet.decor = { walls: 'crépi' as never, ceiling: { type: 'skylight' } as never, labels: 'fluo' as never, frame: { width: 0.8 } };
+    rotonde.wall = 'rouge';
+    const errors = errorsOf(museum);
+    expect(errors).toContain('Salle "hall" : décor inconnu : "rococo" (décors disponibles : argile-claire, terre-cuite, nuit)');
+    expect(errors).toContain('Salle "galerie" : décor : couleur invalide pour "wall" : "bleu" (attendu : "#rrggbb")');
+    expect(errors).toContain('Salle "galerie" : décor : sol inconnu : "moquette"');
+    expect(errors).toContain('Salle "galerie" : décor : niveau d\'éclairage invalide (entre 0 et 2)');
+    expect(errors).toContain('Salle "galerie" : décor : teinte de lumière invalide : "chaud" (attendu : "#rrggbb")');
+    expect(errors).toContain('Salle "galerie" : décor : brillance du sol invalide (entre 0 et 1)');
+    expect(errors).toContain('Salle "cabinet" : décor : finition de mur inconnue : "crépi"');
+    expect(errors).toContain('Salle "cabinet" : décor : plafond inconnu : "skylight" (une verrière se déclare sur la salle)');
+    expect(errors).toContain('Salle "cabinet" : décor : cartels inconnus : "fluo"');
+    expect(errors).toContain('Salle "cabinet" : décor : cadre invalide (largeur et épaisseur entre 0 et 0,3 m, vide entre 0 et 0,1 m)');
+    expect(errors).toContain('Salle "rotonde" : couleur de mur invalide : "rouge" (attendu : "#rrggbb")');
+  });
+
+  it('un plafond flottant trop large ou trop bas pour la salle', () => {
+    const museum = fixture();
+    museum.rooms[0].ceiling = { type: 'cove', inset: 4.5 };
+    museum.rooms[1].ceiling = { type: 'cove', drop: 2 };
+    museum.rooms[2].ceiling = { type: 'voûte' } as never;
+    const errors = errorsOf(museum);
+    expect(errors).toContain('Salle "hall" : plafond flottant : gorge trop large pour la taille de la salle');
+    expect(errors).toContain('Salle "galerie" : plafond flottant : trop bas (minimum 2,4 m sous le panneau)');
+    expect(errors).toContain('Salle "cabinet" : plafond inconnu : "voûte"');
+  });
+
+  it('le cadre du décor compte dans la place qu’un tableau prend sur le mur', () => {
+    const museum = fixture();
+    const hall = museum.rooms[0];
+    // Avec le cadre du style, deux tableaux se touchent presque ; un cadre large les fait se recouvrir.
+    const a = painting(museum, 'le-pays-d-avant');
+    const b = painting(museum, 'carreaux-de-l-atelier');
+    b.offset = a.offset + a.width / 2 + b.width / 2 + 0.16;
+    expect(warningsOf(museum).filter((w) => w.includes('recouvre'))).toEqual([]);
+    hall.decor = { frame: { width: 0.12 } };
+    expect(warningsOf(museum).filter((w) => w.includes('recouvre'))).toEqual([
+      'Œuvre "le-pays-d-avant" : recouvre l\'œuvre "carreaux-de-l-atelier" sur le mur south',
+    ]);
   });
 
   it('des identifiants en double et une étape de parcours inconnue', () => {

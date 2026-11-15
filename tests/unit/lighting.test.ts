@@ -1,6 +1,8 @@
 import { Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
-import { formFactor, lightAt, roomLight, skylightOpening, sunPatch } from '../../src/engine/lighting';
+import { resolveDecor } from '../../src/engine/decors';
+import { MAX_LIGHT, brightness, colorAt, doorSpill, formFactor, lightAt, roomLight, skylightOpening, sunPatch } from '../../src/engine/lighting';
+import { STYLES } from '../../src/engine/styles';
 import type { RoomConfig } from '../../src/engine/types';
 
 const UP = new Vector3(0, 1, 0);
@@ -111,6 +113,123 @@ describe('éclairage d’une salle', () => {
     const under = lightAt(sky, new Vector3(0, 0, 0), UP);
     const aside = lightAt(sky, new Vector3(4.5, 0, 4.5), UP);
     expect(under).toBeGreaterThan(aside + 0.1);
+  });
+});
+
+describe('éclairage selon le décor', () => {
+  const style = STYLES.contemporary;
+  const lightOf = (r: RoomConfig) => roomLight(r, 0.4, resolveDecor(style, r));
+  const facingEast = new Vector3(1, 0, 0);
+
+  it('sans décor particulier, rien ne change', () => {
+    const plain = roomLight(room(), 0.4);
+    const styled = lightOf(room());
+    for (const p of [new Vector3(0, 0, 0), new Vector3(-4.8, 3, 1), new Vector3(2, 4, -3)]) {
+      for (const n of [UP, DOWN, facingEast]) expect(lightAt(styled, p, n)).toBeCloseTo(lightAt(plain, p, n), 10);
+    }
+    expect(styled.tint).toEqual([1, 1, 1]);
+    expect(styled.extra).toEqual([]);
+  });
+
+  it('le niveau d’éclairage du décor tamise toute la salle', () => {
+    const dim = lightOf(room({ decor: { light: { level: 0.5 } } }));
+    const full = lightOf(room());
+    const p = new Vector3(1, 0, 1);
+    expect(lightAt(dim, p, UP)).toBeCloseTo(lightAt(full, p, UP) / 2, 5);
+    expect(brightness(dim)).toBeCloseTo(brightness(full) / 2, 5);
+  });
+
+  it('la gorge d’un plafond flottant lave le haut des murs, bien au-delà de la pleine lumière', () => {
+    const cove = lightOf(room({ ceiling: { type: 'cove', inset: 0.3, drop: 0.3 } }));
+    const flat = lightOf(room());
+    // Mur ouest, dont la surface est en x = -4,8 ; le plafond est à 4 m.
+    const at = (light: typeof cove, y: number) => lightAt(light, new Vector3(-4.8, y, 0), facingEast);
+    expect(at(cove, 3.95)).toBeGreaterThan(1.3);
+    expect(at(cove, 3.95)).toBeGreaterThan(at(cove, 3.4) + 0.3);
+    expect(at(cove, 3.4)).toBeGreaterThan(at(cove, 2) + 0.1);
+    // À hauteur d'œil, la gorge ne compte presque plus : le mur n'est guère plus clair que sous un plafond plein.
+    expect(Math.abs(at(cove, 1.5) - at(flat, 1.5))).toBeLessThan(0.15);
+    expect(at(cove, 3.99)).toBeLessThanOrEqual(MAX_LIGHT);
+  });
+
+  it('le panneau flottant, lui, ne reçoit rien de la gorge qui l’entoure', () => {
+    const r = room({ ceiling: { type: 'cove', inset: 0.3, drop: 0.3 } });
+    const cove = lightOf(r);
+    const under = new Vector3(0, 3.7, 0);
+    const withoutCove = { ...cove, extra: [] };
+    expect(lightAt(cove, under, DOWN)).toBeCloseTo(lightAt(withoutCove, under, DOWN), 10);
+  });
+
+  it('une verrière déclarée sur la salle l’emporte sur le plafond du décor', () => {
+    const sky = lightOf(room({ size: [10, 7, 10], decor: 'argile-claire', ceiling: { type: 'skylight', margin: 2 } }));
+    expect(sky.daylight).toBe(true);
+    expect(sky.extra).toEqual([]);
+  });
+
+  it('la teinte du décor colore la lumière sans changer sa force', () => {
+    const warm = lightOf(room({ decor: { light: { tint: '#ffe0c0' } } }));
+    const p = new Vector3(1, 0, 1);
+    const [r, g, b] = colorAt(warm, p, UP);
+    expect(r).toBeCloseTo(lightAt(warm, p, UP), 6);
+    expect(g).toBeLessThan(r);
+    expect(b).toBeLessThan(g);
+    // Lumière blanche : les trois composantes valent la lumière reçue.
+    const white = lightOf(room());
+    expect(colorAt(white, p, UP)).toEqual([lightAt(white, p, UP), lightAt(white, p, UP), lightAt(white, p, UP)]);
+  });
+});
+
+describe('lumière entrant par une porte', () => {
+  const style = STYLES.contemporary;
+  // Salle sombre de 10 × 8 m ; porte de 2,4 m au milieu de son mur sud, limite en z = 4.
+  // Murs de 0,40 m : la lumière entre au nu du mur de la salle claire, en z = 4,2.
+  const darkRoom = room({ decor: 'nuit' });
+  const dark = roomLight(darkRoom, 0.4, resolveDecor(style, darkRoom));
+  const bright = roomLight(room({ position: [0, 9], size: [10, 4, 10] }), 0.4);
+  const door = { center: new Vector3(0, 0, 4.2), tangent: new Vector3(1, 0, 0) };
+  const spill = doorSpill(dark, bright, door.center, door.tangent, 2.4, 2.9)!;
+
+  it('n’existe que vers la salle la plus sombre', () => {
+    expect(spill).not.toBeNull();
+    expect(doorSpill(bright, dark, door.center, door.tangent, 2.4, 2.9)).toBeNull();
+    expect(doorSpill(bright, bright, door.center, door.tangent, 2.4, 2.9)).toBeNull();
+  });
+
+  it('éclaire le sol près de la porte, de moins en moins en s’éloignant', () => {
+    const lit = { ...dark, extra: [spill] };
+    const gain = (z: number, x = 0) => lightAt(lit, new Vector3(x, 0, z), UP) - lightAt(dark, new Vector3(x, 0, z), UP);
+    expect(gain(3.7)).toBeGreaterThan(0.15);
+    expect(gain(3.7)).toBeGreaterThan(gain(2.5));
+    expect(gain(2.5)).toBeGreaterThan(gain(0));
+    expect(gain(-3)).toBeLessThan(0.02);
+    // Loin sur le côté, le long du mur de la porte, il n'arrive presque rien.
+    expect(gain(3.7, 4.5)).toBeLessThan(gain(3.7) / 4);
+  });
+
+  it('au seuil, le sol de la salle sombre rejoint à peu près la clarté de sa voisine', () => {
+    const lit = { ...dark, extra: [spill] };
+    const threshold = lightAt(lit, new Vector3(0, 0, 4), UP);
+    expect(threshold).toBeGreaterThan(brightness(bright) - 0.15);
+    expect(threshold).toBeLessThan(brightness(bright) + 0.15);
+  });
+
+  it('n’éclaire pas le mur dans lequel la porte est percée', () => {
+    const lit = { ...dark, extra: [spill] };
+    const onDoorWall = new Vector3(3, 1.5, 3.8);
+    const facingNorth = new Vector3(0, 0, -1);
+    expect(lightAt(lit, onDoorWall, facingNorth)).toBeCloseTo(lightAt(dark, onDoorWall, facingNorth), 10);
+  });
+
+  it('prend la teinte de la salle d’où elle vient', () => {
+    const warmRoom = room({ position: [0, 9], size: [10, 4, 10], decor: { light: { tint: '#ffd0a0' } } });
+    const warm = roomLight(warmRoom, 0.4, resolveDecor(style, warmRoom));
+    const tinted = doorSpill(dark, warm, door.center, door.tangent, 2.4, 2.9)!;
+    expect(tinted.color).toEqual(warm.tint);
+    const lit = { ...dark, extra: [tinted] };
+    const [r, , b] = colorAt(lit, new Vector3(0, 0, 3.7), UP);
+    const [r0, , b0] = colorAt(dark, new Vector3(0, 0, 3.7), UP);
+    // La salle sombre a une lumière froide : ce qui entre par la porte la réchauffe.
+    expect(r - r0).toBeGreaterThan(b - b0);
   });
 });
 

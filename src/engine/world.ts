@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import { hangPainting, placeSculpture, TRACK_DISTANCE, type ArtworkContext, type PlacedArtwork } from './artworks';
+import { fixtureMaterial, hangPainting, placeSculpture, TRACK_DISTANCE, type ArtworkContext, type PlacedArtwork } from './artworks';
 import { buildBuilding } from './building';
+import { clearHeight, resolveDecor, type Decor } from './decors';
 import { benchFootprint, buildBench } from './furniture';
 import { EYE_HEIGHT, WALLS, buildLayout, type Layout } from './layout';
 import type { Quality } from './quality';
@@ -15,6 +16,8 @@ export interface World {
   group: THREE.Group;
   layout: Layout;
   artworks: PlacedArtwork[];
+  /** Décor de chaque salle, par identifiant. */
+  decors: Map<string, Decor>;
   /** Le visiteur peut-il se tenir en ce point (murs, portes et socles compris) ? */
   walkable(x: number, z: number): boolean;
   roomAt(x: number, z: number): RoomConfig | null;
@@ -40,15 +43,23 @@ export interface WorldOptions {
 export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
   const { style, quality } = options;
   const layout = buildLayout(museum, { wallThickness: style.wallThickness, doorHeight: style.doorHeight });
-  const building = buildBuilding(museum, layout, style, quality);
+  const decors = new Map(museum.rooms.map((room) => [room.id, resolveDecor(style, room)]));
+  const building = buildBuilding(museum, layout, style, quality, decors);
   const group = building.group;
 
-  const ctx: ArtworkContext = { style, quality, base: options.base, env: options.env, onLoad: options.onLoad ?? (() => {}), light: building.light };
-  const railMat = new THREE.MeshStandardMaterial({ color: '#161616', roughness: 0.5 });
+  const ctx: ArtworkContext = {
+    quality,
+    base: options.base,
+    env: options.env,
+    onLoad: options.onLoad ?? (() => {}),
+    light: building.light,
+    decor: (roomId) => decors.get(roomId)!,
+  };
   /** Zones occupées par le mobilier et les socles : le visiteur les contourne. */
   const blocked: ((x: number, z: number) => boolean)[] = [];
   const artworks: PlacedArtwork[] = [];
   for (const room of museum.rooms) {
+    const decor = decors.get(room.id)!;
     for (const wall of WALLS) {
       const { holder, frame } = building.wall(room.id, wall);
       const hung = room.artworks.filter((cfg) => cfg.type === 'painting' && cfg.wall === wall);
@@ -56,15 +67,15 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
         if (cfg.type === 'painting') artworks.push(hangPainting(cfg, room, holder, frame, ctx));
       }
       // Rail des projecteurs, au plafond, le long des murs qui portent des œuvres.
-      if (hung.length && !building.light(room.id).daylight) {
+      if (hung.length && !building.light(room.id).daylight && decor.light.spots > 0) {
         // Sa longueur le fait rejoindre exactement les rails des murs voisins, dans les angles.
-        const rail = new THREE.Mesh(new THREE.BoxGeometry(frame.length - TRACK_DISTANCE * 2 + 0.025, 0.02, 0.025), railMat);
-        rail.position.set(0, room.size[1] - 0.01, TRACK_DISTANCE);
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(frame.length - TRACK_DISTANCE * 2 + 0.025, 0.02, 0.025), fixtureMaterial(decor));
+        rail.position.set(0, clearHeight(room, decor) - 0.01, TRACK_DISTANCE);
         holder.add(rail);
       }
     }
     for (const bench of room.benches ?? []) {
-      group.add(buildBench(bench, room, style));
+      group.add(buildBench(bench, room, decor));
       const { hx, hz } = benchFootprint(bench);
       const bx = room.position[0] + bench.position[0];
       const bz = room.position[1] + bench.position[1];
@@ -82,6 +93,7 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
   const world: World = {
     group,
     layout,
+    decors,
     artworks,
     walkable: (x, z) => layout.walkable(x, z) && !blocked.some((hit) => hit(x, z)),
     roomAt: layout.roomAt,
@@ -118,7 +130,8 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
       for (const art of artworks) {
         const mat = art.label.material as THREE.MeshBasicMaterial;
         mat.map?.dispose();
-        mat.map = labelTexture(tr(art.config.title, lang), art.config.artist, art.config.year, quality);
+        const dark = decors.get(art.room.id)!.labels === 'dark';
+        mat.map = labelTexture(tr(art.config.title, lang), art.config.artist, art.config.year, quality, dark);
         mat.needsUpdate = true;
       }
     },

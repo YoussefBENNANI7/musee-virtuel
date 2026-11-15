@@ -1,3 +1,4 @@
+import { DECORS, coveOf, isDecorId, resolveDecor, type Decor } from './decors';
 import { benchFootprint } from './furniture';
 import { ART_CENTER_Y, MIN_DOOR_WIDTH, WALLS, buildLayout, inside, roomRect, wallFrame } from './layout';
 import { isStyleId, type Style } from './styles';
@@ -17,6 +18,12 @@ export interface Issue {
 const PAINTING_GENERATORS = ['geometric', 'fields', 'lines', 'circles', 'mosaic', 'landscape'];
 const SCULPTURE_GENERATORS = ['knot', 'blob', 'rings', 'stack', 'ribbon'];
 const SCULPTURE_MATERIALS = ['bronze', 'marble', 'patina', 'lacquer'];
+const FLOORINGS = ['concrete', 'parquet', 'chevron'];
+const WALL_FINISHES = ['paint', 'limewash'];
+const BASEBOARDS = ['skirting', 'shadow-gap', 'none'];
+const CEILINGS = ['flat', 'skylight', 'cove'];
+/** Une couleur s'écrit "#rgb" ou "#rrggbb". */
+const isColor = (value: unknown) => typeof value === 'string' && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(value);
 
 export function validateMuseum(museum: MuseumConfig, style: Style): Issue[] {
   const issues: Issue[] = [];
@@ -64,6 +71,8 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
       if (Math.min(w, d) < style.wallThickness + 2) error(where, 'salle trop étroite pour y circuler');
     }
     if (room.light !== undefined && !(room.light >= 0 && room.light <= 2)) error(where, 'niveau d\'éclairage invalide (entre 0 et 2)');
+    if (room.wall !== undefined && !isColor(room.wall)) error(where, `couleur de mur invalide : "${room.wall}" (attendu : "#rrggbb")`);
+    checkDecor(room, style, where, error);
     for (const [i, bench] of (room.benches ?? []).entries()) {
       const { hx, hz } = benchFootprint(bench);
       const clear = half + 0.3;
@@ -71,9 +80,16 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
         error(where, `banc n° ${i + 1} : posé hors de la salle ou trop près d'un mur`);
       }
     }
+    if (room.ceiling !== undefined && !CEILINGS.includes(room.ceiling?.type)) error(where, `plafond inconnu : "${room.ceiling?.type}"`);
     if (room.ceiling?.type === 'skylight') {
       const margin = room.ceiling.margin ?? 1.2;
       if (Math.min(w, d) - margin * 2 < 1) error(where, 'verrière : marge trop grande pour la taille de la salle');
+    }
+    const cove = coveOf(room, resolveDecor(style, room));
+    if (cove) {
+      if (!(cove.inset >= 0.1 && cove.drop >= 0.1)) error(where, 'plafond flottant : gorge trop fine (minimum 0,1 m)');
+      else if (Math.min(w, d) - (half + cove.inset) * 2 < 1) error(where, 'plafond flottant : gorge trop large pour la taille de la salle');
+      else if (h - cove.drop < 2.4) error(where, 'plafond flottant : trop bas (minimum 2,4 m sous le panneau)');
     }
   }
   for (let i = 0; i < rooms.length; i++) {
@@ -128,6 +144,7 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
       error(`Salle "${room.id}"`, 'liste d\'œuvres manquante');
       continue;
     }
+    const decor = resolveDecor(style, room);
     for (const art of room.artworks) {
       const where = `Œuvre "${art.id}"`;
       if (artIds.has(art.id)) error(where, 'identifiant utilisé par plusieurs œuvres');
@@ -136,11 +153,11 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
       translated(where, 'technique', art.medium);
       translated(where, 'description', art.description);
       if (!art.artist) warning(where, 'artiste manquant');
-      if (art.type === 'painting') checkPainting(art, room, layout, style, where, error, warning);
+      if (art.type === 'painting') checkPainting(art, room, layout, decor, where, error, warning);
       else if (art.type === 'sculpture') checkSculpture(art, room, half, where, error);
       else error(where, `type inconnu : "${(art as ArtworkConfig).type}"`);
     }
-    checkOverlaps(room, style, warning);
+    checkOverlaps(room, decor, warning);
   }
 
   // --- Parcours ----------------------------------------------------------------
@@ -158,27 +175,56 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
   }
 }
 
+/** Décor d'une salle : un nom de la bibliothèque, ou des réglages dont chacun doit être connu. */
+function checkDecor(room: RoomConfig, style: Style, where: string, error: Report) {
+  if (room.decor === undefined) return;
+  const config = typeof room.decor === 'string' ? { preset: room.decor } : room.decor;
+  if (!config || typeof config !== 'object') return error(where, 'décor illisible');
+  if (config.preset !== undefined && !isDecorId(config.preset)) {
+    error(where, `décor inconnu : "${config.preset}" (décors disponibles : ${Object.keys(DECORS).join(', ')})`);
+  }
+  for (const [name, value] of Object.entries(config.colors ?? {})) {
+    if (!isColor(value)) error(where, `décor : couleur invalide pour "${name}" : "${value}" (attendu : "#rrggbb")`);
+  }
+  if (config.floor !== undefined && !FLOORINGS.includes(config.floor)) error(where, `décor : sol inconnu : "${config.floor}"`);
+  if (config.walls !== undefined && !WALL_FINISHES.includes(config.walls)) error(where, `décor : finition de mur inconnue : "${config.walls}"`);
+  if (config.baseboard !== undefined && !BASEBOARDS.includes(config.baseboard)) error(where, `décor : bas de mur inconnu : "${config.baseboard}"`);
+  if (config.ceiling !== undefined && !['flat', 'cove'].includes(config.ceiling?.type)) {
+    error(where, `décor : plafond inconnu : "${config.ceiling?.type}" (une verrière se déclare sur la salle)`);
+  }
+  if (config.gloss !== undefined && !(config.gloss >= 0 && config.gloss <= 1)) error(where, 'décor : brillance du sol invalide (entre 0 et 1)');
+  if (config.labels !== undefined && !['light', 'dark'].includes(config.labels)) error(where, `décor : cartels inconnus : "${config.labels}"`);
+  const light = config.light;
+  if (light?.level !== undefined && !(light.level >= 0 && light.level <= 2)) error(where, 'décor : niveau d\'éclairage invalide (entre 0 et 2)');
+  if (light?.spots !== undefined && !(light.spots >= 0 && light.spots <= 4)) error(where, 'décor : force des projecteurs invalide (entre 0 et 4)');
+  if (light?.tint !== undefined && !isColor(light.tint)) error(where, `décor : teinte de lumière invalide : "${light.tint}" (attendu : "#rrggbb")`);
+  const frame = resolveDecor(style, room).frame;
+  if (!(frame.width > 0 && frame.width <= 0.3 && frame.depth > 0 && frame.depth <= 0.3 && frame.gap >= 0 && frame.gap <= 0.1)) {
+    error(where, 'décor : cadre invalide (largeur et épaisseur entre 0 et 0,3 m, vide entre 0 et 0,1 m)');
+  }
+}
+
 /** Demi-largeur occupée sur le mur par un tableau et son cadre. */
-const framedHalfWidth = (width: number, style: Style) => width / 2 + style.frame.gap + style.frame.width;
+const framedHalfWidth = (width: number, decor: Decor) => width / 2 + decor.frame.gap + decor.frame.width;
 
 function checkPainting(
   art: Extract<ArtworkConfig, { type: 'painting' }>,
   room: RoomConfig,
   layout: ReturnType<typeof buildLayout>,
-  style: Style,
+  decor: Decor,
   where: string,
   error: Report,
   warning: Report,
 ) {
   if (!WALLS.includes(art.wall)) return error(where, 'mur inconnu (north, south, east ou west)');
   if (!(art.width > 0 && art.height > 0)) return error(where, 'dimensions invalides');
-  const reach = framedHalfWidth(art.width, style);
+  const reach = framedHalfWidth(art.width, decor);
   const usable = wallFrame(room, art.wall, layout.wallThickness / 2).length;
   if (Math.abs(art.offset) + reach > usable / 2) error(where, 'dépasse du mur');
   for (const gap of layout.openings(room.id, art.wall)) {
     if (Math.abs(art.offset - gap.offset) < reach + gap.width / 2) error(where, 'accrochée en travers d\'une porte');
   }
-  if (ART_CENTER_Y + art.height / 2 + style.frame.width > room.size[1] - 0.1) error(where, 'trop haute pour le plafond de la salle');
+  if (ART_CENTER_Y + art.height / 2 + decor.frame.width > room.size[1] - 0.1) error(where, 'trop haute pour le plafond de la salle');
   if (ART_CENTER_Y - art.height / 2 < 0.2) error(where, 'trop haute : elle toucherait le sol');
 
   const image = art.image as { src?: unknown; generator?: unknown } | undefined;
@@ -215,12 +261,12 @@ function checkSculpture(
 }
 
 /** Deux tableaux qui se recouvrent sur un même mur : gênant, mais pas bloquant. */
-function checkOverlaps(room: RoomConfig, style: Style, warning: Report) {
+function checkOverlaps(room: RoomConfig, decor: Decor, warning: Report) {
   for (const wall of WALLS) {
     const hung = room.artworks.filter((a) => a.type === 'painting' && a.wall === wall) as Extract<ArtworkConfig, { type: 'painting' }>[];
     for (let i = 0; i < hung.length; i++) {
       for (let j = i + 1; j < hung.length; j++) {
-        const gap = Math.abs(hung[i].offset - hung[j].offset) - framedHalfWidth(hung[i].width, style) - framedHalfWidth(hung[j].width, style);
+        const gap = Math.abs(hung[i].offset - hung[j].offset) - framedHalfWidth(hung[i].width, decor) - framedHalfWidth(hung[j].width, decor);
         if (gap < 0) warning(`Œuvre "${hung[i].id}"`, `recouvre l'œuvre "${hung[j].id}" sur le mur ${wall}`);
       }
     }
