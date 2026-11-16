@@ -17,6 +17,7 @@
   --i-tours: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='6' cy='19' r='2'/%3E%3Ccircle cx='18' cy='5' r='2'/%3E%3Cpath d='M8 19h7a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h7'/%3E%3C/svg%3E");
   --i-map: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14'/%3E%3C/svg%3E");
   --i-list: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01'/%3E%3C/svg%3E");
+  --i-carnet: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11M9 8h6'/%3E%3C/svg%3E");
   --i-vr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M3 8h18v9h-6l-3-3-3 3H3z'/%3E%3C/svg%3E");
   font-family: Georgia, 'Times New Roman', serif;
   color: var(--ink);
@@ -134,6 +135,22 @@ body {
 }
 #mode {
   --icon: var(--i-list);
+}
+#carnet-open {
+  --icon: var(--i-carnet);
+  position: relative;
+}
+/* Nombre d'œuvres vues, posé sur le coin du bouton. */
+#carnet-open .badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font: 600 0.62rem system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
 }
 #vr {
   --icon: var(--i-vr);
@@ -361,9 +378,12 @@ body:not(.simple) .tools select:hover {
   margin-bottom: 18px;
 }
 /* « Agrandir » : un lien souligné à côté du bouton principal. */
+/* L'écart est porté par le bouton d'écoute : si le lien passe à la ligne, il reste aligné à gauche. */
+.panel #p-audio {
+  margin-right: 14px;
+}
 .panel #p-zoom {
   min-height: 0;
-  margin-left: 12px;
   padding: 6px 0;
   border: 0;
   border-bottom: 1px solid var(--green);
@@ -695,6 +715,7 @@ html:has(body.simple) {
 .simple #joystick,
 .simple #help,
 .simple #map-open,
+.simple #carnet-open,
 .simple #tours-open,
 .simple #vr,
 .simple #room-name {
@@ -853,12 +874,20 @@ html:has(body.simple) {
 .zoom-stage.zoomed {
   cursor: grab;
 }
+.zoom-sheet {
+  position: relative;
+  line-height: 0;
+  will-change: transform;
+}
+/* Approche d'un détail commenté : l'image glisse au lieu de sauter. */
+.zoom-sheet.glide {
+  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
 .zoom-stage img {
-  max-width: 94%;
-  max-height: 88%;
+  max-width: 94vw;
+  max-height: 88vh;
   user-select: none;
   -webkit-user-drag: none;
-  will-change: transform;
 }
 .zoom.loading img {
   opacity: 0.25;
@@ -922,4 +951,173 @@ html:has(body.simple) {
 .zoom-btn[aria-pressed='true'] {
   background: #fff;
   color: #141413;
+}
+
+/* --- Carnet de visite ------------------------------------------------------- */
+.carnet-bar,
+.carnet-room .track {
+  position: relative;
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--paper-2);
+  overflow: hidden;
+}
+.carnet-bar::after,
+.carnet-room .track::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--green);
+  transform-origin: left;
+  transform: scaleX(var(--part, 0));
+}
+.carnet-bar {
+  height: 6px;
+  margin-bottom: 14px;
+}
+.carnet-room {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 16px;
+  align-items: baseline;
+  width: 100%;
+  padding: 14px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.carnet-room:hover .name {
+  text-decoration: underline;
+}
+.carnet-room .name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: italic 400 1.15rem Georgia, serif;
+}
+/* L'étoile du musée marque une salle terminée. */
+.carnet-room .name::before {
+  content: '';
+  flex: none;
+  width: 16px;
+  height: 16px;
+  background: var(--line);
+  -webkit-mask: var(--i-star) center / contain no-repeat;
+  mask: var(--i-star) center / contain no-repeat;
+}
+.carnet-room.complete .name::before {
+  background: var(--accent);
+}
+.carnet-room .count {
+  font: 600 0.85rem system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.carnet-room .track {
+  grid-column: 1 / -1;
+}
+#carnet-reset {
+  margin-top: 8px;
+}
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--dock) + 60px);
+  z-index: 4;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 32px);
+  margin: 0;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--green);
+  box-shadow: 0 6px 22px rgba(18, 40, 33, 0.35);
+  font: 600 0.88rem system-ui, sans-serif;
+  text-align: center;
+  pointer-events: none;
+}
+.welcoming .toast,
+.inspecting .toast {
+  visibility: hidden;
+}
+
+/* --- Détails commentés d'une œuvre ---------------------------------------------- */
+.zoom-dot {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: rgba(31, 90, 72, 0.9);
+  color: #fff;
+  font: 600 0.9rem/1 system-ui, sans-serif;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  transform: scale(var(--inv, 1));
+  cursor: pointer;
+}
+.zoom-dot:hover,
+.zoom-dot:focus-visible,
+.zoom-dot[aria-current='true'] {
+  background: #fff;
+  color: var(--green);
+  outline: none;
+}
+.zoom-detail {
+  position: absolute;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(560px, calc(100% - 24px));
+  padding: 18px 22px 16px;
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.zoom-detail .count {
+  margin: 0 0 6px;
+  font: 500 0.7rem system-ui, sans-serif;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.zoom-detail h3 {
+  margin: 0 0 8px;
+  font-size: 1.35rem;
+  font-style: italic;
+  font-weight: 400;
+}
+.zoom-detail .text {
+  margin: 0 0 14px;
+  font-size: 1.02rem;
+  line-height: 1.6;
+}
+.zoom-detail .row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.zoom-detail .btn {
+  min-height: 40px;
+}
+/* Dans la vue simplifiée, les détails se lisent sous le commentaire. */
+.card .details {
+  margin: 0 0 14px;
+  padding-left: 18px;
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+.card .details-title {
+  margin: 0 0 4px;
+  font: 600 0.8rem system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }

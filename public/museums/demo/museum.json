@@ -163,7 +163,51 @@
           "audio": {
             "fr": "audio/la-classe-de-danse.fr.mp3",
             "en": "audio/la-classe-de-danse.en.mp3"
-          }
+          },
+          "details": [
+            {
+              "at": [
+                0.89,
+                0.44
+              ],
+              "title": {
+                "fr": "Le maître de ballet",
+                "en": "The ballet master"
+              },
+              "text": {
+                "fr": "Jules Perrot, appuyé sur le grand bâton qui lui sert à battre la mesure.",
+                "en": "Jules Perrot, leaning on the long stick he uses to beat time."
+              }
+            },
+            {
+              "at": [
+                0.45,
+                0.21
+              ],
+              "title": {
+                "fr": "Le miroir",
+                "en": "The mirror"
+              },
+              "text": {
+                "fr": "Il reflète d'autres danseuses et une fenêtre ouverte sur la ville, que l'on ne verrait pas autrement.",
+                "en": "It reflects more dancers and a window open onto the city, which we would not see otherwise."
+              }
+            },
+            {
+              "at": [
+                0.27,
+                0.27
+              ],
+              "title": {
+                "fr": "L'affiche",
+                "en": "The poster"
+              },
+              "text": {
+                "fr": "Au mur, l'affiche d'un opéra de Rossini, Guillaume Tell : un hommage au chanteur Jean-Baptiste Faure, qui avait commandé le tableau.",
+                "en": "On the wall, a poster for Rossini's opera William Tell: a tribute to the singer Jean-Baptiste Faure, who had commissioned the painting."
+              }
+            }
+          ]
         },
         {
           "id": "ia-orana-maria",
@@ -327,7 +371,51 @@
           "audio": {
             "fr": "audio/les-moissonneurs.fr.mp3",
             "en": "audio/les-moissonneurs.en.mp3"
-          }
+          },
+          "details": [
+            {
+              "at": [
+                0.57,
+                0.83
+              ],
+              "title": {
+                "fr": "Le dormeur",
+                "en": "The sleeper"
+              },
+              "text": {
+                "fr": "Un moissonneur dort, bras et jambes écartés, au pied du poirier. Bruegel peint la fatigue telle qu'elle est, sans s'en moquer.",
+                "en": "A harvester sleeps, arms and legs spread, at the foot of the pear tree. Bruegel paints tiredness as it is, without mocking it."
+              }
+            },
+            {
+              "at": [
+                0.77,
+                0.84
+              ],
+              "title": {
+                "fr": "Le repas",
+                "en": "The meal"
+              },
+              "text": {
+                "fr": "Assis sur des gerbes, hommes et femmes mangent et boivent dans des bols. Chacun a son geste, personne ne pose.",
+                "en": "Sitting on sheaves, men and women eat and drink from bowls. Each has a gesture of their own; nobody is posing."
+              }
+            },
+            {
+              "at": [
+                0.39,
+                0.34
+              ],
+              "title": {
+                "fr": "La mer au loin",
+                "en": "The distant sea"
+              },
+              "text": {
+                "fr": "Derrière les champs, une baie où passent des navires. Ce lointain a fait la célébrité du tableau : le paysage y devient le vrai sujet.",
+                "en": "Beyond the fields, a bay crossed by ships. This distance made the painting famous: the landscape becomes the real subject."
+              }
+            }
+          ]
         },
         {
           "id": "champ-de-ble-avec-cypres",
@@ -369,7 +457,51 @@
           "audio": {
             "fr": "audio/champ-de-ble-avec-cypres.fr.mp3",
             "en": "audio/champ-de-ble-avec-cypres.en.mp3"
-          }
+          },
+          "details": [
+            {
+              "at": [
+                0.86,
+                0.35
+              ],
+              "title": {
+                "fr": "Les cyprès",
+                "en": "The cypresses"
+              },
+              "text": {
+                "fr": "Van Gogh comparait le cyprès à « un obélisque égyptien ». Sa flamme sombre monte plus haut que les nuages.",
+                "en": "Van Gogh compared the cypress to \"an Egyptian obelisk\". Its dark flame rises higher than the clouds."
+              }
+            },
+            {
+              "at": [
+                0.25,
+                0.2
+              ],
+              "title": {
+                "fr": "La matière",
+                "en": "The paint itself"
+              },
+              "text": {
+                "fr": "La peinture est posée en pâte épaisse : chaque nuage garde la trace du pinceau.",
+                "en": "The paint is laid on thickly: every cloud keeps the mark of the brush."
+              }
+            },
+            {
+              "at": [
+                0.66,
+                0.92
+              ],
+              "title": {
+                "fr": "Les coquelicots",
+                "en": "The poppies"
+              },
+              "text": {
+                "fr": "Quelques touches rouges au bord du champ suffisent à faire des coquelicots.",
+                "en": "A few red touches at the edge of the field are enough to make poppies."
+              }
+            }
+          ]
         },
         {
           "id": "crepuscule-dans-la-nature-sauvage",
@@ -1019,7 +1151,65 @@
           "audio": {
             "fr": "audio/la-grande-vague.fr.mp3",
             "en": "audio/la-grande-vague.en.mp3"
-          }
+          },
+          "details": [
+            {
+              "at": [
+                0.635,
+                0.69
+              ],
+              "title": {
+                "fr": "Le mont Fuji",
+                "en": "Mount Fuji"
+              },
+              "text": {
+                "fr": "La montagne sacrée paraît minuscule sous la vague, et son sommet enneigé ressemble à une crête d'écume.",
+                "en": "The sacred mountain looks tiny beneath the wave, and its snowy summit resembles a crest of foam."
+              }
+            },
+            {
+              "at": [
+                0.48,
+                0.3
+              ],
+              "title": {
+                "fr": "L'écume",
+                "en": "The foam"
+              },
+              "text": {
+                "fr": "La crête se déchire en doigts crochus, comme des griffes au-dessus des barques.",
+                "en": "The crest breaks into hooked fingers, like claws above the boats."
+              }
+            },
+            {
+              "at": [
+                0.75,
+                0.905
+              ],
+              "title": {
+                "fr": "Les rameurs",
+                "en": "The rowers"
+              },
+              "text": {
+                "fr": "Dans les barques, longues et rapides, les pêcheurs se couchent sur leurs rames en attendant le choc.",
+                "en": "In the long, fast boats, the fishermen bend over their oars, bracing for the impact."
+              }
+            },
+            {
+              "at": [
+                0.07,
+                0.17
+              ],
+              "title": {
+                "fr": "Le titre et la signature",
+                "en": "Title and signature"
+              },
+              "text": {
+                "fr": "Dans le cartouche, le nom de la série et celui de l'estampe. À sa gauche, la signature : « du pinceau d'Iitsu, autrefois Hokusai ».",
+                "en": "In the cartouche, the name of the series and of the print. To its left, the signature: \"from the brush of Iitsu, formerly Hokusai\"."
+              }
+            }
+          ]
         },
         {
           "id": "averse-soudaine",
@@ -1529,7 +1719,65 @@
           "audio": {
             "fr": "audio/un-dimanche-a-la-grande-jatte.fr.mp3",
             "en": "audio/un-dimanche-a-la-grande-jatte.en.mp3"
-          }
+          },
+          "details": [
+            {
+              "at": [
+                0.74,
+                0.86
+              ],
+              "title": {
+                "fr": "Le singe en laisse",
+                "en": "The monkey on a leash"
+              },
+              "text": {
+                "fr": "Aux pieds du couple élégant, un petit singe tenu en laisse, et un chien qui bondit vers lui.",
+                "en": "At the feet of the elegant couple, a small monkey on a leash, and a dog leaping towards it."
+              }
+            },
+            {
+              "at": [
+                0.455,
+                0.47
+              ],
+              "title": {
+                "fr": "La fillette en blanc",
+                "en": "The girl in white"
+              },
+              "text": {
+                "fr": "Au centre du tableau, c'est le seul personnage qui nous regarde en face.",
+                "en": "At the centre of the painting, she is the only figure who looks straight at us."
+              }
+            },
+            {
+              "at": [
+                0.6,
+                0.8
+              ],
+              "title": {
+                "fr": "Les points de couleur",
+                "en": "The dots of colour"
+              },
+              "text": {
+                "fr": "De près, la pelouse est faite de petites touches posées côte à côte. C'est l'œil du spectateur qui les mélange.",
+                "en": "Seen close, the lawn is made of small touches set side by side. It is the viewer's eye that blends them."
+              }
+            },
+            {
+              "at": [
+                0.015,
+                0.5
+              ],
+              "title": {
+                "fr": "La bordure peinte",
+                "en": "The painted border"
+              },
+              "text": {
+                "fr": "Seurat a ajouté plus tard cette bordure de points colorés, pour faire vibrer les couleurs voisines.",
+                "en": "Seurat later added this border of coloured dots, to make the neighbouring colours vibrate."
+              }
+            }
+          ]
         },
         {
           "id": "rue-de-paris-temps-de-pluie",
@@ -1571,7 +1819,51 @@
           "audio": {
             "fr": "audio/rue-de-paris-temps-de-pluie.fr.mp3",
             "en": "audio/rue-de-paris-temps-de-pluie.en.mp3"
-          }
+          },
+          "details": [
+            {
+              "at": [
+                0.49,
+                0.3
+              ],
+              "title": {
+                "fr": "Le réverbère",
+                "en": "The lamp post"
+              },
+              "text": {
+                "fr": "Planté presque au milieu, il coupe le tableau en deux : à gauche la rue profonde, à droite le couple tout proche.",
+                "en": "Standing almost in the middle, it cuts the painting in two: the deep street on the left, the couple close by on the right."
+              }
+            },
+            {
+              "at": [
+                0.25,
+                0.82
+              ],
+              "title": {
+                "fr": "Les pavés mouillés",
+                "en": "The wet cobbles"
+              },
+              "text": {
+                "fr": "Chaque pavé brille. Caillebotte peint la pluie sans peindre une seule goutte.",
+                "en": "Every cobblestone shines. Caillebotte paints the rain without painting a single drop."
+              }
+            },
+            {
+              "at": [
+                0.93,
+                0.6
+              ],
+              "title": {
+                "fr": "L'homme coupé",
+                "en": "The cropped man"
+              },
+              "text": {
+                "fr": "Ce passant de dos, coupé par le bord, donne l'impression d'une photographie prise en marchant.",
+                "en": "This passer-by seen from behind, cut off by the edge, gives the impression of a photograph taken while walking."
+              }
+            }
+          ]
         }
       ]
     },
@@ -1649,7 +1941,51 @@
           "audio": {
             "fr": "audio/paire-de-portes.fr.mp3",
             "en": "audio/paire-de-portes.en.mp3"
-          }
+          },
+          "details": [
+            {
+              "at": [
+                0.26,
+                0.27
+              ],
+              "title": {
+                "fr": "Les étoiles sculptées",
+                "en": "The carved stars"
+              },
+              "text": {
+                "fr": "Des baguettes de bois dessinent un réseau d'étoiles et de polygones, qui pourrait se prolonger à l'infini.",
+                "en": "Strips of wood draw a network of stars and polygons that could go on for ever."
+              }
+            },
+            {
+              "at": [
+                0.3,
+                0.67
+              ],
+              "title": {
+                "fr": "Le guichet",
+                "en": "The wicket"
+              },
+              "text": {
+                "fr": "Cette petite porte en arc outrepassé laissait passer une personne sans ouvrir les grands vantaux.",
+                "en": "This small horseshoe-arched door let one person through without opening the great leaves."
+              }
+            },
+            {
+              "at": [
+                0.5,
+                0.53
+              ],
+              "title": {
+                "fr": "Le verrou",
+                "en": "The bolt"
+              },
+              "text": {
+                "fr": "Une longue barre de fer glissait d'un vantail à l'autre pour fermer la porte.",
+                "en": "A long iron bar slid from one leaf to the other to close the door."
+              }
+            }
+          ]
         },
         {
           "id": "tapis",

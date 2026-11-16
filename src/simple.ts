@@ -102,6 +102,12 @@ export function startSimple(app: App, fallback: boolean): View {
           h('p', { class: 'meta' }, metaLine(app, a)),
           h('p', { class: 'desc' }, tr(a.description, app.lang)),
         );
+        if (a.type === 'painting' && a.details?.length) {
+          // Les détails commentés de l'agrandissement se lisent ici, à la suite du commentaire.
+          const list = h('ul', { class: 'details' });
+          for (const d of a.details) list.append(h('li', {}, h('strong', {}, tr(d.title, app.lang)), ` : ${tr(d.text, app.lang)}`));
+          body.append(h('p', { class: 'details-title' }, app.ui().detailsTitle), list);
+        }
         const credit = h('p', { class: 'credit' });
         renderCredit(credit, app, a);
         body.append(credit);

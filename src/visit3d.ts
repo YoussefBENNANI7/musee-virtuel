@@ -7,6 +7,7 @@ import { buildMap } from './engine/map';
 import { buildFloorReflection } from './engine/reflection';
 import { loc, tr, type RoomConfig, type TourConfig } from './engine/types';
 import { buildWorld, type PlacedArtwork } from './engine/world';
+import { setupCarnet } from './carnet';
 import { setupInspect } from './inspect';
 import { $, metaLine, renderCredit, type App, type View } from './ui';
 import { setupVR } from './vr';
@@ -151,7 +152,7 @@ export function startVisit(app: App): View {
     renderCredit($('p-credit'), app, a);
     // Un tableau fourni en fichier s'agrandit ; une sculpture, une fois chargée, s'examine sous tous les angles.
     $('p-zoom').hidden = a.type === 'painting' ? !('src' in a.image) : !current.shape;
-    $('p-zoom').textContent = a.type === 'painting' ? ui().enlarge : ui().examine;
+    $('p-zoom').textContent = a.type === 'sculpture' ? ui().examine : a.details?.length ? ui().explore : ui().enlarge;
     renderAudio();
   }
   guide.onChange = () => {
@@ -179,7 +180,10 @@ export function startVisit(app: App): View {
     const a = current?.config;
     if (!current || !a) return;
     if (a.type === 'sculpture') inspect.open(current);
-    else if ('src' in a.image) zoom.open(new URL(a.image.src, app.base).href, `${tr(a.title, app.lang)}, ${loc(a.artist, app.lang)}`);
+    else if ('src' in a.image) {
+      const details = (a.details ?? []).map((d) => ({ x: d.at[0], y: d.at[1], title: tr(d.title, app.lang), text: tr(d.text, app.lang) }));
+      zoom.open(new URL(a.image.src, app.base).href, `${tr(a.title, app.lang)}, ${loc(a.artist, app.lang)}`, details);
+    }
   });
 
   /**
@@ -209,6 +213,7 @@ export function startVisit(app: App): View {
   function openArtwork(art: PlacedArtwork, instant = false) {
     guide.stop();
     current = art;
+    carnet.see(art.config.id, art.room.id);
     panel.hidden = false;
     $('help').hidden = true;
     renderPanel();
@@ -397,6 +402,14 @@ export function startVisit(app: App): View {
     const s = world.spawn(roomId);
     fade(() => controls.teleport(s.x, s.z, s.yaw));
   });
+  // Carnet de visite : les œuvres vues, salle par salle.
+  const carnet = setupCarnet(app, {
+    goToRoom(roomId) {
+      closePanel();
+      const s = world.spawn(roomId);
+      fade(() => controls.teleport(s.x, s.z, s.yaw));
+    },
+  });
   const openMap = () => {
     mapDialog.hidden = false;
     $('map-close').focus();
@@ -411,6 +424,7 @@ export function startVisit(app: App): View {
     if (e.key !== 'Escape') return;
     if (zoom.isOpen) zoom.close();
     else if (inspect.isOpen) inspect.close();
+    else if (carnet.close()) return;
     else if (!mapDialog.hidden) mapDialog.hidden = true;
     else if (!toursDialog.hidden) toursDialog.hidden = true;
     else closePanel();
@@ -430,6 +444,7 @@ export function startVisit(app: App): View {
     $('tours-title').textContent = ui().toursTitle;
     $('tours-hint').textContent = ui().toursHint;
     $('vr').textContent = ui().vr;
+    carnet.render();
     world.setLang(app.lang);
     map.setLang(app.lang);
     vr.refresh();
@@ -566,7 +581,7 @@ export function startVisit(app: App): View {
       return { x: ((v.x + 1) / 2) * canvas.clientWidth, y: ((1 - v.y) / 2) * canvas.clientHeight };
     };
     Object.assign(window, {
-      __museum: { screenAt, marker, inspect, style: style.id, decors: Object.fromEntries([...world.decors].map(([id, d]) => [id, d.preset])), quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
+      __museum: { screenAt, marker, inspect, carnet, style: style.id, decors: Object.fromEntries([...world.decors].map(([id, d]) => [id, d.preset])), quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
     });
   }
 

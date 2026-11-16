@@ -79,6 +79,16 @@ export interface PaintingConfig extends ArtworkBase {
   frameless?: boolean;
   /** Cadre particulier à cette œuvre, à la place de celui de la salle : "gilt" pour un cadre doré mouluré. */
   frame?: 'gilt';
+  /** Détails commentés, montrés dans l'agrandissement de l'œuvre : trois ou quatre suffisent. */
+  details?: DetailConfig[];
+}
+
+/** Un détail à regarder de près dans un tableau. */
+export interface DetailConfig {
+  /** Position dans l'image, de 0 à 1 : [depuis la gauche, depuis le haut]. */
+  at: [number, number];
+  title: L10n;
+  text: L10n;
 }
 
 export interface SculptureConfig extends ArtworkBase {

@@ -16,6 +16,7 @@
       <div class="tools">
         <button id="tours-open" type="button"></button>
         <button id="map-open" type="button"></button>
+        <button id="carnet-open" type="button"></button>
         <button id="vr" type="button" hidden></button>
         <button id="mode" type="button"></button>
         <select id="lang"></select>
@@ -70,9 +71,34 @@
       </section>
     </div>
 
+    <div id="carnet" class="overlay" hidden>
+      <section class="map-card" role="dialog" aria-labelledby="carnet-title">
+        <button id="carnet-close" class="close" type="button">×</button>
+        <h2 id="carnet-title"></h2>
+        <p id="carnet-hint" class="meta"></p>
+        <div id="carnet-bar" class="carnet-bar" aria-hidden="true"></div>
+        <div id="carnet-body"></div>
+        <button id="carnet-reset" class="link" type="button"></button>
+      </section>
+    </div>
+
+    <p id="toast" class="toast" role="status" hidden></p>
+
     <div id="zoom" class="zoom" role="dialog" aria-modal="true" tabindex="-1" hidden>
-      <div id="zoom-stage" class="zoom-stage"><img id="zoom-img" alt="" draggable="false" /></div>
+      <div id="zoom-stage" class="zoom-stage">
+        <div id="zoom-sheet" class="zoom-sheet"><img id="zoom-img" alt="" draggable="false" /><div id="zoom-dots"></div></div>
+      </div>
       <p id="zoom-hint" class="zoom-hint"></p>
+      <aside id="zoom-detail" class="zoom-detail" aria-live="polite" hidden>
+        <p id="zoom-detail-count" class="count"></p>
+        <h3 id="zoom-detail-title"></h3>
+        <p id="zoom-detail-text" class="text"></p>
+        <div class="row">
+          <button id="zoom-detail-prev" class="btn" type="button"></button>
+          <button id="zoom-detail-all" class="link" type="button"></button>
+          <button id="zoom-detail-next" class="btn primary" type="button"></button>
+        </div>
+      </aside>
       <div class="zoom-tools">
         <button id="zoom-out" class="zoom-btn" type="button">−</button>
         <button id="zoom-in" class="zoom-btn" type="button">+</button>

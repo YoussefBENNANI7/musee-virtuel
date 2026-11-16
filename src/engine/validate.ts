@@ -165,6 +165,16 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
       if (art.year && typeof art.year !== 'string') translated(where, 'date', art.year);
       if (art.credit !== undefined) translated(where, 'mention', art.credit);
       if (art.link !== undefined && !/^https:\/\/\S+$/.test(String(art.link))) error(where, `lien invalide : "${art.link}" (attendu : une adresse en https://)`);
+      if (art.type === 'painting') {
+        (art.details ?? []).forEach((detail, i) => {
+          const spot = `${where}, détail ${i + 1}`;
+          const [x, y]: number[] = Array.isArray(detail.at) ? detail.at : [];
+          if (!(x! >= 0 && x! <= 1 && y! >= 0 && y! <= 1)) error(spot, 'position invalide (attendu : deux nombres entre 0 et 1, depuis la gauche puis depuis le haut)');
+          translated(spot, 'titre', detail.title);
+          translated(spot, 'texte', detail.text);
+        });
+        if (art.details?.length && !('src' in art.image)) warning(where, 'les détails commentés ne s’affichent que pour une œuvre fournie en fichier image');
+      }
       if (art.type === 'painting') checkPainting(art, room, layout, decor, where, error, warning);
       else if (art.type === 'sculpture') checkSculpture(art, room, half, where, error);
       else error(where, `type inconnu : "${(art as ArtworkConfig).type}"`);
