@@ -67,7 +67,7 @@ Le 15 novembre 2026, le porteur a donné son avis sur l'ambiance : la base lui p
 |---|---|---|
 | 1. README | Installer, lancer et configurer le projet | Fait |
 | 2. Décor par salle | Chaque salle reçoit un décor : sol, murs, plafond, lumière, cadres, mobilier | Fait : les cinq salles ont leur décor, voir ci-dessous |
-| 3. Œuvres réelles | Recherche de vraies œuvres en accès libre, puis remplacement des œuvres fictives : tableaux, vrais modèles 3D (format GLB) avec de vraies ombres, nouveaux cartels, textes et parcours. Aussi : cadres variés, zoom haute définition | **Sélection en cours**, à valider par le porteur avant toute intégration |
+| 3. Œuvres réelles | Recherche de vraies œuvres en accès libre, puis remplacement des œuvres fictives : tableaux, vrais modèles 3D (format GLB) avec de vraies ombres, nouveaux cartels, textes et parcours. Aussi : cadres variés, zoom haute définition | **Sélection proposée le 16 novembre 2026**, à valider par le porteur avant toute intégration. Voir ci-dessous |
 | 3 bis. Salle marocaine | Nouvelle salle au plan, avec ses éléments d'architecture (arcs, zellige, plâtre sculpté, plafond de cèdre, fontaine) et ses objets traditionnels | À faire, après les œuvres réelles. Salle pilote à valider |
 | 4. Interface | Écran d'accueil du musée, nouvelle identité visuelle (typographie, icônes, commandes discrètes, fiches animées), clic au sol pour se déplacer, mini-plan permanent | À faire, après le décor pour s'accorder à l'ambiance définitive |
 | 5. Mise en ligne | Hébergement sur Vercel, puis vérification sur de vrais appareils | À faire, avec l'accord du porteur |
@@ -101,9 +101,30 @@ La bibliothèque compte quatre décors. Le porteur a choisi de les utiliser tous
 
 Pour essayer un autre décor sans rien modifier : `?decor=galerie:terre-cuite` (une salle) ou `?decor=nuit` (toutes).
 
+### Œuvres réelles : la sélection proposée
+
+73 pièces, variantes comprises, toutes vérifiées à la source : 59 en domaine public, 12 libres si l'on cite l'auteur, 2 réservées à un usage non commercial. La liste complète, avec la source et la licence de chaque pièce, est dans `docs/selection-oeuvres.md` ; les mêmes données, prêtes pour l'intégration, sont dans `docs/selection-oeuvres.json`.
+
+| Salle | Proposition |
+|---|---|
+| Atrium | Renoir, *Deux sœurs* ; Degas, *La Classe de danse* |
+| Salle des Horizons | Bruegel, *Les Moissonneurs* ; Van Gogh, *Champ de blé avec cyprès* ; Church, *Crépuscule dans la nature sauvage* ; Cézanne, *La Montagne Sainte-Victoire* |
+| Cabinet des Couleurs | Deux *Meules* de Monet ; Kandinsky, *Improvisation n° 30* ; Gauguin, *Mahana no atua* |
+| Galerie des Lignes | Hokusai, *La Grande Vague* ; Hiroshige, *Averse soudaine* ; Dürer, *Le Rhinocéros* ; Rembrandt, *Les Trois Arbres* ; Le Gray, *La Grande Vague, Sète* (photographie) |
+| Cour des Sculptures | Seurat, *Un dimanche à la Grande Jatte* |
+| Sculptures en 3D | Vénus de Milo (moulage), tête d'Amenhotep III, Shiva Nataraja, tête de Pierre de Wissant par Rodin, *L'Esclave grecque* de Powers |
+| Salle marocaine | 20 pièces du Metropolitan Museum, de l'Art Institute of Chicago et du musée de Cleveland (portes et panneaux mérinides, zelliges, tapis, textiles, manuscrits, bijoux, instruments), et des modèles 3D d'artistes (fontaine, lanterne, théière, tajine) |
+
+Ce que la recherche a montré :
+
+- Aucun musée ne publie de pièce marocaine numérisée en 3D. Les modèles 3D proposés sont des créations d'artistes, sauf un relevé de tombe du Chellah, à Rabat.
+- Les estampes et gravures mesurent 25 à 40 cm : elles demandent un passe-partout, que le moteur ne sait pas encore dessiner.
+- Les modèles 3D de Sketchfab se téléchargent avec un compte gratuit ; celui de la Smithsonian se télécharge directement. Plusieurs sont lourds et devront être allégés pour le téléphone.
+
 ## 4. En attente du porteur du projet
 
-- **Son accord sur la sélection d'œuvres réelles** : rien n'entre dans le musée sans lui.
+- **Son accord sur la sélection d'œuvres réelles** (`docs/selection-oeuvres.md`) : rien n'entre dans le musée sans lui.
+- **Un compte Sketchfab gratuit**, au moment d'intégrer les sculptures : sa clé d'accès sert à télécharger les modèles 3D.
 - **Les voix de l'audioguide** : service de voix de qualité ou vraie personne, à décider.
 - **Des essais sur de vrais appareils** : téléphone (de préférence ancien), casque VR, lecteur d'écran (VoiceOver, TalkBack), voix de l'audioguide. Le casque exige une adresse HTTPS, donc l'hébergement.
 - **L'hébergement** : créer un compte Vercel et y relier le dépôt GitHub, le moment venu.
@@ -155,7 +176,9 @@ scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
 tests/unit/                 Tests unitaires (Vitest) : 89 tests
 tests/e2e/                  Tests dans un navigateur (Playwright) : 39 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
-docs/prompts-images.md      Prompts de génération des 16 images
+docs/prompts-images.md      Prompts de génération des 16 images fictives, appelées à être remplacées
+docs/selection-oeuvres.md   Sélection d'œuvres réelles proposée : source et licence de chaque pièce
+docs/selection-oeuvres.json Les mêmes données, pour l'intégration
 vercel.json                 Configuration de l'hébergement (pas encore relié)
 ```
 
