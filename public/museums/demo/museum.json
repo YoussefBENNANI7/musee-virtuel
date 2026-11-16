@@ -1580,7 +1580,11 @@
             "en": "Freer Gallery of Art, Smithsonian, Washington · public domain 3D model"
           },
           "link": "https://asia.si.edu/object/F1930.54a-b/",
-          "photo": "thumbs/vase-fangyi.jpg"
+          "photo": "thumbs/vase-fangyi.jpg",
+          "audio": {
+            "fr": "audio/vase-fangyi.fr.mp3",
+            "en": "audio/vase-fangyi.en.mp3"
+          }
         },
         {
           "id": "danseuse",
@@ -1621,7 +1625,11 @@
           },
           "link": "https://collection.cooperhewitt.org/view/objects/asitem/id/17969",
           "tone": 0.62,
-          "photo": "thumbs/danseuse.jpg"
+          "photo": "thumbs/danseuse.jpg",
+          "audio": {
+            "fr": "audio/danseuse.fr.mp3",
+            "en": "audio/danseuse.en.mp3"
+          }
         },
         {
           "id": "bouddha-cosmique",
@@ -1661,7 +1669,11 @@
             "en": "Freer Gallery of Art, Smithsonian, Washington · public domain 3D model"
           },
           "link": "https://asia.si.edu/object/F1923.15/",
-          "photo": "thumbs/bouddha-cosmique.jpg"
+          "photo": "thumbs/bouddha-cosmique.jpg",
+          "audio": {
+            "fr": "audio/bouddha-cosmique.fr.mp3",
+            "en": "audio/bouddha-cosmique.en.mp3"
+          }
         },
         {
           "id": "defense-sculptee",
@@ -1701,7 +1713,11 @@
             "en": "National Museum of African Art, Smithsonian, Washington · public domain 3D model"
           },
           "link": "https://www.si.edu/object/nmafa_96-28-1",
-          "photo": "thumbs/defense-sculptee.jpg"
+          "photo": "thumbs/defense-sculptee.jpg",
+          "audio": {
+            "fr": "audio/defense-sculptee.fr.mp3",
+            "en": "audio/defense-sculptee.en.mp3"
+          }
         },
         {
           "id": "un-dimanche-a-la-grande-jatte",
@@ -2394,7 +2410,11 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/451682"
+          "link": "https://www.metmuseum.org/art/collection/search/451682",
+          "audio": {
+            "fr": "audio/dalail-al-khayrat.fr.mp3",
+            "en": "audio/dalail-al-khayrat.en.mp3"
+          }
         },
         {
           "id": "carreaux-calligraphies",
@@ -2439,7 +2459,11 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/453659"
+          "link": "https://www.metmuseum.org/art/collection/search/453659",
+          "audio": {
+            "fr": "audio/carreaux-calligraphies.fr.mp3",
+            "en": "audio/carreaux-calligraphies.en.mp3"
+          }
         },
         {
           "id": "carreau-zellige",
