@@ -174,7 +174,7 @@ Limites de cette salle pilote :
 - **Son avis sur le Patio marocain enrichi** : couleurs du zellige, choix des pièces, présentation des objets en volume.
 
 - **Un compte Sketchfab gratuit**, pour intégrer les quatre sculptures restantes : le porteur le créera à un prochain jalon. Sa clé d'accès se saisira dans un formulaire sécurisé.
-- **Sa relecture des textes des œuvres** : ils sont rédigés par Claude et n'ont pas été confrontés un par un aux notices des musées.
+- **Sa relecture des textes des œuvres** : ils sont rédigés par Claude et n'ont pas été confrontés un par un aux notices des musées. Les textes des 43 œuvres réelles et des 3 parcours sont réunis dans un document à corriger en ligne : https://claude.ai/artifact/9VirMxjKKbA2dtJQ6hewSd. Une fois la relecture finie, reporter ses corrections dans `museum.json`, puis produire les voix de l'audioguide.
 - **Les voix de l'audioguide** : service de voix de qualité ou vraie personne, à décider.
 - **Des essais sur de vrais appareils** : téléphone (de préférence ancien), casque VR, lecteur d'écran (VoiceOver, TalkBack), voix de l'audioguide. Le casque exige une adresse HTTPS, donc l'hébergement.
 - **L'hébergement** : créer un compte Vercel et y relier le dépôt GitHub, le moment venu.
