@@ -72,7 +72,16 @@ Le 15 novembre 2026, le porteur a donné son avis sur l'ambiance : la base lui p
 | 5. Mise en ligne | Hébergement sur Vercel, puis vérification sur de vrais appareils | À faire, avec l'accord du porteur |
 | 6. Outil d'administration | L'éditeur de l'étape 2 du produit. Les réglages de décor y deviendront des options | À faire |
 
-Les voix de l'audioguide peuvent se faire à tout moment : le moteur lit déjà un enregistrement par œuvre et par langue quand on lui en fournit un. Il ne manque que les fichiers.
+### Voix de l'audioguide : décisions prises, production à venir
+
+Le moteur lit déjà un enregistrement par œuvre et par langue quand on lui en fournit un (champ `audio` de l'œuvre) ; sans lui, il fait lire le texte par la voix du navigateur. Il ne manque que les fichiers.
+
+- **Textes validés** : le porteur a relu les textes des œuvres et des parcours et les garde tels quels (16 novembre 2026). Le document de relecture (https://claude.ai/artifact/9VirMxjKKbA2dtJQ6hewSd) n'a reçu aucune correction. Les textes n'ont pas pour autant été confrontés un par un aux notices des musées : à refaire avant une diffusion publique.
+- **Choix du porteur** : un service de voix (pas d'enregistrement par une personne), une **voix féminine chaleureuse**, en **français et en anglais**. L'arabe viendra dans un lot à part (traduction des textes, écriture de droite à gauche).
+- **Service retenu** : les voix de Google Gemini, par son accès développeur (« Gemini API »), car le porteur a déjà un abonnement Google. L'abonnement ne donne pas de crédit pour cet accès : il faut une clé créée dans Google AI Studio. L'existence d'une formule gratuite pour les voix et les tarifs exacts restent à vérifier sur la documentation officielle (`ai.google.dev`, non joignable depuis l'environnement de travail le 16 novembre 2026).
+- **Volume mesuré** : 47 œuvres, 21 600 caractères de commentaires pour les deux langues (11 100 en français, 10 600 en anglais), le plus long faisant 346 caractères. Avec le titre, l'artiste et la date lus en tête, compter environ 27 000 caractères, soit une demi-heure d'audio.
+- **Étapes prévues** : 1. clé d'accès du porteur ; 2. trois extraits dans deux ou trois voix, sur une page d'écoute ; 3. choix de la voix par le porteur ; 4. production de tout le musée par une commande `npm run voix`, qui ne refera que les textes modifiés.
+- Claude ne peut pas écouter le résultat : la prononciation des noms propres se contrôle à l'oreille, par le porteur.
 
 Viendront aussi : salle immersive sombre au sud de l'atrium, ambiance sonore par salle, contenus enrichis (lien direct vers une œuvre, favoris, vidéos).
 
@@ -197,8 +206,7 @@ Ce mélange est maintenant l'interface du musée, appliquée partout : accueil, 
 - **Son avis sur le Patio marocain enrichi** : couleurs du zellige, choix des pièces, présentation des objets en volume.
 
 - **Un compte Sketchfab gratuit**, pour intégrer les quatre sculptures restantes : le porteur le créera à un prochain jalon. Sa clé d'accès se saisira dans un formulaire sécurisé.
-- **Sa relecture des textes des œuvres** : ils sont rédigés par Claude et n'ont pas été confrontés un par un aux notices des musées. Les textes des 43 œuvres réelles et des 3 parcours sont réunis dans un document à corriger en ligne : https://claude.ai/artifact/9VirMxjKKbA2dtJQ6hewSd. Une fois la relecture finie, reporter ses corrections dans `museum.json`, puis produire les voix de l'audioguide.
-- **Les voix de l'audioguide** : service de voix de qualité ou vraie personne, à décider.
+- **Une clé d'accès Google AI Studio**, pour produire les voix de l'audioguide (voir « Voix de l'audioguide » ci-dessous). Elle se crée avec son compte Google et se saisira dans un formulaire sécurisé, jamais dans la conversation.
 - **Des essais sur de vrais appareils** : téléphone (de préférence ancien), casque VR, lecteur d'écran (VoiceOver, TalkBack), voix de l'audioguide. Le casque exige une adresse HTTPS, donc l'hébergement.
 - **L'hébergement** : créer un compte Vercel et y relier le dépôt GitHub, le moment venu.
 
