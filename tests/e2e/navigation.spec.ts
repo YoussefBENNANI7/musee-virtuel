@@ -110,7 +110,7 @@ test('une œuvre cachée derrière un mur n’est pas cliquable', async ({ page 
 test('le plan transporte le visiteur dans la salle choisie', async ({ page }) => {
   await openMuseum(page);
   await page.click('#map-open');
-  await expect(page.locator('.map-room')).toHaveCount(4);
+  await expect(page.locator('#map .map-room')).toHaveCount(4);
   await page.getByRole('button', { name: 'Cabinet des Couleurs' }).click();
   await expect(roomName(page)).toHaveText('Cabinet des Couleurs');
 
@@ -135,4 +135,89 @@ test('à l’arrêt, le musée ne redessine pas l’image', async ({ page }) => 
   const before = await frames();
   await page.waitForTimeout(1500);
   expect((await frames()) - before).toBe(0);
+});
+
+/** Clique sur un point du sol, donné par ses coordonnées dans le musée. */
+async function clickFloor(page: import('@playwright/test').Page, x: number, z: number) {
+  const p = await page.evaluate(([x, z]) => (window as any).__museum.screenAt(x, z), [x, z]);
+  await page.mouse.click(p.x, p.y);
+}
+/** Attend que le visiteur ne bouge plus, et renvoie sa position. */
+async function settle(page: import('@playwright/test').Page) {
+  let last = await position(page);
+  await expect
+    .poll(
+      async () => {
+        const now = await position(page);
+        const moved = Math.hypot(now.x - last.x, now.z - last.z);
+        last = now;
+        return moved;
+      },
+      { timeout: 20_000, intervals: [300] },
+    )
+    .toBeLessThan(0.002);
+  return last;
+}
+const yaw = (page: import('@playwright/test').Page) => page.evaluate(() => (window as any).__museum.controls.yaw as number);
+const markerVisible = (page: import('@playwright/test').Page) => page.evaluate(() => (window as any).__museum.marker.visible as boolean);
+
+test('cliquer au sol amène le visiteur à cet endroit, sans changer la direction du regard', async ({ page }) => {
+  const errors = await openMuseum(page);
+  await teleport(page, 0, 2.5, NORTH);
+  await page.waitForTimeout(300);
+  // Le survol du sol montre déjà où mènerait le clic.
+  const p = await page.evaluate(() => (window as any).__museum.screenAt(1.5, -1));
+  await page.mouse.move(p.x, p.y);
+  await expect.poll(() => markerVisible(page)).toBe(true);
+
+  await clickFloor(page, 1.5, -1);
+  const end = await settle(page);
+  expect(end.x).toBeCloseTo(1.5, 1);
+  expect(end.z).toBeCloseTo(-1, 1);
+  expect(await yaw(page)).toBeCloseTo(NORTH, 3);
+  await expect(roomName(page)).toHaveText('Salle des Horizons');
+  expect(errors).toEqual([]);
+});
+
+test('un clic au sol au-delà d’un banc arrête le visiteur devant le banc', async ({ page }) => {
+  await openMuseum(page);
+  // Dans la galerie, le banc est posé en (10, 3.6). On vise le sol de l'autre côté, visible par-dessus.
+  await teleport(page, 7.5, 3.6, -WEST);
+  await page.waitForTimeout(300);
+  await clickFloor(page, 12.5, 3.6);
+  const end = await settle(page);
+  expect(end.x).toBeGreaterThan(8.5);
+  expect(end.x).toBeLessThan(9.8);
+  // Arrivé, le repère du sol s'efface.
+  await page.mouse.move(640, 200);
+  await expect.poll(() => markerVisible(page)).toBe(false);
+});
+
+test('avec une fiche ouverte, un clic au sol la referme sans déplacer le visiteur', async ({ page }) => {
+  await openMuseum(page);
+  await clickArtwork(page, 'equilibre-no-7', 4.5);
+  await expect(panel(page)).toBeVisible();
+  const before = await settle(page);
+  // En bas à gauche de l'écran : le sol, loin de la fiche.
+  await page.mouse.click(200, 660);
+  await expect(panel(page)).toBeHidden();
+  await page.waitForTimeout(600);
+  const after = await position(page);
+  expect(Math.hypot(after.x - before.x, after.z - before.z)).toBeLessThan(0.01);
+});
+
+test('le mini-plan suit le visiteur et ouvre le plan complet', async ({ page }) => {
+  await openMuseum(page);
+  const mini = page.locator('#minimap');
+  await expect(mini).toBeVisible();
+  await expect(mini.locator('.map-room')).toHaveCount(4);
+  await expect(mini.locator('.map-room.current')).toHaveCount(1);
+
+  await teleport(page, -10.5, 2, NORTH);
+  await expect(roomName(page)).toHaveText('Salon des Sculptures');
+  await expect(mini.locator('.map-you')).toHaveAttribute('transform', /translate\(-10\.50 2\.00\)/);
+
+  await mini.click();
+  await expect(page.locator('#map')).toBeVisible();
+  await expect(page.locator('#map-title')).toHaveText('Plan du musée');
 });

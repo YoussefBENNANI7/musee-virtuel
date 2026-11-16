@@ -1,7 +1,23 @@
+/*
+ * Identité de l'interface : crème et vert profond, lettres à empattements pour les titres et
+ * les textes, étoile à huit branches pour emblème. L'accent (--accent) vient du style du musée.
+ */
 :root {
   --accent: #a8472a;
-  --ink: #1c1b19;
-  --paper: #fbfaf6;
+  --ink: #1c2b26;
+  --paper: #f8f4e9;
+  --paper-2: #efe8d6;
+  --green: #1f5a48;
+  --line: #d8d0bf;
+  --muted: #5b5852;
+  /* Hauteur de la barre de commandes, marge du bas comprise : ce qui flotte se pose au-dessus. */
+  --dock: calc(max(16px, env(safe-area-inset-bottom)) + 68px);
+  --fiche: 420px;
+  --i-star: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24'%3E%3Cpath d='M0-11 3.2-7.7 7.8-7.8 7.7-3.2 11 0 7.7 3.2 7.8 7.8 3.2 7.7 0 11-3.2 7.7-7.8 7.8-7.7 3.2-11 0-7.7-3.2-7.8-7.8-3.2-7.7z'/%3E%3C/svg%3E");
+  --i-tours: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='6' cy='19' r='2'/%3E%3Ccircle cx='18' cy='5' r='2'/%3E%3Cpath d='M8 19h7a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h7'/%3E%3C/svg%3E");
+  --i-map: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14'/%3E%3C/svg%3E");
+  --i-list: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01'/%3E%3C/svg%3E");
+  --i-vr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M3 8h18v9h-6l-3-3-3 3H3z'/%3E%3C/svg%3E");
   font-family: Georgia, 'Times New Roman', serif;
   color: var(--ink);
 }
@@ -19,6 +35,14 @@ body {
   overscroll-behavior: none;
 }
 
+[hidden] {
+  display: none !important;
+}
+:focus-visible {
+  outline: 3px solid var(--green);
+  outline-offset: 2px;
+}
+
 #scene {
   position: fixed;
   inset: 0;
@@ -33,7 +57,12 @@ body {
 .ready #scene {
   opacity: 1;
 }
+.ready #scene.fade {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
 
+/* --- En-tête : le nom du musée et celui de la salle ------------------------ */
 .bar {
   position: fixed;
   top: 0;
@@ -43,57 +72,121 @@ body {
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
-  padding: max(14px, env(safe-area-inset-top)) 18px 14px;
+  padding: max(14px, env(safe-area-inset-top)) 22px 14px;
   pointer-events: none;
-  background: linear-gradient(rgba(20, 18, 15, 0.45), transparent);
+  background: linear-gradient(rgba(18, 40, 33, 0.6), transparent);
   color: #fff;
 }
 .bar h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
+.bar h1::before {
+  content: '';
+  flex: none;
+  width: 22px;
+  height: 22px;
+  background: #f1d59a;
+  -webkit-mask: var(--i-star) center / contain no-repeat;
+  mask: var(--i-star) center / contain no-repeat;
+}
 .bar p {
-  margin: 2px 0 0;
+  margin: 2px 0 0 32px;
   font-size: 0.85rem;
   font-style: italic;
   opacity: 0.9;
 }
+
+/* --- Commandes : une barre en bas de l'écran, de grandes icônes avec leur nom --- */
 .tools {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
+  gap: 4px;
 }
-[hidden] {
-  display: none !important;
-}
-.bar select,
-.bar button {
+.tools button,
+.tools select {
   pointer-events: auto;
   cursor: pointer;
-  font: 600 0.85rem system-ui, sans-serif;
-  padding: 8px 10px;
-  min-height: 40px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  background: rgba(20, 18, 15, 0.55);
-  color: #fff;
+  border: 0;
+  background: transparent;
+  color: var(--green);
+  font: 600 0.74rem system-ui, sans-serif;
+  white-space: nowrap;
+}
+.tools button::before {
+  content: '';
+  flex: none;
+  width: 22px;
+  height: 22px;
+  background: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+#tours-open {
+  --icon: var(--i-tours);
+}
+#map-open {
+  --icon: var(--i-map);
+}
+#mode {
+  --icon: var(--i-list);
+}
+#vr {
+  --icon: var(--i-vr);
+}
+body:not(.simple) .tools {
+  position: fixed;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  max-width: calc(100% - 16px);
+  padding: 6px;
+  border-radius: 20px;
+  background: var(--paper);
+  box-shadow: 0 8px 30px rgba(18, 40, 33, 0.35);
+  pointer-events: auto;
+}
+body:not(.simple) .tools button {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 74px;
+  min-height: 56px;
+  padding: 6px 10px;
+  border-radius: 14px;
+}
+body:not(.simple) .tools select {
+  align-self: center;
+  min-width: 58px;
+  min-height: 44px;
+  padding: 0 8px;
+  border-radius: 14px;
+  font-size: 0.82rem;
+}
+body:not(.simple) .tools button:hover,
+body:not(.simple) .tools select:hover {
+  background: var(--paper-2);
 }
 
 .help {
   position: fixed;
   left: 50%;
-  bottom: max(16px, env(safe-area-inset-bottom));
+  bottom: calc(var(--dock) + 12px);
   transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 32px);
   margin: 0;
   padding: 8px 14px;
-  max-width: calc(100% - 32px);
   border-radius: 999px;
-  background: rgba(20, 18, 15, 0.6);
+  background: rgba(31, 90, 72, 0.9);
   color: #fff;
-  font: 0.8rem system-ui, sans-serif;
+  font: 0.82rem system-ui, sans-serif;
   text-align: center;
   pointer-events: none;
 }
@@ -102,11 +195,12 @@ body {
   display: none;
   position: fixed;
   left: 22px;
-  bottom: calc(max(16px, env(safe-area-inset-bottom)) + 56px);
+  /* Au-dessus de la barre de commandes et de la ligne d'aide ou de reprise du parcours. */
+  bottom: calc(var(--dock) + 72px);
   width: 112px;
   height: 112px;
   border-radius: 50%;
-  background: rgba(20, 18, 15, 0.3);
+  background: rgba(18, 40, 33, 0.3);
   border: 2px solid rgba(255, 255, 255, 0.55);
   touch-action: none;
 }
@@ -122,50 +216,84 @@ body {
   }
 }
 
+/* --- Mini-plan : toujours visible, il ouvre le plan complet ------------------ */
+.minimap {
+  position: fixed;
+  top: max(14px, env(safe-area-inset-top));
+  right: max(14px, env(safe-area-inset-right));
+  width: 132px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(248, 244, 233, 0.92);
+  box-shadow: 0 6px 22px rgba(18, 40, 33, 0.3);
+  cursor: pointer;
+}
+.minimap:hover {
+  background: var(--paper);
+}
+.minimap .map-room {
+  cursor: inherit;
+}
+.minimap .map-room > rect:first-child {
+  stroke-width: 0.3;
+}
+.minimap .map-door {
+  stroke-width: 0.6;
+}
+.simple .minimap {
+  display: none;
+}
+
+/* --- Fiche d'œuvre : une page de catalogue ----------------------------------- */
 .panel {
   position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(380px, 100%);
-  padding: 56px 28px 28px;
+  z-index: 3;
+  --pad-b: 36px;
+  width: min(var(--fiche), 100%);
+  padding: 72px 40px var(--pad-b);
   overflow-y: auto;
   background: var(--paper);
-  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.25);
-  border-top: 5px solid var(--accent);
-}
-.panel[hidden] {
-  display: none;
+  border-left: 1px solid var(--line);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.18);
 }
 .panel .artist {
-  margin: 0 0 6px;
-  font: 600 0.8rem system-ui, sans-serif;
-  letter-spacing: 0.12em;
+  margin: 0 0 12px;
+  font: 500 0.72rem system-ui, sans-serif;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--accent);
 }
 .panel h2 {
-  margin: 0 0 10px;
-  font-size: 1.7rem;
+  margin: 0 0 18px;
+  font-size: 2.1rem;
   font-style: italic;
-  font-weight: 500;
-  line-height: 1.2;
+  font-weight: 400;
+  line-height: 1.12;
+  text-wrap: balance;
 }
 .panel .meta {
-  margin: 0 0 20px;
-  font: 0.85rem system-ui, sans-serif;
-  color: #5b5852;
+  margin: 0 0 22px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font: 0.8rem system-ui, sans-serif;
+  letter-spacing: 0.03em;
+  color: var(--muted);
 }
 .panel .desc {
   margin: 0;
-  font-size: 1.02rem;
-  line-height: 1.65;
+  font-size: 1.08rem;
+  line-height: 1.75;
 }
 /* Mention de l'œuvre : musée qui la conserve, licence de l'image, lien vers sa notice. */
 .credit {
   margin: 16px 0 0;
   font: 0.82rem/1.5 system-ui, sans-serif;
-  color: #5b5852;
+  color: var(--muted);
 }
 .credit a {
   color: var(--accent);
@@ -189,155 +317,42 @@ body {
 }
 .close:hover,
 .close:focus-visible {
-  background: rgba(0, 0, 0, 0.08);
-}
-:focus-visible {
-  outline: 3px solid var(--accent);
-  outline-offset: 2px;
+  background: rgba(18, 40, 33, 0.08);
 }
 
-/* Sur téléphone, la fiche monte du bas pour laisser l'œuvre visible. */
-@media (max-width: 640px) {
-  .panel {
-    top: auto;
-    left: 0;
-    width: 100%;
-    max-height: 52%;
-    padding: 44px 20px 24px;
-    border-radius: 16px 16px 0 0;
-    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.25);
-  }
-  .panel h2 {
-    font-size: 1.35rem;
-  }
-  .panel {
-    max-height: 58%;
-  }
-  .tour-nav {
-    margin-top: 16px;
-  }
-  .tour-nav p {
-    margin-bottom: 8px;
-  }
-}
-
-.help[hidden] {
-  display: none;
-}
-
-.ready #scene.fade {
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 16px;
-  background: rgba(20, 18, 15, 0.55);
-}
-.overlay[hidden] {
-  display: none;
-}
-.map-card {
-  position: relative;
-  width: min(640px, 100%);
-  max-height: 100%;
-  overflow-y: auto;
-  padding: 24px;
-  border-radius: 14px;
-  background: var(--paper);
-  border-top: 5px solid var(--accent);
-}
-.map-card h2 {
-  margin: 0 0 4px;
-  font-size: 1.4rem;
-  font-weight: 500;
-}
-.map-card .meta {
-  margin: 0 0 14px;
-  font: 0.85rem system-ui, sans-serif;
-  color: #5b5852;
-}
-.map-svg {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-.map-room {
-  cursor: pointer;
-  outline: none;
-}
-.map-room > rect:first-child {
-  fill: #ece7dd;
-  stroke: var(--ink);
-  stroke-width: 0.14;
-}
-.map-room:hover > rect:first-child,
-.map-room:focus-visible > rect:first-child {
-  fill: #e0d6c4;
-}
-.map-room:focus-visible > rect:first-child {
-  stroke: var(--accent);
-  stroke-width: 0.3;
-}
-.map-room.current > rect:first-child {
-  fill: #f6e3d6;
-}
-.map-room text {
-  font-family: system-ui, sans-serif;
-  font-weight: 600;
-  fill: var(--ink);
-  pointer-events: none;
-}
-.map-art {
-  fill: var(--accent);
-  pointer-events: none;
-}
-.map-door {
-  stroke: #ece7dd;
-  stroke-width: 0.3;
-}
-.map-you path {
-  fill: #1f5fbf;
-}
-.map-you-halo {
-  fill: rgba(31, 95, 191, 0.2);
-}
-
+/* --- Boutons ------------------------------------------------------------- */
 .btn {
   min-height: 44px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  border: 1.5px solid var(--ink);
+  padding: 10px 14px;
+  border: 1px solid var(--green);
+  border-radius: 2px;
   background: transparent;
-  color: var(--ink);
-  font: 600 0.9rem system-ui, sans-serif;
+  color: var(--green);
+  font: 600 0.72rem system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   cursor: pointer;
 }
 .btn:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(31, 90, 72, 0.08);
 }
-.btn.primary {
-  border-color: var(--accent);
-  background: var(--accent);
+.btn.primary,
+.btn[aria-pressed='true'] {
+  background: var(--green);
   color: #fff;
+}
+.btn.primary:hover {
+  background: #17463a;
 }
 .btn:disabled {
   opacity: 0.4;
   cursor: default;
 }
-.btn[aria-pressed='true'] {
-  background: var(--ink);
-  color: #fff;
-}
 .link {
   padding: 10px 0;
   border: 0;
   background: none;
-  color: #5b5852;
+  color: var(--muted);
   font: 0.85rem system-ui, sans-serif;
   text-decoration: underline;
   cursor: pointer;
@@ -345,14 +360,23 @@ body {
 .panel .btn {
   margin-bottom: 18px;
 }
+/* « Agrandir » : un lien souligné à côté du bouton principal. */
+.panel #p-zoom {
+  min-height: 0;
+  margin-left: 12px;
+  padding: 6px 0;
+  border: 0;
+  border-bottom: 1px solid var(--green);
+}
 
 .tour-nav {
   /* Reste visible en bas de la fiche, même quand le texte défile. */
   position: sticky;
-  bottom: 0;
-  margin: 26px 0 -28px;
-  padding: 14px 0 8px;
-  border-top: 1px solid #d9d4c9;
+  /* Elle descend jusqu'au bord de la fiche, par-dessus sa marge du bas : aucun texte ne passe dessous. */
+  bottom: calc(-1 * var(--pad-b));
+  margin: 26px 0 calc(-1 * var(--pad-b));
+  padding: 14px 0 12px;
+  border-top: 1px solid var(--line);
   background: var(--paper);
 }
 .tour-nav p {
@@ -370,7 +394,7 @@ body {
 .resume {
   position: fixed;
   left: 50%;
-  bottom: max(16px, env(safe-area-inset-bottom));
+  bottom: calc(var(--dock) + 12px);
   transform: translateX(-50%);
   display: flex;
   gap: 8px;
@@ -378,10 +402,93 @@ body {
 }
 .resume .btn {
   background: var(--paper);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 16px rgba(18, 40, 33, 0.3);
 }
 .resume .btn.primary {
-  background: var(--accent);
+  background: var(--green);
+}
+
+/* --- Fenêtres : plan du musée, liste des parcours ---------------------------- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(18, 40, 33, 0.55);
+}
+.map-card {
+  position: relative;
+  width: min(640px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 32px 32px 28px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper);
+}
+.map-card h2 {
+  margin: 0 0 6px;
+  font-size: 1.7rem;
+  font-weight: 400;
+}
+.map-card .meta {
+  margin: 0 0 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  font: 0.85rem system-ui, sans-serif;
+  color: var(--muted);
+}
+.map-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* Le plan complet tient toujours dans la hauteur de l'écran, sans défilement. */
+.map-card .map-svg {
+  max-height: calc(100vh - 190px);
+  max-height: calc(100dvh - 190px);
+}
+.map-room {
+  cursor: pointer;
+  outline: none;
+}
+.map-room > rect:first-child {
+  fill: var(--paper-2);
+  stroke: var(--ink);
+  stroke-width: 0.14;
+}
+.map-room:hover > rect:first-child,
+.map-room:focus-visible > rect:first-child {
+  fill: #e2d9c2;
+}
+.map-room:focus-visible > rect:first-child {
+  stroke: var(--green);
+  stroke-width: 0.3;
+}
+.map-room.current > rect:first-child {
+  fill: #d5e3d6;
+}
+.map-room text {
+  font-family: system-ui, sans-serif;
+  font-weight: 600;
+  fill: var(--ink);
+  pointer-events: none;
+}
+.map-art {
+  fill: var(--accent);
+  pointer-events: none;
+}
+.map-door {
+  stroke: var(--paper-2);
+  stroke-width: 0.3;
+}
+.map-you path {
+  fill: var(--green);
+}
+.map-you-halo {
+  fill: rgba(31, 90, 72, 0.25);
 }
 
 .tour-item {
@@ -389,33 +496,188 @@ body {
   align-items: center;
   gap: 16px;
   padding: 16px 0;
-  border-top: 1px solid #d9d4c9;
+  border-bottom: 1px solid var(--line);
+}
+.tour-item:last-child {
+  border-bottom: 0;
 }
 .tour-item div {
   flex: 1;
 }
 .tour-item h3 {
   margin: 0 0 4px;
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.2rem;
+  font-style: italic;
+  font-weight: 400;
 }
 .tour-item p {
   margin: 0;
   font: 0.88rem/1.45 system-ui, sans-serif;
-  color: #5b5852;
+  color: var(--muted);
 }
 
+/* --- Écran d'accueil : le musée reste visible derrière un voile clair --------- */
+.welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  background: rgba(248, 244, 233, 0.86);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  transition: opacity 0.5s;
+}
+.welcome.leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+.welcoming .bar,
+.welcoming .help,
+.welcoming .joystick,
+.welcoming .minimap {
+  visibility: hidden;
+}
+.welcome-card {
+  width: min(560px, 100%);
+  text-align: center;
+}
+.welcome-emblem {
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 22px;
+  background: var(--accent);
+  -webkit-mask: var(--i-star) center / contain no-repeat;
+  mask: var(--i-star) center / contain no-repeat;
+}
+.welcome-kicker {
+  margin: 0;
+  font: 500 0.74rem system-ui, sans-serif;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.welcome-title {
+  margin: 18px 0 14px;
+  font-size: clamp(2.6rem, 8vw, 4.6rem);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.welcome-stats {
+  margin: 0;
+  font-style: italic;
+  font-size: 1.1rem;
+  color: var(--muted);
+}
+.welcome-enter {
+  margin: 34px 0 30px;
+  padding: 17px 38px;
+  border: 1px solid var(--green);
+  background: var(--green);
+  color: var(--paper);
+  font: 600 0.8rem system-ui, sans-serif;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.welcome-enter:hover {
+  background: transparent;
+  color: var(--green);
+}
+.welcome-how {
+  margin: 0;
+  padding: 18px 0;
+  border-top: 1px solid #cfc6b3;
+  border-bottom: 1px solid #cfc6b3;
+  list-style: none;
+  font-style: italic;
+  line-height: 1.9;
+  color: #3d3a34;
+}
+.welcome-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  margin-top: 18px;
+}
+.welcome-langs {
+  display: inline-flex;
+  gap: 14px;
+}
+.welcome-simple,
+.welcome-langs button {
+  padding: 8px 2px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: none;
+  color: var(--green);
+  font: 600 0.72rem system-ui, sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.welcome-simple,
+.welcome-langs button[aria-pressed='true'] {
+  border-bottom-color: var(--green);
+}
+
+/* --- Grand écran : ce qui flotte se range à gauche de la fiche ----------------- */
+@media (min-width: 641px) {
+  body:has(#panel:not([hidden])) .tools,
+  body:has(#panel:not([hidden])) .help,
+  body:has(#panel:not([hidden])) .resume {
+    left: calc((100% - var(--fiche)) / 2);
+  }
+}
+/* Fiche ouverte : toute la place libre revient à l'œuvre, le mini-plan s'efface. */
+body:has(#panel:not([hidden])) .minimap {
+  display: none;
+}
+
+/* --- Téléphone : la fiche monte du bas pour laisser l'œuvre visible ------------- */
 @media (max-width: 640px) {
-  .bar {
-    flex-direction: column;
-    gap: 10px;
+  .panel {
+    top: auto;
+    left: 0;
+    width: 100%;
+    --pad-b: 26px;
+    max-height: 58%;
+    padding: 48px 24px var(--pad-b);
+    /*
+     * Le filet du haut est nécessaire : pleine largeur, défilante et sans bordure, la fiche
+     * fait disparaître la vue 3D dans Chrome pour téléphone.
+     */
+    border-top: 1px solid var(--line);
+    border-left: 0;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.25);
   }
-  .tools {
-    justify-content: flex-start;
+  .panel h2 {
+    font-size: 1.6rem;
   }
-  .bar select,
-  .bar button {
-    padding: 6px 10px;
+  .tour-nav {
+    margin-top: 16px;
+  }
+  .tour-nav p {
+    margin-bottom: 8px;
+  }
+  .map-card {
+    padding: 26px 20px 22px;
+  }
+  .minimap {
+    width: 92px;
+    padding: 4px;
+    border-radius: 10px;
+  }
+  body:not(.simple) .tools button {
+    min-width: 0;
+    padding: 6px 8px;
   }
 }
 
@@ -440,8 +702,24 @@ html:has(body.simple) {
 }
 .simple .bar {
   position: sticky;
-  background: var(--ink);
+  align-items: center;
+  background: var(--green);
   pointer-events: auto;
+}
+.simple .tools button,
+.simple .tools select {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 2px;
+  color: #fff;
+  font-size: 0.8rem;
+}
+.simple .tools button::before {
+  display: none;
+}
+.simple .tools select option {
+  color: var(--ink);
 }
 .simple-page {
   max-width: 880px;
@@ -451,7 +729,7 @@ html:has(body.simple) {
 .simple-page h2 {
   margin: 44px 0 14px;
   padding-bottom: 8px;
-  border-bottom: 3px solid var(--accent);
+  border-bottom: 1px solid var(--line);
   font-size: 1.5rem;
   font-weight: 500;
 }
@@ -476,7 +754,7 @@ html:has(body.simple) {
 .notice {
   padding: 14px 16px;
   border-left: 5px solid var(--accent);
-  background: #f3ece0;
+  background: var(--paper-2);
   font: 0.95rem/1.5 system-ui, sans-serif;
 }
 .card {
@@ -484,7 +762,7 @@ html:has(body.simple) {
   grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
   gap: 22px;
   padding: 22px 0;
-  border-bottom: 1px solid #d9d4c9;
+  border-bottom: 1px solid var(--line);
   scroll-margin-top: 90px;
 }
 .card figure {
@@ -516,7 +794,7 @@ html:has(body.simple) {
 .card .meta {
   margin: 0 0 12px;
   font: 0.85rem system-ui, sans-serif;
-  color: #5b5852;
+  color: var(--muted);
 }
 .card .desc {
   margin: 0 0 14px;
@@ -530,13 +808,6 @@ html:has(body.simple) {
 @media (max-width: 560px) {
   .card {
     grid-template-columns: 1fr;
-  }
-}
-
-/* Sur grand écran, la fiche occupe le bord droit : l'en-tête se resserre pour rester accessible. */
-@media (min-width: 641px) {
-  body:has(#panel:not([hidden])) .bar {
-    right: min(380px, 100%);
   }
 }
 
@@ -625,7 +896,4 @@ html:has(body.simple) {
   font: 0.85rem system-ui, sans-serif;
   color: rgba(255, 255, 255, 0.75);
   pointer-events: none;
-}
-.panel #p-zoom {
-  margin-left: 8px;
 }

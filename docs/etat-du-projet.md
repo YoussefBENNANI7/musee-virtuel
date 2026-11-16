@@ -68,7 +68,7 @@ Le 15 novembre 2026, le porteur a donné son avis sur l'ambiance : la base lui p
 | 2. Décor par salle | Chaque salle reçoit un décor : sol, murs, plafond, lumière, cadres, mobilier | Fait : les cinq salles ont leur décor, voir ci-dessous |
 | 3. Œuvres réelles | Recherche de vraies œuvres en accès libre, puis remplacement des œuvres fictives : tableaux, vrais modèles 3D (format GLB) avec de vraies ombres, nouveaux cartels, textes et parcours. Aussi : cadres variés, zoom haute définition | Sélection validée en entier par le porteur le 16 novembre 2026. **Les 29 tableaux, estampes, dessin et photographie sont intégrés, ainsi qu'une première sculpture numérisée.** Restent quatre sculptures, voir ci-dessous |
 | 3 bis. Salle marocaine | Nouvelle salle au plan, avec ses éléments d'architecture (arcs, zellige, plâtre sculpté, plafond de cèdre, fontaine) et ses objets traditionnels | **Salle pilote faite**, voir ci-dessous. Attend l'avis du porteur |
-| 4. Interface | Écran d'accueil du musée, nouvelle identité visuelle (typographie, icônes, commandes discrètes, fiches animées), clic au sol pour se déplacer, mini-plan permanent | **Trois directions proposées**, voir ci-dessous. Attend le choix du porteur ; le reste suit ce choix |
+| 4. Interface | Écran d'accueil du musée, nouvelle identité visuelle (typographie, icônes, commandes discrètes, fiches animées), clic au sol pour se déplacer, mini-plan permanent | **Fait** : identité choisie par le porteur et appliquée partout, écran d'accueil, clic au sol, mini-plan. Voir ci-dessous. Attend son avis |
 | 5. Mise en ligne | Hébergement sur Vercel, puis vérification sur de vrais appareils | À faire, avec l'accord du porteur |
 | 6. Outil d'administration | L'éditeur de l'étape 2 du produit. Les réglages de décor y deviendront des options | À faire |
 
@@ -169,27 +169,30 @@ Limites de cette salle pilote :
 - Les objets en volume de la sélection (plat, poignard, instruments, bijoux) ne sont pas exposés : ils n'existent qu'en photographie. Les modèles 3D d'artistes (lanterne, théière, tajine) attendent la clé Sketchfab.
 - La largeur du tapis vient de son image : elle dépasse celle que donne le musée (1,79 m).
 
-### Interface : trois directions à comparer
+### Interface : l'identité retenue
 
-Trois habillages de l'interface sont proposés au porteur. Ils ne remplacent rien : l'interface habituelle reste celle par défaut, et chaque direction ne s'affiche qu'avec le paramètre d'adresse `?ui=`. Chacune habille l'en-tête, les commandes, la fiche d'œuvre, et ajoute un écran d'accueil (nom du musée, nombre de salles, d'œuvres et de parcours, bouton d'entrée, rappel des gestes, vue simplifiée, langues).
+Trois directions ont été proposées au porteur (Cimaise, Nocturne, Zellige ; page de comparaison : https://claude.ai/artifact/5ZaXQyHAFdN3Vex22X2aKG). Il a retenu un mélange, le 16 novembre 2026 :
 
-| Direction | Adresse | Caractère |
-|---|---|---|
-| Cimaise | `?ui=cimaise` | Galerie classique : ivoire, lettres à empattements, filets fins, commandes en haut, en mots |
-| Nocturne | `?ui=nocturne` | Contemporain : verre sombre, grand titre, barre de commandes en bas avec icônes |
-| Zellige | `?ui=zellige` | Chaleureux : crème, vert et terre cuite, étoile à huit branches, frise de zellige, grandes icônes nommées en bas |
+| Élément | Choix |
+|---|---|
+| Écran d'accueil | Cimaise : titre centré en lettres à empattements, sur un voile clair qui laisse voir le musée |
+| Commandes de la visite | Zellige : une barre en bas de l'écran, de grandes icônes avec leur nom |
+| Fiche d'œuvre | Cimaise : une page de catalogue, colonne ivoire, titre en italique, filets fins |
+| Couleurs et emblème | Crème et vert profond, étoile à huit branches seule, sans frise multicolore |
 
-`?accueil=non`, ajouté à l'une de ces adresses, ouvre la visite sans passer par l'écran d'accueil.
+Ce mélange est maintenant l'interface du musée, appliquée partout : accueil, en-tête, commandes, fiche, liste des parcours, plan, reprise du parcours, vue simplifiée. Le code d'aperçu (`?ui=`) a été supprimé.
 
-- Page de comparaison, avec les captures sur ordinateur et sur téléphone : https://claude.ai/artifact/5ZaXQyHAFdN3Vex22X2aKG. Avis de Claude : Zellige en premier choix (la plus accueillante, les plus grands boutons), Cimaise en second ; un mélange est possible.
-- Le code de cet aperçu est dans `src/apercu-ui.ts` et `src/apercu-ui.css`. Il est provisoire : une fois la direction choisie, elle passe dans `src/style.css`, les deux autres sont supprimées, et le paramètre `?ui=` disparaît.
-- Seuls l'accueil, l'en-tête, les commandes et la fiche sont habillés. La liste des parcours, le plan, la vue simplifiée, l'agrandissement et le casque VR gardent l'habillage d'origine jusqu'au choix.
+- **Écran d'accueil** (`src/accueil.ts`) : nom du musée, nombre de salles, d'œuvres et de parcours, bouton « Entrer dans le musée », rappel des trois gestes, accès à la vue simplifiée, choix de la langue. Tant qu'il est affiché, le clavier ne déplace pas le visiteur ; Échap fait entrer. `?accueil=non` dans l'adresse ouvre directement la visite. La vue simplifiée n'a pas d'écran d'accueil.
+- **Barre de commandes** : Parcours, Plan, Casque VR (s'il existe), Vue simplifiée, langue. En bas de l'écran, sous le pouce sur téléphone. Quand une fiche est ouverte sur ordinateur, elle se recentre dans la place restante ; sur téléphone, la fiche la recouvre.
+- **Clic au sol** : un clic ou un toucher sur le sol y amène le visiteur, en ligne droite, à l'allure d'une promenade (4,5 m/s au plus), sans changer la direction du regard. Un repère rond montre la destination ; sur ordinateur il suit déjà la souris. Si un obstacle barre le chemin (banc, socle, fontaine), le visiteur s'arrête devant. Avec une fiche ouverte, un clic au sol la referme sans déplacer le visiteur. Code : `Controls.reach` et `Controls.walkTo`, puis `pick` dans `src/visit3d.ts`.
+- **Mini-plan permanent** : en haut à droite, il montre les salles, la salle où l'on est et la direction du regard. Un clic ouvre le plan complet. Il s'efface quand une fiche est ouverte. C'est le plan de `src/engine/map.ts` en version compacte.
+- **Couleurs** : définies en tête de `src/style.css` (`--paper`, `--green`, `--ink`, `--line`). L'accent (`--accent`) vient toujours du style du musée. Le vert et l'étoile ne sont pas encore réglables par musée : ce sera une option de l'outil d'administration.
 - Piège rencontré : sur téléphone, une fiche pleine largeur, défilante et sans aucune bordure fait disparaître la vue 3D dans Chrome. La fiche garde donc toujours un filet en haut.
-- Suite prévue après le choix : appliquer la direction à toute l'interface, puis le clic au sol pour se déplacer et le mini-plan permanent.
+- Reste hors de ce lot : le panneau affiché dans le casque VR et l'agrandissement gardent leur habillage sombre d'origine ; les fiches ne sont pas animées.
 
 ## 4. En attente du porteur du projet
 
-- **Son choix d'une direction pour l'interface** : Cimaise, Nocturne, Zellige, ou un mélange. Voir la page de comparaison ci-dessus.
+- **Son avis sur la nouvelle interface** : accueil, barre de commandes, fiche, clic au sol, mini-plan.
 
 - **Son avis sur le Patio marocain enrichi** : couleurs du zellige, choix des pièces, présentation des objets en volume.
 
@@ -229,7 +232,7 @@ src/audio.ts                Audioguide
 src/zoom.ts                 Agrandissement d'une œuvre en haute définition
 src/ui.ts                   Textes de l'interface (français, anglais)
 src/style.css               Styles de l'interface
-src/apercu-ui.ts, .css      Provisoire : les trois directions d'interface à comparer (?ui=)
+src/accueil.ts              Écran d'accueil de la visite 3D
 
 src/engine/types.ts         Format de la configuration d'un musée
 src/engine/validate.ts      Contrôle de la configuration, erreurs lisibles
@@ -247,7 +250,7 @@ scripts/images.mjs          Préparation des images d'un musée
 scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
 tests/unit/                 Tests unitaires (Vitest) : 106 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 45 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 52 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration
@@ -263,7 +266,7 @@ vercel.json                 Configuration de l'hébergement (pas encore relié)
 | `?decor=cabinet:nuit` | Montre une salle dans un autre décor, sans toucher à sa configuration. `?decor=nuit` l'applique à toutes les salles ; plusieurs demandes se séparent par des virgules |
 | `?q=high`, `?q=medium`, `?q=low` | Force un niveau de qualité |
 | `?vue=simple` | Ouvre la vue simplifiée |
-| `?ui=cimaise`, `?ui=nocturne`, `?ui=zellige` | Provisoire : montre une des trois directions d'interface à comparer. Avec `&accueil=non`, sans l'écran d'accueil |
+| `?accueil=non` | Ouvre la visite 3D sans passer par l'écran d'accueil |
 | `?debug` | Affiche le détail des erreurs de configuration, même dans la version publiée |
 
 ### Configurer un musée (`museum.json`)

@@ -1,5 +1,5 @@
 import './style.css';
-import { setupUiPreview } from './apercu-ui';
+import { showWelcome } from './accueil';
 import { AudioGuide } from './audio';
 import { withDecorOverrides } from './engine/decors';
 import { detectQuality } from './engine/quality';
@@ -63,11 +63,12 @@ async function start() {
 
   const mode = $('mode');
   mode.hidden = !webgl;
-  mode.addEventListener('click', () => {
+  const switchView = () => {
     if (simple) params.delete('vue');
     else params.set('vue', 'simple');
     location.search = params.toString();
-  });
+  };
+  mode.addEventListener('click', switchView);
 
   const langSelect = $<HTMLSelectElement>('lang');
   for (const code of museum.langs) langSelect.add(new Option(code.toUpperCase(), code));
@@ -79,14 +80,16 @@ async function start() {
     langSelect.setAttribute('aria-label', app.ui().lang);
     langSelect.value = app.lang;
   }
-  langSelect.addEventListener('change', () => {
-    app.lang = langSelect.value;
+  const setLang = (lang: string) => {
+    app.lang = lang;
     applyLang();
     view.setLang(app.lang);
-  });
+  };
+  langSelect.addEventListener('change', () => setLang(langSelect.value));
   applyLang();
   window.addEventListener('pagehide', () => app.guide.stop());
-  setupUiPreview(app, params, langSelect);
+  // La visite 3D s'ouvre sur un écran d'accueil ; ?accueil=non mène droit dans le musée.
+  if (!simple && params.get('accueil') !== 'non') showWelcome(app, { setLang, simpleView: switchView });
   document.body.classList.add('ready');
 }
 

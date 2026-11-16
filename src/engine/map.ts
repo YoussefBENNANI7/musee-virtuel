@@ -11,8 +11,12 @@ function el(name: string, attrs: Record<string, string | number>, parent?: Eleme
   return node;
 }
 
-/** Plan du musée vu de dessus : salles cliquables, portes, œuvres et position du visiteur. */
-export function buildMap(container: HTMLElement, museum: MuseumConfig, onRoom: (roomId: string) => void) {
+/**
+ * Plan du musée vu de dessus : salles cliquables, portes, œuvres et position du visiteur.
+ * En version compacte (le mini-plan), il ne garde que les salles, les portes et le visiteur :
+ * c'est une image, sans rien à cliquer.
+ */
+export function buildMap(container: HTMLElement, museum: MuseumConfig, onRoom: (roomId: string) => void, compact = false) {
   let minX = Infinity;
   let maxX = -Infinity;
   let minZ = Infinity;
@@ -25,13 +29,18 @@ export function buildMap(container: HTMLElement, museum: MuseumConfig, onRoom: (
   }
   const pad = 0.8;
   const svg = el('svg', { viewBox: `${minX - pad} ${minZ - pad} ${maxX - minX + pad * 2} ${maxZ - minZ + pad * 2}`, class: 'map-svg' });
+  if (compact) svg.setAttribute('aria-hidden', 'true');
   container.replaceChildren(svg);
 
-  const labels = new Map<string, { group: Element; text: Element }>();
+  const labels = new Map<string, { group: Element; text: Element | null }>();
   for (const r of museum.rooms) {
     const [w, , d] = r.size;
-    const g = el('g', { class: 'map-room', tabindex: 0, role: 'button' }, svg);
+    const g = el('g', compact ? { class: 'map-room' } : { class: 'map-room', tabindex: 0, role: 'button' }, svg);
     el('rect', { x: r.position[0] - w / 2, y: r.position[1] - d / 2, width: w, height: d }, g);
+    if (compact) {
+      labels.set(r.id, { group: g, text: null });
+      continue;
+    }
     const text = el('text', { x: r.position[0], y: r.position[1] - d / 2 + 1.1, 'text-anchor': 'middle', 'font-size': 0.62 }, g);
     labels.set(r.id, { group: g, text });
     g.addEventListener('click', () => onRoom(r.id));
@@ -65,9 +74,11 @@ export function buildMap(container: HTMLElement, museum: MuseumConfig, onRoom: (
     el('line', { class: 'map-door', x1: a.x, y1: a.z, x2: b.x, y2: b.z }, svg);
   }
 
+  // Sur le mini-plan, la flèche du visiteur est grossie pour rester lisible.
   const you = el('g', { class: 'map-you' }, svg);
-  el('circle', { r: 0.75, class: 'map-you-halo' }, you);
-  el('path', { d: 'M0,-0.72 L0.46,0.5 L0,0.22 L-0.46,0.5 Z' }, you);
+  const mark = el('g', compact ? { transform: 'scale(2.4)' } : {}, you);
+  el('circle', { r: 0.75, class: 'map-you-halo' }, mark);
+  el('path', { d: 'M0,-0.72 L0.46,0.5 L0,0.22 L-0.46,0.5 Z' }, mark);
 
   return {
     update(x: number, z: number, yaw: number) {
@@ -76,6 +87,7 @@ export function buildMap(container: HTMLElement, museum: MuseumConfig, onRoom: (
     setLang(lang: string) {
       for (const r of museum.rooms) {
         const l = labels.get(r.id)!;
+        if (!l.text) continue;
         l.text.textContent = tr(r.name, lang);
         l.group.setAttribute('aria-label', tr(r.name, lang));
       }

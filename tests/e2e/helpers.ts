@@ -13,6 +13,8 @@ const fixtureImage = readFileSync(fileURLToPath(new URL('../fixtures/image.webp'
 export interface OpenOptions {
   /** Paramètres d'adresse supplémentaires, par exemple "&vue=simple". */
   query?: string;
+  /** Garde l'écran d'accueil, que les tests passent d'ordinaire pour entrer droit dans le musée. */
+  welcome?: boolean;
   /** Remplace la voix de synthèse par un enregistreur : window.__spoken liste les textes lus. */
   spySpeech?: boolean;
   /** Fait comme si les fichiers d'images des œuvres n'existaient pas. */
@@ -46,7 +48,7 @@ export async function openMuseum(page: Page, options: OpenOptions = {}): Promise
   );
   // Qualité moyenne par défaut : le reflet du sol double le temps de rendu, calculé ici par le processeur.
   const query = options.query ?? '';
-  await page.goto(`/?m=fixture${/[?&]q=/.test(query) ? '' : '&q=medium'}${query}`);
+  await page.goto(`/?m=fixture${/[?&]q=/.test(query) ? '' : '&q=medium'}${options.welcome ? '' : '&accueil=non'}${query}`);
   await page.waitForSelector('body.ready');
   return errors;
 }

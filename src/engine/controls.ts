@@ -4,10 +4,12 @@ import { EYE_HEIGHT } from './layout';
 const SPEED = 2.4; // m/s
 const TURN_SPEED = 1.6; // rad/s, rotation au clavier
 const LOOK = 0.0032; // rad par pixel de glissement
+const WALK_SPEED = 4.5; // m/s au plus, quand le visiteur a cliqué au sol
+const STEP = 0.1; // m, pas de contrôle d'un trajet
 
 /**
  * Déplacement libre à la première personne.
- * - Souris / doigt : glisser pour regarder, toucher une œuvre pour l'ouvrir.
+ * - Souris / doigt : glisser pour regarder, toucher une œuvre pour l'ouvrir, toucher le sol pour s'y rendre.
  * - Clavier : ZQSD / WASD ou flèches pour avancer, A/E ou Q/E pour tourner.
  * - Tactile : manette virtuelle pour avancer.
  */
@@ -23,7 +25,7 @@ export class Controls {
   private keys = new Set<string>();
   private stick = new THREE.Vector2();
   private drag: { id: number; x: number; y: number; moved: number } | null = null;
-  private glide: { pos: THREE.Vector3; yaw: number; pitch: number } | null = null;
+  private glide: { pos: THREE.Vector3; yaw: number; pitch: number; maxSpeed: number } | null = null;
 
   constructor(
     private camera: THREE.PerspectiveCamera,
@@ -124,7 +126,42 @@ export class Controls {
   glideTo(pos: THREE.Vector3, yaw: number, pitch = 0) {
     // Tourne par le plus court chemin.
     const delta = Math.atan2(Math.sin(yaw - this.yaw), Math.cos(yaw - this.yaw));
-    this.glide = { pos: pos.clone().setY(EYE_HEIGHT), yaw: this.yaw + delta, pitch };
+    this.glide = { pos: pos.clone().setY(EYE_HEIGHT), yaw: this.yaw + delta, pitch, maxSpeed: Infinity };
+  }
+
+  /**
+   * Point le plus loin que le visiteur peut atteindre en marchant tout droit vers (x, z) :
+   * le point lui-même si rien ne gêne, sinon le dernier endroit libre avant l'obstacle.
+   */
+  reach(x: number, z: number): { x: number; z: number } {
+    const p = this.camera.position;
+    const length = Math.hypot(x - p.x, z - p.z);
+    const steps = Math.ceil(length / STEP);
+    let last = { x: p.x, z: p.z };
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps;
+      const next = { x: p.x + (x - p.x) * t, z: p.z + (z - p.z) * t };
+      if (!this.walkable(next.x, next.z)) break;
+      last = next;
+    }
+    return last;
+  }
+
+  /**
+   * Marche tout droit vers un point du sol, sans changer la direction du regard.
+   * Renvoie la destination retenue, ou null si le visiteur ne peut pas avancer vers ce point.
+   */
+  walkTo(x: number, z: number): { x: number; z: number } | null {
+    const end = this.reach(x, z);
+    const p = this.camera.position;
+    if (Math.hypot(end.x - p.x, end.z - p.z) < 0.3) return null;
+    this.glide = { pos: new THREE.Vector3(end.x, EYE_HEIGHT, end.z), yaw: this.yaw, pitch: this.pitch, maxSpeed: WALK_SPEED };
+    return end;
+  }
+
+  /** Vrai tant qu'un déplacement en douceur est en cours. */
+  get gliding() {
+    return this.glide !== null;
   }
 
   update(dt: number) {
@@ -139,7 +176,10 @@ export class Controls {
     if (forward || strafe || turn) this.glide = null;
 
     if (this.glide) {
-      const t = 1 - Math.exp(-dt * 4);
+      let t = 1 - Math.exp(-dt * 4);
+      // Une marche vers un point du sol garde une allure de promenade, même de loin.
+      const left = this.camera.position.distanceTo(this.glide.pos);
+      if (left * t > this.glide.maxSpeed * dt) t = (this.glide.maxSpeed * dt) / left;
       this.camera.position.lerp(this.glide.pos, t);
       this.yaw += (this.glide.yaw - this.yaw) * t;
       this.pitch += (this.glide.pitch - this.pitch) * t;

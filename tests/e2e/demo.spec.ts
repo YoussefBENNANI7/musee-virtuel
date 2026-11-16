@@ -7,7 +7,7 @@ test('démo : chaque œuvre s’ouvre depuis le point de vue qui lui fait face',
   const errors: string[] = [];
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   page.on('pageerror', (e) => errors.push(String(e)));
-  await page.goto('/');
+  await page.goto('/?accueil=non');
   await page.waitForSelector('body.ready');
 
   const works = await page.evaluate(() => {
@@ -32,7 +32,7 @@ test('démo : chaque œuvre s’ouvre depuis le point de vue qui lui fait face',
 });
 
 test('démo : la fiche d’une œuvre cite le musée qui la conserve, dans les deux langues', async ({ page }) => {
-  await page.goto('/?q=medium');
+  await page.goto('/?q=medium&accueil=non');
   await page.waitForSelector('body.ready');
   await page.evaluate(() => (window as any).__museum.standBefore('la-grande-vague', 2));
   await page.waitForTimeout(300);
@@ -85,7 +85,7 @@ test('démo : la sculpture numérisée se charge, à la bonne taille, en version
       return { bottom: min, height: max - min, walkable: m.world.walkable(art.center.x, art.center.z) };
     });
 
-  await page.goto('/?q=medium');
+  await page.goto('/?q=medium&accueil=non');
   await page.waitForSelector('body.ready');
   await expect.poll(sculpture, { timeout: 30_000 }).not.toBeNull();
   const s = (await sculpture())!;
@@ -94,7 +94,7 @@ test('démo : la sculpture numérisée se charge, à la bonne taille, en version
   expect(s.bottom).toBeCloseTo(0.6, 2);
   expect(s.walkable).toBe(false);
 
-  await page.goto('/?q=low');
+  await page.goto('/?q=low&accueil=non');
   await page.waitForSelector('body.ready');
   await expect.poll(sculpture, { timeout: 30_000 }).not.toBeNull();
   expect(requested).toEqual(['/museums/demo/models/web/l-esclave-grecque.glb', '/museums/demo/models/web/l-esclave-grecque-leger.glb']);
@@ -102,7 +102,7 @@ test('démo : la sculpture numérisée se charge, à la bonne taille, en version
 });
 
 test('démo : on entre à pied dans le patio marocain par l’arc, et la fontaine se contourne', async ({ page }) => {
-  await page.goto('/?q=medium');
+  await page.goto('/?q=medium&accueil=non');
   await page.waitForSelector('body.ready');
   const m = (fn: string) => page.evaluate(`(() => { const m = window.__museum; return ${fn}; })()`);
   expect(await m('m.decors.riad')).toBe('riad');
@@ -129,7 +129,7 @@ test('démo : on entre à pied dans le patio marocain par l’arc, et la fontain
 });
 
 test('démo : une œuvre s’agrandit en haute définition, et Échap referme d’abord l’agrandissement', async ({ page }) => {
-  await page.goto('/?q=medium');
+  await page.goto('/?q=medium&accueil=non');
   await page.waitForSelector('body.ready');
   await page.evaluate(() => (window as any).__museum.standBefore('les-moissonneurs', 2.5));
   await page.waitForTimeout(300);
@@ -181,7 +181,7 @@ test('une œuvre sans mention ni lien n’affiche pas de ligne vide', async ({ p
   await page.route('**/museums/fixture/museum.json', (route) =>
     route.fulfill({ path: new URL('../fixtures/museum.json', import.meta.url).pathname }),
   );
-  await page.goto('/?m=fixture&q=medium');
+  await page.goto('/?m=fixture&q=medium&accueil=non');
   await page.waitForSelector('body.ready');
   await page.evaluate(() => (window as any).__museum.standBefore('equilibre-no-7', 3));
   await page.waitForTimeout(300);

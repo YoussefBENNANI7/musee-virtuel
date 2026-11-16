@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { clickArtwork, holdUntil, openMuseum, panel, roomName, walkUntilBlocked, teleport } from './helpers';
+import { clickArtwork, holdUntil, openMuseum, panel, position, roomName, walkUntilBlocked, teleport } from './helpers';
 
 const fixture = () => JSON.parse(readFileSync(fileURLToPath(new URL('../fixtures/museum.json', import.meta.url)), 'utf8'));
 const hook = (page: import('@playwright/test').Page, key: string) => page.evaluate((k) => (window as any).__museum[k], key);
@@ -68,7 +68,7 @@ test('le décor écrit dans la configuration est appliqué, et un décor inconnu
   await page.route('**/museums/fixture/museum.json', (route) =>
     route.fulfill({ contentType: 'application/json', body: JSON.stringify(decorated) }),
   );
-  await page.goto('/?m=fixture&q=medium');
+  await page.goto('/?m=fixture&q=medium&accueil=non');
   const box = page.locator('#config-errors');
   await expect(box).toBeVisible();
   await expect(box).toContainText('Salle "cabinet" : décor inconnu : "rococo"');
@@ -77,7 +77,7 @@ test('le décor écrit dans la configuration est appliqué, et un décor inconnu
 
 test('le niveau de qualité suit l’appareil, et se force depuis l’adresse', async ({ page }) => {
   // Un ordinateur reçoit le rendu complet, avec le reflet du sol.
-  await page.goto('/');
+  await page.goto('/?accueil=non');
   await page.waitForSelector('body.ready');
   expect(await hook(page, 'quality')).toBe('high');
   expect(await page.evaluate(() => (window as any).__museum.reflections())).toBe(true);
@@ -110,26 +110,42 @@ test('un musée introuvable affiche un message simple', async ({ page }) => {
   await expect(page.locator('#help')).toHaveText('Impossible de charger ce musée.');
 });
 
-test('les directions d’interface à comparer ne s’affichent que sur demande', async ({ page }) => {
-  // Sans paramètre : l'interface habituelle, sans écran d'accueil.
-  await openMuseum(page);
-  await expect(page.locator('#welcome')).toHaveCount(0);
-  expect(await page.evaluate(() => document.body.dataset.ui)).toBeUndefined();
+test('la visite s’ouvre sur un écran d’accueil, qui présente le musée et laisse entrer', async ({ page }) => {
+  const errors = await openMuseum(page, { welcome: true });
+  await expect(page.locator('#welcome-title')).toHaveText('Musée des Horizons');
+  await expect(page.locator('.welcome-stats')).toHaveText('4 salles · 21 œuvres · 2 parcours');
+  await expect(page.locator('.welcome-how li')).toHaveCount(3);
+  // Les commandes attendent derrière l'accueil, et le clavier ne déplace pas encore le visiteur.
+  await expect(page.locator('#bar')).toBeHidden();
+  await expect(page.locator('#minimap')).toBeHidden();
+  const before = await position(page);
+  await page.keyboard.down('ArrowUp');
+  await page.waitForTimeout(500);
+  await page.keyboard.up('ArrowUp');
+  expect(await position(page)).toEqual(before);
 
-  for (const ui of ['cimaise', 'nocturne', 'zellige']) {
-    const errors = await openMuseum(page, { query: `&ui=${ui}` });
-    expect(await page.evaluate(() => document.body.dataset.ui)).toBe(ui);
-    // L'écran d'accueil nomme le musée ; les commandes attendent derrière lui.
-    await expect(page.locator('#welcome-title')).toHaveText('Musée des Horizons');
-    await expect(page.locator('#bar')).toBeHidden();
-    await page.locator('.welcome-enter').click();
-    await expect(page.locator('#welcome')).toHaveCount(0);
-    await expect(page.locator('#bar')).toBeVisible();
-    expect(errors).toEqual([]);
-  }
+  // La langue se choisit dès l'accueil.
+  await page.locator('.welcome-langs button', { hasText: 'EN' }).click();
+  await expect(page.locator('#welcome-title')).toHaveText('Horizons Museum');
+  await expect(page.locator('.welcome-enter')).toHaveText('Enter the museum');
+  await page.locator('.welcome-langs button', { hasText: 'FR' }).click();
 
-  // « accueil=non » ouvre la visite directement, dans l'habillage demandé.
-  await openMuseum(page, { query: '&ui=zellige&accueil=non' });
+  await page.locator('.welcome-enter').click();
   await expect(page.locator('#welcome')).toHaveCount(0);
-  expect(await page.evaluate(() => document.body.dataset.ui)).toBe('zellige');
+  await expect(page.locator('#bar')).toBeVisible();
+  await expect(page.locator('#minimap')).toBeVisible();
+  // Une fois entré, les flèches déplacent le visiteur.
+  await holdUntil(page, 'ArrowUp', async () => (await position(page)).z < before.z - 0.3);
+  expect(errors).toEqual([]);
+});
+
+test('Échap fait entrer dans le musée, et la vue simplifiée n’a pas d’écran d’accueil', async ({ page }) => {
+  await openMuseum(page, { welcome: true });
+  await expect(page.locator('#welcome')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#welcome')).toHaveCount(0);
+
+  await openMuseum(page, { welcome: true, query: '&vue=simple' });
+  await expect(page.locator('#welcome')).toHaveCount(0);
+  await expect(page.locator('.card').first()).toBeVisible();
 });

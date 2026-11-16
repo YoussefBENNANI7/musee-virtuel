@@ -22,7 +22,7 @@ for (const room of museum.rooms) {
     if (art.type !== 'sculpture') continue;
     // Une page neuve par vignette : la prise de vue fige la visite.
     const page = await browser.newPage({ viewport: { width: 800, height: 800 } });
-    await page.goto(`${server}/?m=${encodeURIComponent(museumId)}&q=medium`);
+    await page.goto(`${server}/?m=${encodeURIComponent(museumId)}&q=medium&accueil=non`);
     await page.waitForSelector('body.ready');
     // Les images et les modèles 3D arrivent après l'ouverture : on attend que tout soit en place.
     await page.waitForFunction(() => window.__museum.world.artworks.every((a) => a.ready), null, { timeout: 60000 });

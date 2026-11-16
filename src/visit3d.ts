@@ -110,6 +110,7 @@ export function startVisit(app: App): View {
     button: $('vr'),
     onStart() {
       closePanel();
+      marker.visible = false;
       camera.clearViewOffset();
       // Le reflet du sol n'est pas calculé dans le casque.
       if (reflection) reflection.object.visible = false;
@@ -220,23 +221,65 @@ export function startVisit(app: App): View {
     }, 220);
   }
 
-  // --- Sélection des œuvres ------------------------------------------------
+  // --- Sélection des œuvres et marche vers un point du sol -------------------
   // On teste toute la scène : un mur placé devant une œuvre bloque le clic.
   const raycaster = new THREE.Raycaster();
-  const pick = (ndc: THREE.Vector2): PlacedArtwork | null => {
+  const up = new THREE.Vector3();
+  /** Ce que désigne un point de l'écran : une œuvre, un point du sol, ou rien. */
+  const pick = (ndc: THREE.Vector2): { art: PlacedArtwork | null; ground: THREE.Vector3 | null } => {
     raycaster.setFromCamera(ndc, camera);
-    let node: THREE.Object3D | null = raycaster.intersectObject(world.group, true)[0]?.object ?? null;
+    const hit = raycaster.intersectObject(world.group, true)[0];
+    if (!hit) return { art: null, ground: null };
+    let node: THREE.Object3D | null = hit.object;
     while (node && !node.userData.artwork) node = node.parent;
-    return node?.userData.artwork ?? null;
+    if (node) return { art: node.userData.artwork, ground: null };
+    // Le sol : une surface tournée vers le haut, au niveau zéro (ni banc, ni socle, ni bassin).
+    const flat = hit.face ? up.copy(hit.face.normal).transformDirection(hit.object.matrixWorld).y > 0.9 : false;
+    return { art: null, ground: flat && hit.point.y < 0.06 ? hit.point : null };
   };
+
+  // Repère posé au sol : il montre où le visiteur ira s'il clique, puis sa destination.
+  const marker = new THREE.Group();
+  const ring = (inner: number, outer: number, color: number, opacity: number) =>
+    new THREE.Mesh(
+      new THREE.RingGeometry(inner, outer, 48),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthWrite: false, toneMapped: false }),
+    );
+  marker.add(ring(0.15, 0.21, 0x1f5a48, 0.9), ring(0.21, 0.25, 0xffffff, 0.9));
+  marker.rotation.x = -Math.PI / 2;
+  marker.position.y = 0.02;
+  marker.visible = false;
+  scene.add(marker);
+  let walking = false;
+  const showMarker = (at: { x: number; z: number } | null) => {
+    if (!at && !marker.visible) return;
+    marker.visible = at !== null;
+    if (at) marker.position.set(at.x, 0.02, at.z);
+    invalidate(200);
+  };
+  /** Endroit où mènerait un clic sur ce point du sol, s'il vaut le déplacement. */
+  const destination = (ground: THREE.Vector3) => {
+    const end = controls.reach(ground.x, ground.z);
+    return Math.hypot(end.x - camera.position.x, end.z - camera.position.z) < 0.3 ? null : end;
+  };
+
   controls.onTap = (ndc) => {
-    const art = pick(ndc);
-    if (art) openArtwork(art);
-    else closePanel();
+    const { art, ground } = pick(ndc);
+    if (art) return openArtwork(art);
+    // Fiche ouverte : un clic à côté la referme, sans déplacer le visiteur.
+    const open = !panel.hidden;
+    closePanel();
+    if (open || !ground) return;
+    const end = controls.walkTo(ground.x, ground.z);
+    walking = end !== null;
+    showMarker(end);
   };
   controls.onHover = (ndc) => {
-    canvas.style.cursor = pick(ndc) ? 'pointer' : 'grab';
+    const { art, ground } = pick(ndc);
+    canvas.style.cursor = art || (ground && panel.hidden) ? 'pointer' : 'grab';
+    if (!walking) showMarker(ground && panel.hidden ? destination(ground) : null);
   };
+  canvas.addEventListener('pointerleave', () => !walking && showMarker(null));
 
   // --- Parcours thématiques ------------------------------------------------
   const tours = (museum.tours ?? [])
@@ -328,10 +371,14 @@ export function startVisit(app: App): View {
     const s = world.spawn(roomId);
     fade(() => controls.teleport(s.x, s.z, s.yaw));
   });
-  $('map-open').addEventListener('click', () => {
+  const openMap = () => {
     mapDialog.hidden = false;
     $('map-close').focus();
-  });
+  };
+  $('map-open').addEventListener('click', openMap);
+  // Mini-plan permanent : où l'on est dans le musée ; un clic ouvre le plan complet.
+  const miniMap = buildMap($('minimap'), museum, () => {}, true);
+  $('minimap').addEventListener('click', openMap);
   $('map-close').addEventListener('click', () => (mapDialog.hidden = true));
   mapDialog.addEventListener('click', (e) => e.target === mapDialog && (mapDialog.hidden = true));
   window.addEventListener('keydown', (e) => {
@@ -349,6 +396,7 @@ export function startVisit(app: App): View {
     $('help').textContent = touch ? ui().helpTouch : ui().help;
     for (const id of ['p-close', 'map-close', 'tours-close']) $(id).setAttribute('aria-label', ui().close);
     $('map-open').textContent = ui().map;
+    $('minimap').setAttribute('aria-label', ui().mapTitle);
     $('map-title').textContent = ui().mapTitle;
     $('map-hint').textContent = ui().mapHint;
     $('tours-open').textContent = ui().tours;
@@ -407,13 +455,22 @@ export function startVisit(app: App): View {
       room = here;
       $('room-name').textContent = tr(room.name, app.lang);
       map.setCurrent(room.id);
+      miniMap.setCurrent(room.id);
     }
     if (!mapDialog.hidden) map.update(p.x, p.z, controls.yaw);
 
     const pose = `${p.x.toFixed(3)} ${p.z.toFixed(3)} ${controls.yaw.toFixed(4)} ${controls.pitch.toFixed(4)}`;
     const moving = pose !== lastPose;
     lastPose = pose;
-    if (moving) invalidate(300);
+    if (moving) {
+      invalidate(300);
+      miniMap.update(p.x, p.z, controls.yaw);
+    }
+    // Arrivé au point cliqué (ou détourné en chemin) : le repère du sol s'efface.
+    if (walking && !controls.gliding) {
+      walking = false;
+      showMarker(null);
+    }
     if (performance.now() > renderUntil) return;
     renderer.render(scene, camera);
 
@@ -469,8 +526,14 @@ export function startVisit(app: App): View {
       const v = target.project(camera);
       return { x: ((v.x + 1) / 2) * canvas.clientWidth, y: ((1 - v.y) / 2) * canvas.clientHeight };
     };
+    /** Position à l'écran, en pixels, d'un point du sol. */
+    const screenAt = (x: number, z: number) => {
+      camera.updateMatrixWorld();
+      const v = new THREE.Vector3(x, 0, z).project(camera);
+      return { x: ((v.x + 1) / 2) * canvas.clientWidth, y: ((1 - v.y) / 2) * canvas.clientHeight };
+    };
     Object.assign(window, {
-      __museum: { style: style.id, decors: Object.fromEntries([...world.decors].map(([id, d]) => [id, d.preset])), quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
+      __museum: { screenAt, marker, style: style.id, decors: Object.fromEntries([...world.decors].map(([id, d]) => [id, d.preset])), quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
     });
   }
 
