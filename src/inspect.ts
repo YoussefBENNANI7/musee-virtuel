@@ -134,7 +134,7 @@ export function setupInspect(options: {
 
       // Recul pour que la sculpture entière tienne à l'écran, en hauteur comme en largeur.
       const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
-      const fit = 1.25 * Math.max(target.config.height / (2 * tan), target.span / (2 * tan * camera.aspect));
+      const fit = 1.45 * Math.max(target.config.height / (2 * tan), target.span / (2 * tan * camera.aspect));
       const radius = Math.max(target.config.height, target.span) / 2;
       min = radius * 0.45 + 0.12;
       max = fit * 1.7;

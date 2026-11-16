@@ -43,8 +43,11 @@ export function setupZoom(labels: () => Labels): Zoom {
   function apply() {
     const maxX = Math.max(0, (img.clientWidth * scale - stage.clientWidth) / 2);
     const maxY = Math.max(0, (img.clientHeight * scale - stage.clientHeight) / 2);
+    // Quand le commentaire d'un détail occupe le bas de l'écran, l'image peut monter d'autant :
+    // un détail du bas du tableau reste ainsi visible au-dessus de son texte.
+    const lift = card.hidden ? 0 : card.getBoundingClientRect().height + 24;
     x = Math.min(maxX, Math.max(-maxX, x));
-    y = Math.min(maxY, Math.max(-maxY, y));
+    y = Math.min(maxY, Math.max(-maxY - lift, y));
     sheet.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
     // Les points gardent leur taille à l'écran, quel que soit le grossissement.
     sheet.style.setProperty('--inv', String(1 / scale));
