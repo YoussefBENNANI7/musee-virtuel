@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { centuryFr, narrationText, spoken } from '../../src/engine/narration';
 import type { MuseumConfig } from '../../src/engine/types';
@@ -57,3 +58,37 @@ describe('texte lu par l’audioguide', () => {
     }
   });
 });
+
+const demo = new URL('../../public/museums/demo/', import.meta.url);
+// Ces tests s'activent dès que les voix de la démo ont été produites (npm run voix).
+describe.skipIf(!existsSync(new URL('audio/voix.json', demo)))('voix enregistrées de la démo', () => {
+  const root = demo;
+  const museum: MuseumConfig = JSON.parse(readFileSync(new URL('museum.json', root), 'utf8'));
+  const manifest = JSON.parse(readFileSync(new URL('audio/voix.json', root), 'utf8'));
+
+  it('chaque œuvre a sa voix dans chaque langue, et le fichier existe', () => {
+    for (const art of museum.rooms.flatMap((r) => r.artworks)) {
+      for (const lang of museum.langs) {
+        const file = art.audio?.[lang];
+        expect(file, `${art.id} (${lang})`).toBe(`audio/${art.id}.${lang}.mp3`);
+        expect(existsSync(new URL(file!, root)), file).toBe(true);
+      }
+    }
+  });
+
+  it('chaque voix correspond au texte actuel de l’œuvre', () => {
+    // Un texte corrigé sans relancer « npm run voix » ferait entendre l'ancienne version.
+    for (const art of museum.rooms.flatMap((r) => r.artworks)) {
+      for (const lang of museum.langs) {
+        const voice = voiceOf(manifest.voice, lang);
+        const print = createHash('sha256').update(JSON.stringify([manifest.model, voice, manifest.style, narrationText(art, lang)])).digest('hex').slice(0, 16);
+        expect(manifest.files[`audio/${art.id}.${lang}.mp3`], `${art.id} (${lang}) : relancer npm run voix`).toBe(print);
+      }
+    }
+  });
+});
+
+function voiceOf(spec: string, lang: string): string {
+  if (!spec.includes(':')) return spec;
+  return Object.fromEntries(spec.split('+').map((p) => p.split(':')))[lang];
+}
