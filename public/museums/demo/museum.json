@@ -112,7 +112,8 @@
             "fr": "Art Institute of Chicago · image dans le domaine public",
             "en": "Art Institute of Chicago · public domain image"
           },
-          "link": "https://www.artic.edu/artworks/14655"
+          "link": "https://www.artic.edu/artworks/14655",
+          "frame": "gilt"
         },
         {
           "id": "la-classe-de-danse",
@@ -149,7 +150,8 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/438817"
+          "link": "https://www.metmuseum.org/art/collection/search/438817",
+          "frame": "gilt"
         },
         {
           "id": "ia-orana-maria",
@@ -186,7 +188,8 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/438821"
+          "link": "https://www.metmuseum.org/art/collection/search/438821",
+          "frame": "gilt"
         },
         {
           "id": "cypres",
@@ -223,7 +226,8 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/437980"
+          "link": "https://www.metmuseum.org/art/collection/search/437980",
+          "frame": "gilt"
         }
       ]
     },
@@ -298,7 +302,8 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/435809"
+          "link": "https://www.metmuseum.org/art/collection/search/435809",
+          "frame": "gilt"
         },
         {
           "id": "champ-de-ble-avec-cypres",
@@ -335,7 +340,8 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/436535"
+          "link": "https://www.metmuseum.org/art/collection/search/436535",
+          "frame": "gilt"
         },
         {
           "id": "crepuscule-dans-la-nature-sauvage",
@@ -372,7 +378,8 @@
             "fr": "Cleveland Museum of Art · image dans le domaine public",
             "en": "Cleveland Museum of Art · public domain image"
           },
-          "link": "https://clevelandart.org/art/1965.233"
+          "link": "https://clevelandart.org/art/1965.233",
+          "frame": "gilt"
         },
         {
           "id": "la-montagne-sainte-victoire",
@@ -412,7 +419,8 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/435878"
+          "link": "https://www.metmuseum.org/art/collection/search/435878",
+          "frame": "gilt"
         },
         {
           "id": "l-incendie-du-parlement",
@@ -449,7 +457,8 @@
             "fr": "Cleveland Museum of Art · image dans le domaine public",
             "en": "Cleveland Museum of Art · public domain image"
           },
-          "link": "https://clevelandart.org/art/1942.647"
+          "link": "https://clevelandart.org/art/1942.647",
+          "frame": "gilt"
         },
         {
           "id": "promenade-sur-la-falaise",
@@ -486,7 +495,8 @@
             "fr": "Art Institute of Chicago · image dans le domaine public",
             "en": "Art Institute of Chicago · public domain image"
           },
-          "link": "https://www.artic.edu/artworks/14620"
+          "link": "https://www.artic.edu/artworks/14620",
+          "frame": "gilt"
         },
         {
           "id": "la-mer-calme",
@@ -523,7 +533,8 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/436005"
+          "link": "https://www.metmuseum.org/art/collection/search/436005",
+          "frame": "gilt"
         }
       ]
     },
@@ -587,7 +598,8 @@
             "fr": "Art Institute of Chicago · image dans le domaine public",
             "en": "Art Institute of Chicago · public domain image"
           },
-          "link": "https://www.artic.edu/artworks/64818"
+          "link": "https://www.artic.edu/artworks/64818",
+          "frame": "gilt"
         },
         {
           "id": "meules-effet-de-neige",
@@ -624,7 +636,8 @@
             "fr": "Art Institute of Chicago · image dans le domaine public",
             "en": "Art Institute of Chicago · public domain image"
           },
-          "link": "https://www.artic.edu/artworks/81545"
+          "link": "https://www.artic.edu/artworks/81545",
+          "frame": "gilt"
         },
         {
           "id": "improvisation-no-30",
@@ -701,13 +714,14 @@
             "fr": "Art Institute of Chicago · image dans le domaine public",
             "en": "Art Institute of Chicago · public domain image"
           },
-          "link": "https://www.artic.edu/artworks/27943"
+          "link": "https://www.artic.edu/artworks/27943",
+          "frame": "gilt"
         },
         {
           "id": "iris",
           "type": "painting",
           "wall": "north",
-          "offset": -3.75,
+          "offset": -3.85,
           "width": 0.929,
           "height": 0.737,
           "image": {
@@ -738,7 +752,8 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/436528"
+          "link": "https://www.metmuseum.org/art/collection/search/436528",
+          "frame": "gilt"
         },
         {
           "id": "nympheas",
@@ -775,7 +790,8 @@
             "fr": "Art Institute of Chicago · image dans le domaine public",
             "en": "Art Institute of Chicago · public domain image"
           },
-          "link": "https://www.artic.edu/artworks/16568"
+          "link": "https://www.artic.edu/artworks/16568",
+          "frame": "gilt"
         },
         {
           "id": "la-chambre",
@@ -812,7 +828,8 @@
             "fr": "Art Institute of Chicago · image dans le domaine public",
             "en": "Art Institute of Chicago · public domain image"
           },
-          "link": "https://www.artic.edu/artworks/28560"
+          "link": "https://www.artic.edu/artworks/28560",
+          "frame": "gilt"
         },
         {
           "id": "composition-rouge-jaune-bleu",
@@ -1379,7 +1396,8 @@
             "fr": "Art Institute of Chicago · image dans le domaine public",
             "en": "Art Institute of Chicago · public domain image"
           },
-          "link": "https://www.artic.edu/artworks/27992"
+          "link": "https://www.artic.edu/artworks/27992",
+          "frame": "gilt"
         },
         {
           "id": "rue-de-paris-temps-de-pluie",
@@ -1416,7 +1434,8 @@
             "fr": "Art Institute of Chicago · image dans le domaine public",
             "en": "Art Institute of Chicago · public domain image"
           },
-          "link": "https://www.artic.edu/artworks/20684"
+          "link": "https://www.artic.edu/artworks/20684",
+          "frame": "gilt"
         }
       ]
     },
@@ -1975,7 +1994,8 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/12065"
+          "link": "https://www.metmuseum.org/art/collection/search/12065",
+          "frame": "gilt"
         },
         {
           "id": "couple-marocain",

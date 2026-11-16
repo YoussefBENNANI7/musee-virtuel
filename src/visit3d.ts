@@ -8,6 +8,7 @@ import { loc, tr, type RoomConfig, type TourConfig } from './engine/types';
 import { buildWorld, type PlacedArtwork } from './engine/world';
 import { $, metaLine, renderCredit, type App, type View } from './ui';
 import { setupVR } from './vr';
+import { setupZoom } from './zoom';
 
 /** Visite en 3D : déplacement libre, fiches d'œuvres, plan, parcours et audioguide. */
 export function startVisit(app: App): View {
@@ -48,8 +49,48 @@ export function startVisit(app: App): View {
   scene.add(rig);
   const controls = new Controls(camera, canvas, $('joystick'));
 
-  const world = buildWorld(museum, { lang: app.lang, base: app.base, style, quality, env, onLoad: invalidate });
+  const world = buildWorld(museum, {
+    lang: app.lang,
+    base: app.base,
+    style,
+    quality,
+    env,
+    onLoad() {
+      // Une sculpture vient d'arriver : son ombre est à calculer.
+      renderer.shadowMap.needsUpdate = true;
+      invalidate();
+    },
+  });
   scene.add(world.group);
+  if (quality.shadows) {
+    // Ombres portées des sculptures : le soleil les dessine une seule fois, puisque rien ne bouge.
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minZ = Infinity;
+    let maxZ = -Infinity;
+    for (const r of museum.rooms) {
+      minX = Math.min(minX, r.position[0] - r.size[0] / 2);
+      maxX = Math.max(maxX, r.position[0] + r.size[0] / 2);
+      minZ = Math.min(minZ, r.position[1] - r.size[2] / 2);
+      maxZ = Math.max(maxZ, r.position[1] + r.size[2] / 2);
+    }
+    const centre = new THREE.Vector3((minX + maxX) / 2, 0, (minZ + maxZ) / 2);
+    const reach = Math.hypot(maxX - minX, maxZ - minZ) / 2 + 4;
+    sun.target.position.copy(centre);
+    sun.position.copy(centre).add(new THREE.Vector3().copy(SUN_AZIMUTH).multiplyScalar(3).setY(7).normalize().multiplyScalar(60));
+    scene.add(sun.target);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(4096, 4096);
+    Object.assign(sun.shadow.camera, { left: -reach, right: reach, top: reach, bottom: -reach, near: 1, far: 120 });
+    sun.shadow.camera.updateProjectionMatrix();
+    sun.shadow.bias = -0.0004;
+    sun.shadow.normalBias = 0.03;
+    sun.shadow.radius = 4;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.autoUpdate = false;
+    renderer.shadowMap.needsUpdate = true;
+  }
   const reflection = quality.reflections ? buildFloorReflection(museum, world.decors, world.layout.wallThickness) : null;
   if (reflection) scene.add(reflection.object);
   controls.walkable = world.walkable;
@@ -98,6 +139,9 @@ export function startVisit(app: App): View {
     $('p-meta').textContent = metaLine(app, a);
     $('p-desc').textContent = tr(a.description, app.lang);
     renderCredit($('p-credit'), app, a);
+    // L'agrandissement montre l'image d'origine : il n'existe que pour une œuvre fournie en fichier.
+    $('p-zoom').hidden = !(a.type === 'painting' && 'src' in a.image);
+    $('p-zoom').textContent = ui().enlarge;
     renderAudio();
   }
   guide.onChange = () => {
@@ -105,6 +149,11 @@ export function startVisit(app: App): View {
     vr.refresh();
   };
   $('p-audio').addEventListener('click', () => current && guide.toggle(current.config, app.lang, app.base));
+  const zoom = setupZoom(() => ui() as never);
+  $('p-zoom').addEventListener('click', () => {
+    const a = current?.config;
+    if (a?.type === 'painting' && 'src' in a.image) zoom.open(new URL(a.image.src, app.base).href, `${tr(a.title, app.lang)}, ${loc(a.artist, app.lang)}`);
+  });
 
   /**
    * Zone de l'écran où l'œuvre reste visible quand la fiche est ouverte :
@@ -287,7 +336,8 @@ export function startVisit(app: App): View {
   mapDialog.addEventListener('click', (e) => e.target === mapDialog && (mapDialog.hidden = true));
   window.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (!mapDialog.hidden) mapDialog.hidden = true;
+    if (zoom.isOpen) zoom.close();
+    else if (!mapDialog.hidden) mapDialog.hidden = true;
     else if (!toursDialog.hidden) toursDialog.hidden = true;
     else closePanel();
   });

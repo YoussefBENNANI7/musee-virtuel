@@ -77,6 +77,8 @@ export interface PaintingConfig extends ArtworkBase {
   y?: number;
   /** Vrai pour un objet accroché tel quel, sans cadre : porte, panneau de bois, tapis, tenture. */
   frameless?: boolean;
+  /** Cadre particulier à cette œuvre, à la place de celui de la salle : "gilt" pour un cadre doré mouluré. */
+  frame?: 'gilt';
 }
 
 export interface SculptureConfig extends ArtworkBase {

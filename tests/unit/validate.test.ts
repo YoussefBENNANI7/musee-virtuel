@@ -218,6 +218,19 @@ describe('erreurs détectées', () => {
     expect(errors.filter((e) => e.includes('petite-fugue'))).toEqual([]);
   });
 
+  it('un cadre doré est plus large que celui de la salle, et un cadre inconnu est refusé', () => {
+    const museum = fixture();
+    const a = painting(museum, 'le-pays-d-avant');
+    const b = painting(museum, 'carreaux-de-l-atelier');
+    b.offset = a.offset + a.width / 2 + b.width / 2 + 0.16;
+    expect(warningsOf(museum).filter((w) => w.includes('recouvre'))).toEqual([]);
+    a.frame = 'gilt';
+    b.frame = 'gilt';
+    expect(warningsOf(museum).filter((w) => w.includes('recouvre'))).toHaveLength(1);
+    painting(museum, 'portee').frame = 'rococo' as never;
+    expect(errorsOf(museum)).toContain('Œuvre "portee" : cadre inconnu : "rococo"');
+  });
+
   it('le passe-partout compte dans la place qu’une œuvre prend sur le mur', () => {
     const museum = fixture();
     const a = painting(museum, 'le-pays-d-avant');

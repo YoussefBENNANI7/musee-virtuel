@@ -80,6 +80,15 @@ describe('œuvres du musée de démonstration', () => {
     }
   });
 
+  it('les peintures anciennes ont un cadre doré, les abstraites du XXe siècle non', () => {
+    const framed = paintings.filter((a) => a.type === 'painting' && a.frame === 'gilt').map((a) => a.id);
+    expect(framed).toHaveLength(20);
+    expect(framed).toContain('les-moissonneurs');
+    expect(framed).not.toContain('improvisation-no-30');
+    expect(framed).not.toContain('composition-rouge-jaune-bleu');
+    expect(framed).not.toContain('la-grande-vague');
+  });
+
   it('les œuvres sur papier sont sous passe-partout, les peintures non', () => {
     for (const a of paintings) {
       if (a.type !== 'painting') continue;

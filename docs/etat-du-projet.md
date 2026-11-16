@@ -136,6 +136,14 @@ Ce que la recherche a montré :
 - Les estampes et gravures mesurent 25 à 40 cm : elles sont présentées sous passe-partout.
 - Les modèles 3D de Sketchfab se téléchargent avec un compte gratuit ; celui de la Smithsonian se télécharge directement. Plusieurs sont lourds et devront être allégés pour le téléphone.
 
+### Finitions des œuvres
+
+Faites le 16 novembre 2026, avec l'accord du porteur :
+
+- **Cadres dorés moulurés** pour les vingt peintures anciennes (`"frame": "gilt"` sur une œuvre). Kandinsky et Mondrian gardent le cadre fin de leur salle ; les œuvres sur papier, leur passe-partout.
+- **Ombres portées des sculptures**, au sol et sur leur socle. Elles sont calculées une seule fois, puisque rien ne bouge, et désactivées au niveau de qualité le plus bas.
+- **Agrandissement en haute définition** : le bouton « Agrandir » de la fiche ouvre l'image d'origine, que l'on grossit jusqu'à huit fois et que l'on déplace à la souris, au doigt ou au clavier. Il n'existe pas encore dans la vue simplifiée ni en casque.
+
 ### Salle marocaine : la salle pilote
 
 Le « Patio marocain » est une nouvelle salle de 11 m sur 11, haute de 6,50 m, au bout de l'enfilade, après le Cabinet des Couleurs. On y entre par un arc outrepassé, visible depuis le Cabinet.
@@ -173,10 +181,8 @@ Limites de cette salle pilote :
 
 ## 5. Limites connues
 
-- Tous les tableaux portent le cadre fin de leur salle : pas encore de cadres dorés ou anciens.
-- Le zoom en haute définition n'existe pas encore : on s'approche de l'œuvre, sans pouvoir l'agrandir.
+- L'agrandissement en haute définition n'existe que dans la visite 3D, pas dans la vue simplifiée ni en casque.
 - Quatre sculptures sur cinq sont encore dessinées par le code.
-- Les sculptures ne projettent pas de vraie ombre, seulement une ombre douce au sol.
 - L'arabe (écriture de droite à gauche) n'est pas encore géré par l'interface.
 - Dans le casque VR, ni les parcours ni le plan ne sont disponibles.
 - La VR n'a été testée qu'en émulation (casque Meta Quest 3 émulé).
@@ -200,6 +206,7 @@ src/visit3d.ts              Visite 3D : fiches, parcours, plan, boucle de rendu
 src/simple.ts               Vue simplifiée, sans 3D
 src/vr.ts                   Visite en casque VR
 src/audio.ts                Audioguide
+src/zoom.ts                 Agrandissement d'une œuvre en haute définition
 src/ui.ts                   Textes de l'interface (français, anglais)
 src/style.css               Styles de l'interface
 
@@ -218,8 +225,8 @@ src/engine/...              Contrôles, plan, mobilier, sculptures, textures, re
 scripts/images.mjs          Préparation des images d'un musée
 scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
-tests/unit/                 Tests unitaires (Vitest) : 104 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 43 tests
+tests/unit/                 Tests unitaires (Vitest) : 106 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 44 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration
@@ -243,7 +250,7 @@ vercel.json                 Configuration de l'hébergement (pas encore relié)
 - **Salles** : nom, position, taille, décor (facultatif), plafond plat, verrière (`{"type": "skylight", "margin": 1.8}`) ou plafond flottant (`{"type": "cove"}`), bancs.
 - **Décor d'une salle** : le nom d'un décor de la bibliothèque (`"decor": "terre-cuite"` ; décors disponibles : `pierre-claire`, `argile-claire`, `terre-cuite`, `riad`, `nuit`), ou ce décor corrigé réglage par réglage (`"decor": {"preset": "terre-cuite", "colors": {"wall": "#8e3f2c"}, "light": {"level": 0.9}}`). Réglages possibles : couleurs (`colors` : mur, sol, plafond, cadres, socles, bois, finitions, rails), sol (`floor` : `concrete`, `parquet`, `chevron`, `stone`, `zellige`), soubassement de zellige (`dado`) et frise de plâtre (`frieze`), en mètres, plafond de cèdre peint (`cedar`), murs (`walls` : `paint`, `limewash`), brillance du sol (`gloss`), plafond, cadre, lumière (`light` : niveau, teinte, force des projecteurs), cartels (`labels`). Les anciens réglages `wall` (couleur des murs) et `light` (niveau d'éclairage) de la salle restent acceptés.
 - **Portes** : déclarées une seule fois, sur le mur d'une salle (`room`, `wall`, `offset`, `width`, hauteur facultative). L'ouverture dans la salle voisine est déduite.
-- **Tableaux** : mur, décalage le long du mur (positif vers la droite quand on fait face au mur), largeur et hauteur en mètres, image (`{"src": "images/nom.webp"}`), titre, artiste, date, technique, texte. Facultatifs : passe-partout (`"mat": 0.12`, en mètres), mention du musée d'origine (`credit`, par langue), lien vers la notice (`link`), enregistrement audio. L'artiste et la date s'écrivent une fois, ou par langue (`{"fr": "vers 1830", "en": "c. 1830"}`).
+- **Tableaux** : mur, décalage le long du mur (positif vers la droite quand on fait face au mur), largeur et hauteur en mètres, image (`{"src": "images/nom.webp"}`), titre, artiste, date, technique, texte. Facultatifs : cadre doré (`"frame": "gilt"`), passe-partout (`"mat": 0.12`, en mètres), mention du musée d'origine (`credit`, par langue), lien vers la notice (`link`), enregistrement audio. L'artiste et la date s'écrivent une fois, ou par langue (`{"fr": "vers 1830", "en": "c. 1830"}`).
 - **Sculptures** : position dans la salle, hauteur, hauteur du socle, et soit un modèle 3D numérisé (`"model": {"src": "models/nom.glb"}`, à préparer avec `npm run modeles`), soit une forme dessinée par le moteur avec son matériau (bronze, marbre, bronze patiné, bois laqué).
 - **Parcours** : nom, description et liste ordonnée des œuvres.
 - **Contrôle** : à l'ouverture, la configuration est vérifiée (porte qui ne mène nulle part, tableau en travers d'une porte, salle inaccessible, décor inconnu, traduction manquante, etc.).

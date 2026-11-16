@@ -32,6 +32,7 @@
       <h2 id="p-title"></h2>
       <p id="p-meta" class="meta"></p>
       <button id="p-audio" class="btn" type="button"></button>
+      <button id="p-zoom" class="btn" type="button" hidden></button>
       <p id="p-desc" class="desc"></p>
       <p id="p-credit" class="credit" hidden></p>
       <nav id="tour-nav" class="tour-nav" hidden>
@@ -65,6 +66,16 @@
         <p id="tours-hint" class="meta"></p>
         <div id="tours-body"></div>
       </section>
+    </div>
+
+    <div id="zoom" class="zoom" role="dialog" aria-modal="true" tabindex="-1" hidden>
+      <div id="zoom-stage" class="zoom-stage"><img id="zoom-img" alt="" draggable="false" /></div>
+      <p id="zoom-hint" class="zoom-hint"></p>
+      <div class="zoom-tools">
+        <button id="zoom-out" class="zoom-btn" type="button">−</button>
+        <button id="zoom-in" class="zoom-btn" type="button">+</button>
+        <button id="zoom-close" class="zoom-btn" type="button">×</button>
+      </div>
     </div>
 
     <main id="simple" class="simple-page" hidden></main>

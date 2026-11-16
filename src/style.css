@@ -559,3 +559,73 @@ html:has(body.simple) {
   padding-left: 20px;
   max-width: 760px;
 }
+
+/* Agrandissement d'une œuvre en haute définition. */
+.zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: #0d0d0c;
+}
+.zoom[hidden] {
+  display: none;
+}
+.zoom-stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  touch-action: none;
+  cursor: zoom-in;
+}
+.zoom-stage.zoomed {
+  cursor: grab;
+}
+.zoom-stage img {
+  max-width: 94%;
+  max-height: 88%;
+  user-select: none;
+  -webkit-user-drag: none;
+  will-change: transform;
+}
+.zoom.loading img {
+  opacity: 0.25;
+}
+.zoom-tools {
+  position: absolute;
+  top: max(14px, env(safe-area-inset-top));
+  right: max(14px, env(safe-area-inset-right));
+  display: flex;
+  gap: 8px;
+}
+.zoom-btn {
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  background: rgba(20, 20, 19, 0.75);
+  color: #fff;
+  font: 600 1.4rem/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+.zoom-btn:hover,
+.zoom-btn:focus-visible {
+  background: #fff;
+  color: #141413;
+  outline: none;
+}
+.zoom-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  margin: 0;
+  text-align: center;
+  font: 0.85rem system-ui, sans-serif;
+  color: rgba(255, 255, 255, 0.75);
+  pointer-events: none;
+}
+.panel #p-zoom {
+  margin-left: 8px;
+}

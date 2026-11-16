@@ -20,12 +20,14 @@ export interface Quality {
   reflections: boolean;
   /** Version légère des modèles 3D numérisés. */
   lightModels: boolean;
+  /** Ombres portées des sculptures. */
+  shadows: boolean;
 }
 
 export const TIERS: Record<Tier, Quality> = {
-  high: { tier: 'high', maxPixelRatio: 2, antialias: true, textureSize: 1024, anisotropy: 8, imageSize: 1600, reflections: true, lightModels: false },
-  medium: { tier: 'medium', maxPixelRatio: 1.5, antialias: true, textureSize: 1024, anisotropy: 4, imageSize: 1024, reflections: false, lightModels: false },
-  low: { tier: 'low', maxPixelRatio: 1, antialias: false, textureSize: 512, anisotropy: 2, imageSize: 640, reflections: false, lightModels: true },
+  high: { tier: 'high', maxPixelRatio: 2, antialias: true, textureSize: 1024, anisotropy: 8, imageSize: 1600, reflections: true, lightModels: false, shadows: true },
+  medium: { tier: 'medium', maxPixelRatio: 1.5, antialias: true, textureSize: 1024, anisotropy: 4, imageSize: 1024, reflections: false, lightModels: false, shadows: true },
+  low: { tier: 'low', maxPixelRatio: 1, antialias: false, textureSize: 512, anisotropy: 2, imageSize: 640, reflections: false, lightModels: true, shadows: false },
 };
 
 export interface Device {

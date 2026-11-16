@@ -51,6 +51,7 @@ export function litColor(color: string, decor: Decor): THREE.Color {
 const LABEL_W = 0.3;
 const LABEL_H = 0.15;
 const noRaycast = () => {};
+let catcherMaterial: THREE.ShadowMaterial | null = null;
 /**
  * Réglage d'une matière plaquée sur une autre (halo sur le mur, toile sur son cadre) : elle passe
  * toujours devant, même dans le reflet du sol, où la profondeur est mesurée moins finement.
@@ -93,6 +94,9 @@ function label(decor: Decor): THREE.Mesh {
   return new THREE.Mesh(new THREE.PlaneGeometry(LABEL_W, LABEL_H), new THREE.MeshBasicMaterial({ color, toneMapped: false }));
 }
 
+/** Cadre doré mouluré : largeur du montant et saillie, en mètres. */
+export const GILT_FRAME = { width: 0.1, depth: 0.075 };
+
 /** Carton du passe-partout, et l'ombre de son biseau autour de l'œuvre. */
 const MAT_COLOR = '#f1ede3';
 const MAT_BEVEL = 0.004;
@@ -133,11 +137,12 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
   const decor = ctx.decor(room.id);
   // Un objet accroché tel quel (porte, tapis, panneau) n'a ni cadre ni passe-partout : seulement son épaisseur.
   const bare = cfg.frameless === true;
-  const fw = bare ? 0 : decor.frame.width;
-  const depth = bare ? 0.03 : decor.frame.depth;
+  const gilt = !bare && cfg.frame === 'gilt';
+  const fw = bare ? 0 : gilt ? GILT_FRAME.width : decor.frame.width;
+  const depth = bare ? 0.03 : gilt ? 0.02 : decor.frame.depth;
   // Sous passe-partout, pas de vide entre l'œuvre et le cadre : le carton va jusqu'au montant.
   const mat = bare ? 0 : (cfg.mat ?? 0);
-  const gap = bare || mat > 0 ? 0 : decor.frame.gap;
+  const gap = bare || gilt || mat > 0 ? 0 : decor.frame.gap;
   const centerY = cfg.y ?? ART_CENTER_Y;
   const art = new THREE.Group();
   art.position.set(cfg.offset, centerY, 0);
@@ -156,10 +161,39 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
   const border = mat + gap + fw;
   const body = new THREE.Mesh(
     new THREE.BoxGeometry(cfg.width + border * 2, cfg.height + border * 2, depth),
-    new THREE.MeshStandardMaterial({ color: litColor(bare ? '#2a2019' : decor.colors.frame, decor), roughness: 0.5 }),
+    new THREE.MeshStandardMaterial({ color: litColor(bare ? '#2a2019' : gilt ? '#9c7a34' : decor.colors.frame, decor), roughness: 0.5 }),
   );
   body.position.z = depth / 2;
   art.add(body);
+  if (gilt) {
+    // Cadre doré : trois moulures emboîtées, la plus haute au milieu, qui descendent vers la toile.
+    // L'or est rendu par sa teinte : sans rien à refléter, un vrai métal paraîtrait terne.
+    const gold = new THREE.MeshStandardMaterial({ color: litColor('#d8b25c', decor), roughness: 0.5 });
+    const bright = new THREE.MeshStandardMaterial({ color: litColor('#edd08a', decor), roughness: 0.4 });
+    const shadowed = new THREE.MeshStandardMaterial({ color: litColor('#9c7a34', decor), roughness: 0.6 });
+    const moulding = (from: number, to: number, height: number, material: THREE.Material) => {
+      const outer = new THREE.Shape();
+      const [ow, oh] = [cfg.width / 2 + fw * to, cfg.height / 2 + fw * to];
+      outer.moveTo(-ow, -oh);
+      outer.lineTo(ow, -oh);
+      outer.lineTo(ow, oh);
+      outer.lineTo(-ow, oh);
+      outer.closePath();
+      const [iw, ih] = [cfg.width / 2 + fw * from, cfg.height / 2 + fw * from];
+      const hole = new THREE.Path();
+      hole.moveTo(-iw, -ih);
+      hole.lineTo(-iw, ih);
+      hole.lineTo(iw, ih);
+      hole.lineTo(iw, -ih);
+      hole.closePath();
+      outer.holes.push(hole);
+      art.add(new THREE.Mesh(new THREE.ExtrudeGeometry(outer, { depth: height, bevelEnabled: false }), material));
+    };
+    moulding(0, 1, 0.04, gold);
+    moulding(0.3, 0.8, GILT_FRAME.depth, bright);
+    moulding(0.86, 1, 0.055, bright);
+    moulding(0, 0.22, 0.03, shadowed);
+  }
   if (gap > 0) {
     // Caisse américaine : un vide sombre sépare la toile du cadre.
     const recess = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width + gap * 2, cfg.height + gap * 2), new THREE.MeshBasicMaterial({ color: 0x050505, ...inFront(1) }));
@@ -230,6 +264,18 @@ export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: T
   card.rotation.y = Math.PI / 2;
   const shadow = groundShadow(1, 1);
   art.add(plinth, card, shadow);
+  if (ctx.quality.shadows) {
+    // Ombre portée : le socle la projette et la reçoit ; au sol, une surface invisible la recueille.
+    plinth.castShadow = true;
+    plinth.receiveShadow = true;
+    catcherMaterial ??= new THREE.ShadowMaterial({ opacity: 0.3, depthWrite: false });
+    const catcher = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), catcherMaterial);
+    catcher.rotation.x = -Math.PI / 2;
+    catcher.position.y = 0.0045;
+    catcher.receiveShadow = true;
+    catcher.raycast = noRaycast;
+    art.add(catcher);
+  }
 
   const placed: PlacedArtwork = {
     config: cfg,
@@ -246,6 +292,10 @@ export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: T
   const fit = (shape: THREE.Object3D | null) => {
     let footprint = 0.8;
     if (shape) {
+      shape.traverse((node) => {
+        node.castShadow = true;
+        node.receiveShadow = true;
+      });
       const box = new THREE.Box3().setFromObject(shape);
       const size = box.getSize(new THREE.Vector3());
       const scale = cfg.height / size.y;
