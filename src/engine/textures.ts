@@ -597,6 +597,23 @@ export function limewashTexture(quality: Quality = TIERS.high): THREE.Texture {
   return limewash;
 }
 
+/** Coupe un texte en lignes qui tiennent dans la largeur donnée, sans couper les mots. */
+function wrapLabel(g: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  const lines: string[] = [];
+  let line = '';
+  for (const word of text.split(' ')) {
+    const next = line ? `${line} ${word}` : word;
+    if (line && g.measureText(next).width > maxWidth) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = next;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
 /** Cartel posé à côté de l'œuvre. */
 export function labelTexture(title: string, artist: string, year: string, quality: Quality = TIERS.high, dark = false): THREE.Texture {
   const { c, g } = canvasOf(512, 256);
@@ -605,12 +622,15 @@ export function labelTexture(title: string, artist: string, year: string, qualit
   g.fillRect(0, 0, 512, 256);
   g.fillStyle = dark ? '#ece7dc' : '#1c1b19';
   g.font = '600 40px Georgia, serif';
-  g.fillText(artist, 32, 78, 448);
+  g.fillText(artist, 32, 70, 448);
+  // Un titre long se replie sur deux lignes plutôt que de se tasser.
   g.font = 'italic 34px Georgia, serif';
-  g.fillText(title, 32, 136, 448);
+  const lines = wrapLabel(g, title, 448);
+  if (lines.length > 1) g.font = 'italic 30px Georgia, serif';
+  lines.slice(0, 2).forEach((line, i) => g.fillText(line, 32, (lines.length > 1 ? 118 : 128) + i * 38, 448));
   g.font = '28px Georgia, serif';
   g.fillStyle = dark ? '#a9a498' : '#5b5852';
-  g.fillText(year, 32, 190, 448);
+  g.fillText(year, 32, lines.length > 1 ? 206 : 184, 448);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = quality.anisotropy;

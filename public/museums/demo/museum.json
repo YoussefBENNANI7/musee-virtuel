@@ -74,16 +74,16 @@
           "photo": "thumbs/noeud-sans-fin.jpg"
         },
         {
-          "id": "midi-plein",
+          "id": "deux-soeurs",
           "type": "painting",
           "wall": "north",
-          "offset": -3.15,
-          "width": 1.2,
-          "height": 1.6,
+          "offset": -2.7,
+          "width": 0.81,
+          "height": 1.004,
           "image": {
-            "src": "images/midi-plein.webp",
-            "width": 2100,
-            "height": 2800,
+            "src": "images/deux-soeurs.webp",
+            "width": 2418,
+            "height": 3000,
             "variants": [
               640,
               1024,
@@ -91,31 +91,36 @@
             ]
           },
           "title": {
-            "fr": "Midi plein",
-            "en": "High Noon"
+            "fr": "Deux sœurs (Sur la terrasse)",
+            "en": "Two Sisters (On the Terrace)"
           },
-          "artist": "Karim El Fassi",
-          "year": "1971",
+          "artist": "Pierre-Auguste Renoir",
+          "year": "1881",
           "medium": {
-            "fr": "Acrylique sur toile",
-            "en": "Acrylic on canvas"
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
           },
           "description": {
-            "fr": "El Fassi disait vouloir peindre la chaleur plutôt que la lumière. Les disques se chevauchent comme les taches que laisse le soleil derrière les paupières.",
-            "en": "El Fassi said he wanted to paint heat rather than light. The discs overlap like the spots the sun leaves behind closed eyelids."
-          }
+            "fr": "Renoir a peint cette toile à Chatou, sur la terrasse du restaurant Fournaise, au bord de la Seine. Les deux modèles n'étaient pas sœurs : l'aînée, Jeanne Darlot, allait devenir comédienne. Les pelotes de laine du premier plan réunissent toutes les couleurs du tableau, comme une palette.",
+            "en": "Renoir painted this canvas at Chatou, on the terrace of the Maison Fournaise restaurant beside the Seine. The two models were not sisters: the elder, Jeanne Darlot, went on to become an actress. The balls of wool in the foreground gather every colour in the painting, like a palette."
+          },
+          "credit": {
+            "fr": "Art Institute of Chicago · image dans le domaine public",
+            "en": "Art Institute of Chicago · public domain image"
+          },
+          "link": "https://www.artic.edu/artworks/14655"
         },
         {
-          "id": "rive-gauche-rive-droite",
+          "id": "la-classe-de-danse",
           "type": "painting",
           "wall": "north",
-          "offset": 3.15,
-          "width": 1.2,
-          "height": 1.6,
+          "offset": 2.7,
+          "width": 0.77,
+          "height": 0.835,
           "image": {
-            "src": "images/rive-gauche-rive-droite.webp",
-            "width": 2100,
-            "height": 2800,
+            "src": "images/la-classe-de-danse.webp",
+            "width": 2770,
+            "height": 3000,
             "variants": [
               640,
               1024,
@@ -123,19 +128,24 @@
             ]
           },
           "title": {
-            "fr": "Rive gauche, rive droite",
-            "en": "Left Bank, Right Bank"
+            "fr": "La Classe de danse",
+            "en": "The Dance Class"
           },
-          "artist": "Anouk Deschamps",
-          "year": "1983",
+          "artist": "Edgar Degas",
+          "year": "1874",
           "medium": {
-            "fr": "Acrylique sur toile",
-            "en": "Acrylic on canvas"
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
           },
           "description": {
-            "fr": "Deux masses de couleur se font face sans se toucher. Entre elles, une bande plus claire que Deschamps appelait simplement « le fleuve ».",
-            "en": "Two masses of colour face each other without touching. Between them lies a paler band that Deschamps simply called “the river”."
-          }
+            "fr": "Une vingtaine de danseuses et leurs mères attendent pendant que l'une d'elles passe son examen devant le maître de ballet Jules Perrot. La scène est imaginaire : Degas la situe dans l'ancien Opéra de Paris, qui venait de brûler. Le tableau lui avait été commandé par le chanteur Jean-Baptiste Faure.",
+            "en": "Some twenty dancers and their mothers wait while one of them is examined by the ballet master Jules Perrot. The scene is imaginary: Degas set it in the old Paris Opéra, which had just burned down. The painting was commissioned by the singer Jean-Baptiste Faure."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/438817"
         }
       ]
     },
@@ -173,16 +183,16 @@
       ],
       "artworks": [
         {
-          "id": "equilibre-no-7",
+          "id": "les-moissonneurs",
           "type": "painting",
           "wall": "east",
           "offset": -1.6,
-          "width": 2,
-          "height": 1.5,
+          "width": 1.62,
+          "height": 1.19,
           "image": {
-            "src": "images/equilibre-no-7.webp",
-            "width": 2800,
-            "height": 2100,
+            "src": "images/les-moissonneurs.webp",
+            "width": 3000,
+            "height": 2210,
             "variants": [
               640,
               1024,
@@ -190,31 +200,39 @@
             ]
           },
           "title": {
-            "fr": "Équilibre n° 7",
-            "en": "Balance No. 7"
+            "fr": "Les Moissonneurs",
+            "en": "The Harvesters"
           },
-          "artist": "Hélène Varga",
-          "year": "1962",
+          "artist": {
+            "fr": "Pieter Bruegel l'Ancien",
+            "en": "Pieter Bruegel the Elder"
+          },
+          "year": "1565",
           "medium": {
-            "fr": "Huile sur toile",
-            "en": "Oil on canvas"
+            "fr": "Huile sur bois",
+            "en": "Oil on wood"
           },
           "description": {
-            "fr": "Varga compose ses toiles comme des architectures suspendues : chaque forme semble retenir la suivante. Ici, un cercle unique déplace tout le poids de la composition vers la droite, et l'œil cherche sans cesse à rétablir l'équilibre annoncé par le titre.",
-            "en": "Varga builds her canvases like suspended architecture, each shape holding the next in place. Here a single circle shifts the whole weight of the composition to the right, and the eye keeps trying to restore the balance promised by the title."
-          }
+            "fr": "Ce panneau appartient à une série de six tableaux sur les saisons, peinte pour le marchand anversois Niclaes Jongelinck ; cinq nous sont parvenus. Il montre la fin de l'été : les uns fauchent, les autres mangent et dorment à l'ombre d'un poirier. Au-delà des champs, le regard file jusqu'à la mer.",
+            "en": "This panel belongs to a series of six paintings of the seasons made for the Antwerp merchant Niclaes Jongelinck; five survive. It shows late summer: some men mow while others eat and sleep in the shade of a pear tree. Beyond the fields, the eye travels all the way to the sea."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/435809"
         },
         {
-          "id": "petite-fugue",
+          "id": "champ-de-ble-avec-cypres",
           "type": "painting",
           "wall": "east",
           "offset": 2,
-          "width": 1.12,
-          "height": 1.4,
+          "width": 0.93,
+          "height": 0.732,
           "image": {
-            "src": "images/petite-fugue.webp",
-            "width": 2241,
-            "height": 2800,
+            "src": "images/champ-de-ble-avec-cypres.webp",
+            "width": 3000,
+            "height": 2357,
             "variants": [
               640,
               1024,
@@ -222,31 +240,36 @@
             ]
           },
           "title": {
-            "fr": "Petite fugue",
-            "en": "Little Fugue"
+            "fr": "Champ de blé avec cyprès",
+            "en": "Wheat Field with Cypresses"
           },
-          "artist": "Hélène Varga",
-          "year": "1958",
+          "artist": "Vincent van Gogh",
+          "year": "1889",
           "medium": {
             "fr": "Huile sur toile",
             "en": "Oil on canvas"
           },
           "description": {
-            "fr": "Une étude de jeunesse, peinte quatre ans avant la série des Équilibres. Les formes s'y répondent encore comme les voix d'une fugue, sans qu'aucune ne domine.",
-            "en": "An early study, painted four years before the Balance series. The shapes still answer one another like the voices of a fugue, none of them taking the lead."
-          }
+            "fr": "Van Gogh a peint ce paysage à l'été 1889, pendant son séjour à l'asile de Saint-Rémy-de-Provence. Il le comptait parmi ses meilleures toiles d'été et en a fait deux répliques. Tout y est en mouvement : les blés, les nuages et les cyprès.",
+            "en": "Van Gogh painted this landscape in the summer of 1889, during his stay at the asylum in Saint-Rémy-de-Provence. He counted it among his best summer canvases and made two repetitions of it. Everything is in motion: the wheat, the clouds and the cypresses."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/436535"
         },
         {
-          "id": "le-pays-d-avant",
+          "id": "crepuscule-dans-la-nature-sauvage",
           "type": "painting",
           "wall": "west",
           "offset": -1.4,
-          "width": 2.49,
-          "height": 1.4,
+          "width": 1.63,
+          "height": 1.016,
           "image": {
-            "src": "images/le-pays-d-avant.webp",
-            "width": 2800,
-            "height": 1576,
+            "src": "images/crepuscule-dans-la-nature-sauvage.webp",
+            "width": 3000,
+            "height": 1873,
             "variants": [
               640,
               1024,
@@ -254,31 +277,36 @@
             ]
           },
           "title": {
-            "fr": "Le pays d'avant",
-            "en": "The Country Before"
+            "fr": "Crépuscule dans la nature sauvage",
+            "en": "Twilight in the Wilderness"
           },
-          "artist": "Tomás Arrieta",
-          "year": "1987",
+          "artist": "Frederic Edwin Church",
+          "year": "1860",
           "medium": {
             "fr": "Huile sur toile",
             "en": "Oil on canvas"
           },
           "description": {
-            "fr": "Arrieta a quitté sa vallée natale à dix-sept ans et l'a peinte de mémoire toute sa vie. Les collines changent d'un tableau à l'autre ; seul le soleil garde toujours la même place.",
-            "en": "Arrieta left his native valley at seventeen and painted it from memory all his life. The hills change from one painting to the next; only the sun always keeps its place."
-          }
+            "fr": "Church a peint ce coucher de soleil dans son atelier de New York, d'après des croquis rapportés du Maine. Ni personnage ni maison : seulement la forêt, l'eau et un ciel en feu. Le tableau date de la veille de la guerre de Sécession, et beaucoup y ont vu un présage.",
+            "en": "Church painted this sunset in his New York studio from sketches made in Maine. There is no figure and no house: only forest, water and a sky on fire. The picture dates from the eve of the American Civil War, and many have read it as an omen."
+          },
+          "credit": {
+            "fr": "Cleveland Museum of Art · image dans le domaine public",
+            "en": "Cleveland Museum of Art · public domain image"
+          },
+          "link": "https://clevelandart.org/art/1965.233"
         },
         {
-          "id": "carreaux-de-l-atelier",
+          "id": "la-montagne-sainte-victoire",
           "type": "painting",
           "wall": "west",
           "offset": 2.2,
-          "width": 1.5,
-          "height": 1.5,
+          "width": 0.97,
+          "height": 0.572,
           "image": {
-            "src": "images/carreaux-de-l-atelier.webp",
-            "width": 2800,
-            "height": 2800,
+            "src": "images/la-montagne-sainte-victoire.webp",
+            "width": 2925,
+            "height": 1719,
             "variants": [
               640,
               1024,
@@ -286,19 +314,27 @@
             ]
           },
           "title": {
-            "fr": "Carreaux de l'atelier",
-            "en": "Studio Tiles"
+            "fr": "La Montagne Sainte-Victoire",
+            "en": "Mont Sainte-Victoire"
           },
-          "artist": "Salma Haddou",
-          "year": "1994",
+          "artist": "Paul Cézanne",
+          "year": {
+            "fr": "vers 1902–1906",
+            "en": "c. 1902–6"
+          },
           "medium": {
-            "fr": "Acrylique sur toile",
-            "en": "Acrylic on canvas"
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
           },
           "description": {
-            "fr": "Haddou a grandi dans l'atelier de céramique de sa mère. Elle reprend ici le motif du quart de cercle, qu'elle fait pivoter au hasard jusqu'à ce que le mur entier semble en mouvement.",
-            "en": "Haddou grew up in her mother's ceramics workshop. Here she takes the quarter-circle motif and rotates it at random until the whole wall seems to move."
-          }
+            "fr": "Cézanne a peint des dizaines de fois cette montagne proche d'Aix-en-Provence. Cette vue tardive est prise de la colline des Lauves, où il avait fait construire son atelier en 1902. Le paysage se réduit à des touches de couleur posées côte à côte.",
+            "en": "Cézanne painted this mountain near Aix-en-Provence dozens of times. This late view is taken from the hill of Les Lauves, where he had a studio built in 1902. The landscape is reduced to patches of colour laid side by side."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/435878"
         }
       ]
     },
@@ -328,16 +364,16 @@
       ],
       "artworks": [
         {
-          "id": "crepuscule-interieur",
+          "id": "meules-fin-de-l-ete",
           "type": "painting",
           "wall": "north",
-          "offset": -1.15,
-          "width": 1.44,
-          "height": 1.8,
+          "offset": -0.85,
+          "width": 1.02,
+          "height": 0.6,
           "image": {
-            "src": "images/crepuscule-interieur.webp",
-            "width": 2240,
-            "height": 2800,
+            "src": "images/meules-fin-de-l-ete.webp",
+            "width": 3000,
+            "height": 1773,
             "variants": [
               640,
               1024,
@@ -345,31 +381,36 @@
             ]
           },
           "title": {
-            "fr": "Crépuscule intérieur",
-            "en": "Inner Dusk"
+            "fr": "Meules (fin de l'été)",
+            "en": "Stacks of Wheat (End of Summer)"
           },
-          "artist": "Idriss Belkacem",
-          "year": "1978",
+          "artist": "Claude Monet",
+          "year": "1890–1891",
           "medium": {
-            "fr": "Acrylique sur toile",
-            "en": "Acrylic on canvas"
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
           },
           "description": {
-            "fr": "Trois bandes de couleur, aux bords volontairement incertains, se superposent comme des heures de la journée. Belkacem disait peindre « la lumière qui reste dans une pièce après qu'on a éteint ».",
-            "en": "Three bands of colour with deliberately uncertain edges are layered like hours of the day. Belkacem said he painted “the light that stays in a room after it has been switched off”."
-          }
+            "fr": "À la fin de l'été 1890, Monet commence une série de vingt-cinq toiles sur les meules d'un champ voisin de sa maison de Giverny. Le motif ne change pas : seules changent l'heure, la saison et la lumière. Celle-ci montre la fin de l'été.",
+            "en": "In late summer 1890, Monet began a series of twenty-five canvases of the grain stacks in a field near his house at Giverny. The motif never changes: only the hour, the season and the light do. This one shows the end of summer."
+          },
+          "credit": {
+            "fr": "Art Institute of Chicago · image dans le domaine public",
+            "en": "Art Institute of Chicago · public domain image"
+          },
+          "link": "https://www.artic.edu/artworks/64818"
         },
         {
-          "id": "aube-interieure",
+          "id": "meules-effet-de-neige",
           "type": "painting",
           "wall": "north",
-          "offset": 1.15,
-          "width": 1.44,
-          "height": 1.8,
+          "offset": 0.85,
+          "width": 1.01,
+          "height": 0.653,
           "image": {
-            "src": "images/aube-interieure.webp",
-            "width": 2240,
-            "height": 2800,
+            "src": "images/meules-effet-de-neige.webp",
+            "width": 3000,
+            "height": 1938,
             "variants": [
               640,
               1024,
@@ -377,31 +418,36 @@
             ]
           },
           "title": {
-            "fr": "Aube intérieure",
-            "en": "Inner Dawn"
+            "fr": "Meules (soleil couchant, effet de neige)",
+            "en": "Stacks of Wheat (Sunset, Snow Effect)"
           },
-          "artist": "Idriss Belkacem",
-          "year": "1979",
+          "artist": "Claude Monet",
+          "year": "1890–1891",
           "medium": {
-            "fr": "Acrylique sur toile",
-            "en": "Acrylic on canvas"
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
           },
           "description": {
-            "fr": "Pendant du Crépuscule, peint l'année suivante. Les deux toiles ont été conçues pour être accrochées côte à côte et n'avaient jamais été séparées.",
-            "en": "The companion to Inner Dusk, painted the following year. The two canvases were designed to hang side by side and have never been separated."
-          }
+            "fr": "Le même champ, en hiver, au coucher du soleil. Monet menait plusieurs toiles de front et passait de l'une à l'autre à mesure que la lumière changeait. Quinze Meules furent exposées ensemble à Paris en mai 1891 : ce fut un triomphe.",
+            "en": "The same field in winter, at sunset. Monet worked on several canvases at once, moving from one to the next as the light changed. Fifteen of the Stacks were shown together in Paris in May 1891, to great acclaim."
+          },
+          "credit": {
+            "fr": "Art Institute of Chicago · image dans le domaine public",
+            "en": "Art Institute of Chicago · public domain image"
+          },
+          "link": "https://www.artic.edu/artworks/81545"
         },
         {
-          "id": "soleils-multiples",
+          "id": "improvisation-no-30",
           "type": "painting",
           "wall": "west",
           "offset": 0,
-          "width": 1.5,
-          "height": 1.5,
+          "width": 1.11,
+          "height": 1.11,
           "image": {
-            "src": "images/soleils-multiples.webp",
-            "width": 2880,
-            "height": 2880,
+            "src": "images/improvisation-no-30.webp",
+            "width": 2987,
+            "height": 3000,
             "variants": [
               640,
               1024,
@@ -409,31 +455,39 @@
             ]
           },
           "title": {
-            "fr": "Soleils multiples",
-            "en": "Many Suns"
+            "fr": "Improvisation n° 30 (Canons)",
+            "en": "Improvisation No. 30 (Cannons)"
           },
-          "artist": "Karim El Fassi",
-          "year": "1974",
+          "artist": {
+            "fr": "Vassily Kandinsky",
+            "en": "Vasily Kandinsky"
+          },
+          "year": "1913",
           "medium": {
-            "fr": "Acrylique sur toile",
-            "en": "Acrylic on canvas"
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
           },
           "description": {
-            "fr": "La toile la plus joyeuse d'El Fassi, peinte à la naissance de sa fille. Il y a exactement douze disques, un par mois de l'année.",
-            "en": "El Fassi's most joyful canvas, painted when his daughter was born. There are exactly twelve discs, one for each month of the year."
-          }
+            "fr": "Kandinsky appelait « improvisations » les tableaux nés d'une impulsion intérieure, sans sujet arrêté d'avance. On reconnaît pourtant ici des canons, en bas à droite. Le peintre l'expliquait par les rumeurs de guerre qui avaient couru toute l'année.",
+            "en": "Kandinsky called “improvisations” the paintings that sprang from an inner impulse, with no subject fixed in advance. Yet cannons can be made out here, at lower right. The painter put this down to the talk of war that had gone on all year."
+          },
+          "credit": {
+            "fr": "Art Institute of Chicago · image dans le domaine public",
+            "en": "Art Institute of Chicago · public domain image"
+          },
+          "link": "https://www.artic.edu/artworks/8991"
         },
         {
-          "id": "zellige-imaginaire",
+          "id": "mahana-no-atua",
           "type": "painting",
           "wall": "east",
           "offset": 0,
-          "width": 1.6,
-          "height": 1.2,
+          "width": 0.91,
+          "height": 0.68,
           "image": {
-            "src": "images/zellige-imaginaire.webp",
-            "width": 2880,
-            "height": 2160,
+            "src": "images/mahana-no-atua.webp",
+            "width": 3000,
+            "height": 2238,
             "variants": [
               640,
               1024,
@@ -441,19 +495,24 @@
             ]
           },
           "title": {
-            "fr": "Zellige imaginaire",
-            "en": "Imaginary Zellige"
+            "fr": "Mahana no atua (Le Jour du dieu)",
+            "en": "Mahana no atua (Day of the God)"
           },
-          "artist": "Salma Haddou",
-          "year": "2002",
+          "artist": "Paul Gauguin",
+          "year": "1894",
           "medium": {
-            "fr": "Acrylique sur toile",
-            "en": "Acrylic on canvas"
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
           },
           "description": {
-            "fr": "Haddou invente ici un carrelage qui ne pourrait pas exister : aucun motif ne s'y répète, alors que tout l'art du zellige repose sur la répétition.",
-            "en": "Here Haddou invents a tiling that could not exist: no motif repeats, although the whole art of zellige rests on repetition."
-          }
+            "fr": "Gauguin a peint cette scène à Paris, entre ses deux séjours à Tahiti : c'est un souvenir recomposé plus qu'une chose vue. Au centre se dresse une idole, près de laquelle des femmes dansent et portent des offrandes. Au premier plan, l'eau devient un jeu de formes colorées presque abstraites.",
+            "en": "Gauguin painted this scene in Paris, between his two stays in Tahiti: it is a recomposed memory more than something seen. At the centre stands an idol, near which women dance and carry offerings. In the foreground, the water turns into a play of almost abstract coloured shapes."
+          },
+          "credit": {
+            "fr": "Art Institute of Chicago · image dans le domaine public",
+            "en": "Art Institute of Chicago · public domain image"
+          },
+          "link": "https://www.artic.edu/artworks/27943"
         }
       ]
     },
@@ -484,16 +543,17 @@
       ],
       "artworks": [
         {
-          "id": "partition-pour-le-vent",
+          "id": "la-grande-vague",
           "type": "painting",
           "wall": "east",
           "offset": 0,
-          "width": 2.31,
-          "height": 1.3,
+          "width": 0.38,
+          "height": 0.257,
+          "mat": 0.12,
           "image": {
-            "src": "images/partition-pour-le-vent.webp",
-            "width": 2880,
-            "height": 1620,
+            "src": "images/la-grande-vague.webp",
+            "width": 3000,
+            "height": 2017,
             "variants": [
               640,
               1024,
@@ -501,31 +561,40 @@
             ]
           },
           "title": {
-            "fr": "Partition pour le vent",
-            "en": "Score for the Wind"
+            "fr": "La Grande Vague de Kanagawa",
+            "en": "The Great Wave off Kanagawa"
           },
-          "artist": "Mireille Okonjo",
-          "year": "2004",
+          "artist": "Katsushika Hokusai",
+          "year": {
+            "fr": "vers 1830–1832",
+            "en": "c. 1830–32"
+          },
           "medium": {
-            "fr": "Encre et pigments sur toile",
-            "en": "Ink and pigment on canvas"
+            "fr": "Estampe, gravure sur bois en couleurs",
+            "en": "Woodblock print, ink and colour on paper"
           },
           "description": {
-            "fr": "Des centaines de lignes tracées à main levée, sans jamais se croiser tout à fait. Okonjo travaillait en extérieur et laissait le vent dévier son geste : la toile enregistre une après-midi de météo autant qu'un dessin.",
-            "en": "Hundreds of freehand lines that never quite cross. Okonjo worked outdoors and let the wind deflect her hand: the canvas records an afternoon of weather as much as a drawing."
-          }
+            "fr": "Son titre exact est « Sous la vague au large de Kanagawa ». L'estampe appartient à la série des Trente-six vues du mont Fuji, que Hokusai publie alors qu'il a environ soixante-dix ans. Trois barques de pêcheurs affrontent la vague ; au fond, le mont Fuji paraît minuscule. Le bleu profond est un pigment alors nouveau au Japon, le bleu de Prusse.",
+            "en": "Its exact title is “Under the Wave off Kanagawa”. The print belongs to the series Thirty-six Views of Mount Fuji, which Hokusai published when he was about seventy. Three fishing boats face the wave; in the distance, Mount Fuji looks tiny. The deep blue is Prussian blue, a pigment then new to Japan."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/45434"
         },
         {
-          "id": "dunes-04h12",
+          "id": "averse-soudaine",
           "type": "painting",
           "wall": "east",
-          "offset": -3.2,
-          "width": 1.5,
-          "height": 1,
+          "offset": -2.1,
+          "width": 0.23,
+          "height": 0.34,
+          "mat": 0.12,
           "image": {
-            "src": "images/dunes-04h12.webp",
-            "width": 2880,
-            "height": 1920,
+            "src": "images/averse-soudaine.webp",
+            "width": 1298,
+            "height": 1886,
             "variants": [
               640,
               1024,
@@ -533,31 +602,37 @@
             ]
           },
           "title": {
-            "fr": "Dunes, 04 h 12",
-            "en": "Dunes, 4:12 a.m."
+            "fr": "Averse soudaine sur le pont Shin-Ōhashi à Atake",
+            "en": "Sudden Shower over Shin-Ōhashi Bridge and Atake"
           },
-          "artist": "Yuki Tanabe",
-          "year": "1999",
+          "artist": "Utagawa Hiroshige",
+          "year": "1857",
           "medium": {
-            "fr": "Tirage argentique",
-            "en": "Gelatin silver print"
+            "fr": "Estampe, gravure sur bois en couleurs",
+            "en": "Woodblock print, ink and colour on paper"
           },
           "description": {
-            "fr": "Tanabe photographiait uniquement avant l'aube, en pose longue. L'heure exacte de la prise de vue tient lieu de titre à chacune de ses images.",
-            "en": "Tanabe photographed only before dawn, with long exposures. The exact time of the shot serves as the title of each image."
-          }
+            "fr": "L'averse surprend les passants sur un pont d'Edo, l'ancienne Tokyo. La pluie est rendue par de fines lignes noires qui traversent toute l'image. L'estampe appartient à la série des Cent vues célèbres d'Edo ; Van Gogh en a peint une copie à l'huile en 1887.",
+            "en": "A sudden shower catches passers-by on a bridge in Edo, as Tokyo was then called. The rain is rendered by fine black lines that cross the whole image. The print belongs to the series One Hundred Famous Views of Edo; Van Gogh painted a copy of it in oils in 1887."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/36461"
         },
         {
-          "id": "ronds-dans-l-eau",
+          "id": "la-grande-vague-sete",
           "type": "painting",
           "wall": "east",
-          "offset": 3.2,
-          "width": 1.2,
-          "height": 1.2,
+          "offset": 2.1,
+          "width": 0.42,
+          "height": 0.337,
+          "mat": 0.12,
           "image": {
-            "src": "images/ronds-dans-l-eau.webp",
-            "width": 2880,
-            "height": 2880,
+            "src": "images/la-grande-vague-sete.webp",
+            "width": 2000,
+            "height": 1623,
             "variants": [
               640,
               1024,
@@ -565,31 +640,37 @@
             ]
           },
           "title": {
-            "fr": "Ronds dans l'eau",
-            "en": "Rings on Water"
+            "fr": "La Grande Vague, Sète",
+            "en": "The Great Wave, Sète"
           },
-          "artist": "Yuki Tanabe",
-          "year": "2001",
+          "artist": "Gustave Le Gray",
+          "year": "1857",
           "medium": {
-            "fr": "Tirage argentique",
-            "en": "Gelatin silver print"
+            "fr": "Photographie, tirage sur papier albuminé",
+            "en": "Photograph, albumen silver print"
           },
           "description": {
-            "fr": "Une pluie fine sur un bassin, photographiée à la verticale. L'image hésite entre document et abstraction.",
-            "en": "Fine rain on a pond, photographed from directly above. The image hovers between document and abstraction."
-          }
+            "fr": "En 1857, une seule prise de vue ne pouvait pas saisir à la fois le ciel et la mer : l'un demandait un temps de pose bien plus court que l'autre. Le Gray a donc réuni deux négatifs, l'un pour les nuages, l'autre pour les vagues. Leur jonction se cache sur la ligne d'horizon.",
+            "en": "In 1857, a single exposure could not capture both sky and sea: one needed a far shorter exposure than the other. Le Gray therefore combined two negatives, one for the clouds and one for the waves. Their join is hidden along the horizon."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/261941"
         },
         {
-          "id": "maree-basse",
+          "id": "le-rhinoceros",
           "type": "painting",
           "wall": "north",
           "offset": 0,
-          "width": 2.13,
-          "height": 1.2,
+          "width": 0.3,
+          "height": 0.238,
+          "mat": 0.12,
           "image": {
-            "src": "images/maree-basse.webp",
-            "width": 2880,
-            "height": 1620,
+            "src": "images/le-rhinoceros.webp",
+            "width": 3000,
+            "height": 2400,
             "variants": [
               640,
               1024,
@@ -597,31 +678,37 @@
             ]
           },
           "title": {
-            "fr": "Marée basse",
-            "en": "Low Tide"
+            "fr": "Le Rhinocéros",
+            "en": "The Rhinoceros"
           },
-          "artist": "Mireille Okonjo",
-          "year": "2009",
+          "artist": "Albrecht Dürer",
+          "year": "1515",
           "medium": {
-            "fr": "Encre et pigments sur toile",
-            "en": "Ink and pigment on canvas"
+            "fr": "Gravure sur bois",
+            "en": "Woodcut"
           },
           "description": {
-            "fr": "Les lignes se resserrent vers le bas de la toile, comme le sable ridé que la mer découvre en se retirant.",
-            "en": "The lines tighten towards the bottom of the canvas, like the rippled sand the sea uncovers as it withdraws."
-          }
+            "fr": "Dürer n'a jamais vu de rhinocéros. Il a travaillé d'après un croquis et une description de l'animal arrivé à Lisbonne en 1515, cadeau offert au roi du Portugal. Avec sa cuirasse et ses écailles, sa gravure est restée pendant plus de deux siècles l'image du rhinocéros en Europe.",
+            "en": "Dürer never saw a rhinoceros. He worked from a sketch and a description of the animal that arrived in Lisbon in 1515 as a gift to the king of Portugal. With its armour plates and scales, his print remained Europe's image of the rhinoceros for more than two centuries."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/356497"
         },
         {
-          "id": "portee",
+          "id": "les-trois-arbres",
           "type": "painting",
           "wall": "south",
           "offset": 0,
-          "width": 1.13,
-          "height": 1.7,
+          "width": 0.28,
+          "height": 0.213,
+          "mat": 0.12,
           "image": {
-            "src": "images/portee.webp",
-            "width": 1867,
-            "height": 2800,
+            "src": "images/les-trois-arbres.webp",
+            "width": 3000,
+            "height": 2303,
             "variants": [
               640,
               1024,
@@ -629,19 +716,24 @@
             ]
           },
           "title": {
-            "fr": "Portée",
-            "en": "Staff"
+            "fr": "Les Trois Arbres",
+            "en": "The Three Trees"
           },
-          "artist": "Ingrid Solberg",
-          "year": "2012",
+          "artist": "Rembrandt",
+          "year": "1643",
           "medium": {
-            "fr": "Encre et pigments sur toile",
-            "en": "Ink and pigment on canvas"
+            "fr": "Eau-forte, burin et pointe sèche",
+            "en": "Etching, engraving and drypoint"
           },
           "description": {
-            "fr": "Solberg, violoncelliste de formation, trace ses lignes en écoutant une seule œuvre du début à la fin. Celle-ci dure, selon elle, exactement vingt-trois minutes.",
-            "en": "Solberg, a trained cellist, draws her lines while listening to a single piece from start to finish. This one, she says, lasts exactly twenty-three minutes."
-          }
+            "fr": "C'est le plus grand et le plus célèbre des paysages gravés par Rembrandt. L'orage s'éloigne à gauche, en longues hachures obliques, pendant que la lumière revient sur la plaine. En s'approchant, on découvre un pêcheur, un dessinateur assis sur la colline et un couple caché dans les buissons.",
+            "en": "This is the largest and most famous of Rembrandt's etched landscapes. The storm moves off to the left in long slanting strokes while light returns to the plain. Look closely and you will find a fisherman, an artist sketching on the hill and a couple hidden in the bushes."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/354633"
         }
       ]
     },
@@ -796,16 +888,16 @@
           "photo": "thumbs/ruban.jpg"
         },
         {
-          "id": "nocturne-en-quatre-temps",
+          "id": "un-dimanche-a-la-grande-jatte",
           "type": "painting",
           "wall": "west",
           "offset": 0,
-          "width": 2.1,
-          "height": 1.4,
+          "width": 3.1,
+          "height": 2.075,
           "image": {
-            "src": "images/nocturne-en-quatre-temps.webp",
-            "width": 2880,
-            "height": 1920,
+            "src": "images/un-dimanche-a-la-grande-jatte.webp",
+            "width": 3000,
+            "height": 2009,
             "variants": [
               640,
               1024,
@@ -813,19 +905,24 @@
             ]
           },
           "title": {
-            "fr": "Nocturne en quatre temps",
-            "en": "Nocturne in Four Beats"
+            "fr": "Un dimanche à la Grande Jatte — 1884",
+            "en": "A Sunday on La Grande Jatte — 1884"
           },
-          "artist": "Hélène Varga",
-          "year": "1969",
+          "artist": "Georges Seurat",
+          "year": "1884–1886",
           "medium": {
             "fr": "Huile sur toile",
             "en": "Oil on canvas"
           },
           "description": {
-            "fr": "La seule toile que Varga ait peinte pour accompagner des sculptures : celles de son ami Lucien Morvan.",
-            "en": "The only canvas Varga painted to accompany sculptures: those of her friend Lucien Morvan."
-          }
+            "fr": "Seurat a travaillé deux ans à ce tableau, précédé de dizaines d'études. Il y applique sa méthode : de petites touches de couleur pure posées côte à côte, que l'œil mélange à distance. La scène montre des Parisiens un dimanche sur une île de la Seine. La bordure peinte a été ajoutée quelques années plus tard.",
+            "en": "Seurat worked for two years on this painting, after dozens of studies. He applied his method: small touches of pure colour set side by side, which the eye blends at a distance. The scene shows Parisians on a Sunday on an island in the Seine. The painted border was added a few years later."
+          },
+          "credit": {
+            "fr": "Art Institute of Chicago · image dans le domaine public",
+            "en": "Art Institute of Chicago · public domain image"
+          },
+          "link": "https://www.artic.edu/artworks/27992"
         }
       ]
     }
@@ -865,15 +962,16 @@
         "en": "The Essentials"
       },
       "description": {
-        "fr": "Cinq œuvres pour découvrir le musée en dix minutes.",
-        "en": "Five works to discover the museum in ten minutes."
+        "fr": "Six œuvres pour découvrir le musée en un quart d'heure.",
+        "en": "Six works to discover the museum in fifteen minutes."
       },
       "stops": [
         "noeud-sans-fin",
-        "equilibre-no-7",
-        "le-pays-d-avant",
-        "crepuscule-interieur",
-        "partition-pour-le-vent"
+        "les-moissonneurs",
+        "champ-de-ble-avec-cypres",
+        "meules-fin-de-l-ete",
+        "la-grande-vague",
+        "un-dimanche-a-la-grande-jatte"
       ]
     },
     {
@@ -883,16 +981,17 @@
         "en": "Colour First"
       },
       "description": {
-        "fr": "De la chaleur de midi au rouge laqué : six artistes qui font de la couleur leur sujet.",
-        "en": "From midday heat to lacquered red: six artists who make colour their subject."
+        "fr": "De la terrasse de Renoir au Tahiti de Gauguin : six peintres qui font de la couleur leur sujet.",
+        "en": "From Renoir's terrace to Gauguin's Tahiti: six painters who make colour their subject."
       },
       "stops": [
-        "midi-plein",
-        "carreaux-de-l-atelier",
-        "aube-interieure",
-        "soleils-multiples",
-        "zellige-imaginaire",
-        "totem-rouge"
+        "deux-soeurs",
+        "crepuscule-dans-la-nature-sauvage",
+        "meules-fin-de-l-ete",
+        "meules-effet-de-neige",
+        "improvisation-no-30",
+        "mahana-no-atua",
+        "un-dimanche-a-la-grande-jatte"
       ]
     }
   ]

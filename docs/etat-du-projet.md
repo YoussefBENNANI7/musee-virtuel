@@ -31,10 +31,9 @@ Le musée de démonstration sert d'abord à une **présentation interne** : le p
 | Hébergement | Vercel, mis en pause : à faire après la modernisation |
 | Direction artistique | Galerie contemporaine claire, immersive, moderne, créative |
 | Ambiance des salles | Chaque salle a son propre décor, accordé aux œuvres qu'elle expose. Les décors proposés sont tous utilisés, pour alterner salles claires et salles de caractère (décisions du 15 novembre 2026) |
-| Œuvres de la démo | De vraies œuvres en accès libre **remplacent** les 16 tableaux fictifs et les sculptures dessinées par le code. Les cartels portent les vrais titres, auteurs, dates et le musée d'origine |
+| Œuvres de la démo | De vraies œuvres en accès libre **remplacent** les 16 tableaux fictifs et les sculptures dessinées par le code. Les cartels portent les vrais titres, auteurs, dates et le musée d'origine. Chaque œuvre est à sa taille réelle |
 | Licences des œuvres | La démo étant une présentation interne, les licences « non commerciales » sont acceptées. À qualité égale, on prend le domaine public. La licence de chaque œuvre est notée ; la question sera revue avant toute mise en ligne publique |
 | Salle marocaine | Une **nouvelle salle** d'ambiance marocaine historique et traditionnelle (zellige, plâtre sculpté, plafond de cèdre, arcs, fontaine), avec de nouveaux objets traditionnels. Sobre et inspirée de vrais lieux ; salle pilote à valider d'abord |
-| Anciennes images | Les 16 images produites avec le générateur du porteur (`docs/prompts-images.md`) restent en place jusqu'à leur remplacement |
 
 ### Les trois étapes du produit
 
@@ -67,7 +66,7 @@ Le 15 novembre 2026, le porteur a donné son avis sur l'ambiance : la base lui p
 |---|---|---|
 | 1. README | Installer, lancer et configurer le projet | Fait |
 | 2. Décor par salle | Chaque salle reçoit un décor : sol, murs, plafond, lumière, cadres, mobilier | Fait : les cinq salles ont leur décor, voir ci-dessous |
-| 3. Œuvres réelles | Recherche de vraies œuvres en accès libre, puis remplacement des œuvres fictives : tableaux, vrais modèles 3D (format GLB) avec de vraies ombres, nouveaux cartels, textes et parcours. Aussi : cadres variés, zoom haute définition | **Sélection proposée le 16 novembre 2026**, à valider par le porteur avant toute intégration. Voir ci-dessous |
+| 3. Œuvres réelles | Recherche de vraies œuvres en accès libre, puis remplacement des œuvres fictives : tableaux, vrais modèles 3D (format GLB) avec de vraies ombres, nouveaux cartels, textes et parcours. Aussi : cadres variés, zoom haute définition | Sélection validée en entier par le porteur le 16 novembre 2026. **Les 16 tableaux, estampes et photographie sont intégrés.** Restent les sculptures en 3D, voir ci-dessous |
 | 3 bis. Salle marocaine | Nouvelle salle au plan, avec ses éléments d'architecture (arcs, zellige, plâtre sculpté, plafond de cèdre, fontaine) et ses objets traditionnels | À faire, après les œuvres réelles. Salle pilote à valider |
 | 4. Interface | Écran d'accueil du musée, nouvelle identité visuelle (typographie, icônes, commandes discrètes, fiches animées), clic au sol pour se déplacer, mini-plan permanent | À faire, après le décor pour s'accorder à l'ambiance définitive |
 | 5. Mise en ligne | Hébergement sur Vercel, puis vérification sur de vrais appareils | À faire, avec l'accord du porteur |
@@ -101,9 +100,21 @@ La bibliothèque compte quatre décors. Le porteur a choisi de les utiliser tous
 
 Pour essayer un autre décor sans rien modifier : `?decor=galerie:terre-cuite` (une salle) ou `?decor=nuit` (toutes).
 
-### Œuvres réelles : la sélection proposée
+### Œuvres réelles
 
-73 pièces, variantes comprises, toutes vérifiées à la source : 59 en domaine public, 12 libres si l'on cite l'auteur, 2 réservées à un usage non commercial. La liste complète, avec la source et la licence de chaque pièce, est dans `docs/selection-oeuvres.md` ; les mêmes données, prêtes pour l'intégration, sont dans `docs/selection-oeuvres.json`.
+La sélection compte 73 pièces, variantes comprises, toutes vérifiées à la source : 59 en domaine public, 12 libres si l'on cite l'auteur, 2 réservées à un usage non commercial. La liste complète, avec la source et la licence de chaque pièce, est dans `docs/selection-oeuvres.md` ; les mêmes données sont dans `docs/selection-oeuvres.json`. Le porteur l'a validée en entier.
+
+**Fait : les 16 tableaux, estampes et photographie.** Les œuvres fictives et leurs images ont été retirées du dépôt (elles restent dans son historique). Les images viennent du Metropolitan Museum, de l'Art Institute of Chicago et du musée de Cleveland, en haute définition, recadrées sur l'œuvre. Pour chaque œuvre : titre, auteur, date, technique et texte en français et en anglais, musée d'origine, lien vers sa notice. Les deux parcours ont été refaits.
+
+Pour ces œuvres, le moteur a appris à :
+
+- dessiner un **passe-partout** autour d'une œuvre sur papier (`mat`) ;
+- afficher une **mention** sous la légende, avec le musée qui conserve l'œuvre et la licence de son image (`credit`), et un **lien** vers sa notice (`link`) ;
+- écrire un **auteur** ou une **date** différemment selon la langue (« vers 1830–1832 », « c. 1830–32 ») ;
+- **approcher le visiteur** à une soixantaine de centimètres d'une petite estampe, au lieu de 1,20 m ;
+- replier un titre long sur deux lignes dans les cartels.
+
+**Reste à faire :** les cinq sculptures en 3D (chargement des modèles, allègement pour le téléphone, vraies ombres), puis la salle marocaine.
 
 | Salle | Proposition |
 |---|---|
@@ -118,19 +129,22 @@ Pour essayer un autre décor sans rien modifier : `?decor=galerie:terre-cuite` (
 Ce que la recherche a montré :
 
 - Aucun musée ne publie de pièce marocaine numérisée en 3D. Les modèles 3D proposés sont des créations d'artistes, sauf un relevé de tombe du Chellah, à Rabat.
-- Les estampes et gravures mesurent 25 à 40 cm : elles demandent un passe-partout, que le moteur ne sait pas encore dessiner.
+- Les estampes et gravures mesurent 25 à 40 cm : elles sont présentées sous passe-partout.
 - Les modèles 3D de Sketchfab se téléchargent avec un compte gratuit ; celui de la Smithsonian se télécharge directement. Plusieurs sont lourds et devront être allégés pour le téléphone.
 
 ## 4. En attente du porteur du projet
 
-- **Son accord sur la sélection d'œuvres réelles** (`docs/selection-oeuvres.md`) : rien n'entre dans le musée sans lui.
-- **Un compte Sketchfab gratuit**, au moment d'intégrer les sculptures : sa clé d'accès sert à télécharger les modèles 3D.
+- **Un compte Sketchfab gratuit**, pour intégrer les sculptures : sa clé d'accès sert à télécharger quatre des cinq modèles 3D.
+- **Son avis sur l'accrochage** : à leur taille réelle, les œuvres paraissent petites dans les grandes salles. On peut garnir les murs avec les treize œuvres gardées en variantes.
 - **Les voix de l'audioguide** : service de voix de qualité ou vraie personne, à décider.
 - **Des essais sur de vrais appareils** : téléphone (de préférence ancien), casque VR, lecteur d'écran (VoiceOver, TalkBack), voix de l'audioguide. Le casque exige une adresse HTTPS, donc l'hébergement.
 - **L'hébergement** : créer un compte Vercel et y relier le dépôt GitHub, le moment venu.
 
 ## 5. Limites connues
 
+- Les œuvres sont à leur taille réelle : l'atrium, la Salle des Horizons et le Cabinet des Couleurs, dessinés pour de plus grands formats, ont des murs peu garnis.
+- Tous les tableaux portent le cadre fin de leur salle : pas encore de cadres dorés ou anciens.
+- Le zoom en haute définition n'existe pas encore : on s'approche de l'œuvre, sans pouvoir l'agrandir.
 - Les sculptures sont générées par code ; le chargement de modèles 3D réels n'est pas encore branché.
 - Les sculptures ne projettent pas de vraie ombre, seulement une ombre douce au sol.
 - L'arabe (écriture de droite à gauche) n'est pas encore géré par l'interface.
@@ -173,11 +187,10 @@ src/engine/...              Contrôles, plan, mobilier, sculptures, textures, re
 
 scripts/images.mjs          Préparation des images d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
-tests/unit/                 Tests unitaires (Vitest) : 89 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 39 tests
+tests/unit/                 Tests unitaires (Vitest) : 98 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 41 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
-docs/prompts-images.md      Prompts de génération des 16 images fictives, appelées à être remplacées
-docs/selection-oeuvres.md   Sélection d'œuvres réelles proposée : source et licence de chaque pièce
+docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration
 vercel.json                 Configuration de l'hébergement (pas encore relié)
 ```
@@ -199,7 +212,7 @@ vercel.json                 Configuration de l'hébergement (pas encore relié)
 - **Salles** : nom, position, taille, décor (facultatif), plafond plat, verrière (`{"type": "skylight", "margin": 1.8}`) ou plafond flottant (`{"type": "cove"}`), bancs.
 - **Décor d'une salle** : le nom d'un décor de la bibliothèque (`"decor": "terre-cuite"` ; décors disponibles : `pierre-claire`, `argile-claire`, `terre-cuite`, `nuit`), ou ce décor corrigé réglage par réglage (`"decor": {"preset": "terre-cuite", "colors": {"wall": "#8e3f2c"}, "light": {"level": 0.9}}`). Réglages possibles : couleurs (`colors` : mur, sol, plafond, cadres, socles, bois, finitions, rails), sol (`floor` : `concrete`, `parquet`, `chevron`, `stone`), murs (`walls` : `paint`, `limewash`), brillance du sol (`gloss`), plafond, cadre, lumière (`light` : niveau, teinte, force des projecteurs), cartels (`labels`). Les anciens réglages `wall` (couleur des murs) et `light` (niveau d'éclairage) de la salle restent acceptés.
 - **Portes** : déclarées une seule fois, sur le mur d'une salle (`room`, `wall`, `offset`, `width`, hauteur facultative). L'ouverture dans la salle voisine est déduite.
-- **Tableaux** : mur, décalage le long du mur (positif vers la droite quand on fait face au mur), largeur et hauteur en mètres, image (`{"src": "images/nom.webp"}`), titre, artiste, date, technique, texte. Enregistrement audio facultatif.
+- **Tableaux** : mur, décalage le long du mur (positif vers la droite quand on fait face au mur), largeur et hauteur en mètres, image (`{"src": "images/nom.webp"}`), titre, artiste, date, technique, texte. Facultatifs : passe-partout (`"mat": 0.12`, en mètres), mention du musée d'origine (`credit`, par langue), lien vers la notice (`link`), enregistrement audio. L'artiste et la date s'écrivent une fois, ou par langue (`{"fr": "vers 1830", "en": "c. 1830"}`).
 - **Sculptures** : position dans la salle, hauteur, hauteur du socle, forme et matériau (bronze, marbre, bronze patiné, bois laqué).
 - **Parcours** : nom, description et liste ordonnée des œuvres.
 - **Contrôle** : à l'ouverture, la configuration est vérifiée (porte qui ne mène nulle part, tableau en travers d'une porte, salle inaccessible, décor inconnu, traduction manquante, etc.).

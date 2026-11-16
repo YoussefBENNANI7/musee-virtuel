@@ -7,7 +7,7 @@ import { EYE_HEIGHT, WALLS, buildLayout, type Layout } from './layout';
 import type { Quality } from './quality';
 import type { Style } from './styles';
 import { labelTexture } from './textures';
-import { tr, type MuseumConfig, type RoomConfig } from './types';
+import { loc, tr, type MuseumConfig, type RoomConfig } from './types';
 
 export type { PlacedArtwork } from './artworks';
 
@@ -115,7 +115,8 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
       const pos = new THREE.Vector3();
       // Si l'endroit idéal est occupé par un banc ou un socle, on s'approche de l'œuvre
       // par petits pas, puis, à défaut, on recule.
-      const tries = [0, -0.4, -0.8, -1.2, -1.6, -2, 0.4, 0.8, 1.2].map((delta) => Math.max(art.depth + 1, distance + delta));
+      const nearest = art.depth + Math.min(1, art.closest);
+      const tries = [0, -0.4, -0.8, -1.2, -1.6, -2, 0.4, 0.8, 1.2].map((delta) => Math.max(nearest, distance + delta));
       for (const d of tries) {
         pos.copy(target).addScaledVector(dir, d);
         pos.x = THREE.MathUtils.clamp(pos.x, area.minX, area.maxX);
@@ -131,7 +132,7 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
         const mat = art.label.material as THREE.MeshBasicMaterial;
         mat.map?.dispose();
         const dark = decors.get(art.room.id)!.labels === 'dark';
-        mat.map = labelTexture(tr(art.config.title, lang), art.config.artist, art.config.year, quality, dark);
+        mat.map = labelTexture(tr(art.config.title, lang), loc(art.config.artist, lang), loc(art.config.year, lang), quality, dark);
         mat.needsUpdate = true;
       }
     },

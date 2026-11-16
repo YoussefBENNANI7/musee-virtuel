@@ -35,14 +35,20 @@ export type ImageSource =
 interface ArtworkBase {
   id: string;
   title: L10n;
-  artist: string;
-  year: string;
+  /** Auteur, ou origine pour une œuvre anonyme. S'écrit une fois, ou dans chaque langue si le nom change. */
+  artist: string | L10n;
+  /** Date, telle qu'elle doit se lire : « 1889 », ou { "fr": "vers 1830", "en": "c. 1830" }. */
+  year: string | L10n;
   medium: L10n;
   description: L10n;
   /** Commentaire enregistré, un fichier par langue. Sans fichier, le texte est lu par une voix de synthèse. */
   audio?: L10n;
   /** Photo de l'œuvre pour la vue simplifiée (utile surtout pour les sculptures). */
   photo?: string;
+  /** Mention affichée sous la légende : lieu de conservation de l'œuvre et licence de son image. */
+  credit?: L10n;
+  /** Adresse de la notice de l'œuvre sur le site du musée qui la conserve. */
+  link?: string;
 }
 
 export interface PaintingConfig extends ArtworkBase {
@@ -53,6 +59,11 @@ export interface PaintingConfig extends ArtworkBase {
   width: number;
   height: number;
   image: ImageSource;
+  /**
+   * Largeur du passe-partout, en mètres, pour une œuvre sur papier : estampe, dessin, photographie.
+   * `width` et `height` restent les dimensions de l'œuvre elle-même.
+   */
+  mat?: number;
 }
 
 export interface SculptureConfig extends ArtworkBase {
@@ -206,4 +217,9 @@ export interface MuseumConfig {
 
 export function tr(text: L10n, lang: string): string {
   return text[lang] ?? Object.values(text)[0] ?? '';
+}
+
+/** Texte qui s'écrit soit une fois pour toutes les langues, soit dans chaque langue. */
+export function loc(text: string | L10n, lang: string): string {
+  return typeof text === 'string' ? text : tr(text, lang);
 }

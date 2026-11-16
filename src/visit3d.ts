@@ -4,9 +4,9 @@ import { Controls } from './engine/controls';
 import { SUN_AZIMUTH } from './engine/lighting';
 import { buildMap } from './engine/map';
 import { buildFloorReflection } from './engine/reflection';
-import { tr, type RoomConfig, type TourConfig } from './engine/types';
+import { loc, tr, type RoomConfig, type TourConfig } from './engine/types';
 import { buildWorld, type PlacedArtwork } from './engine/world';
-import { $, metaLine, type App, type View } from './ui';
+import { $, metaLine, renderCredit, type App, type View } from './ui';
 import { setupVR } from './vr';
 
 /** Visite en 3D : déplacement libre, fiches d'œuvres, plan, parcours et audioguide. */
@@ -94,9 +94,10 @@ export function startVisit(app: App): View {
     if (!current) return;
     const a = current.config;
     $('p-title').textContent = tr(a.title, app.lang);
-    $('p-artist').textContent = a.artist;
+    $('p-artist').textContent = loc(a.artist, app.lang);
     $('p-meta').textContent = metaLine(app, a);
     $('p-desc').textContent = tr(a.description, app.lang);
+    renderCredit($('p-credit'), app, a);
     renderAudio();
   }
   guide.onChange = () => {
@@ -142,7 +143,7 @@ export function startVisit(app: App): View {
     const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
     const distance =
       art.depth +
-      Math.max(1.2, 1.5 * Math.max(art.config.height / (2 * tan * fh), art.span / (2 * tan * camera.aspect * fw)));
+      Math.max(art.closest, 1.5 * Math.max(art.config.height / (2 * tan * fh), art.span / (2 * tan * camera.aspect * fw)));
     const view = world.viewpoint(art, camera.position, distance);
     if (instant) {
       controls.teleport(view.pos.x, view.pos.z, view.yaw);

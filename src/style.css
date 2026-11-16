@@ -161,6 +161,18 @@ body {
   font-size: 1.02rem;
   line-height: 1.65;
 }
+/* Mention de l'œuvre : musée qui la conserve, licence de l'image, lien vers sa notice. */
+.credit {
+  margin: 16px 0 0;
+  font: 0.82rem/1.5 system-ui, sans-serif;
+  color: #5b5852;
+}
+.credit a {
+  color: var(--accent);
+}
+.card .credit {
+  margin: -4px 0 14px;
+}
 .close {
   position: absolute;
   top: 10px;

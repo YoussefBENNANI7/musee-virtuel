@@ -17,6 +17,8 @@ export interface PlacedArtwork {
   /** Largeur à faire tenir à l'écran, et recul supplémentaire dû au volume de l'œuvre. */
   span: number;
   depth: number;
+  /** Plus petite distance utile pour regarder l'œuvre : on s'approche davantage d'une petite estampe. */
+  closest: number;
   /** Pour un tableau : direction du mur vers la salle. */
   normal?: THREE.Vector3;
   /** Cartel : son texte est redessiné à chaque changement de langue. */
@@ -91,6 +93,14 @@ function label(decor: Decor): THREE.Mesh {
   return new THREE.Mesh(new THREE.PlaneGeometry(LABEL_W, LABEL_H), new THREE.MeshBasicMaterial({ color, toneMapped: false }));
 }
 
+/** Carton du passe-partout, et l'ombre de son biseau autour de l'œuvre. */
+const MAT_COLOR = '#f1ede3';
+const MAT_BEVEL = 0.004;
+const MAT_BEVEL_COLOR = '#cfc8b8';
+
+/** Distance de regard la plus courte : 1,20 m pour un tableau, moins pour une œuvre de petit format. */
+export const closestView = (size: number): number => THREE.MathUtils.clamp(size * 1.6, 0.55, 1.2);
+
 /** Distance entre le mur et le rail des projecteurs. */
 export const TRACK_DISTANCE = 1.5;
 const fixtureMaterials = new Map<string, THREE.Material>();
@@ -121,7 +131,10 @@ function spotFixture(offset: number, ceiling: number, fixtureMat: THREE.Material
 /** Accroche un tableau sur un mur, dans le repère de ce mur. */
 export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THREE.Group, frame: WallFrame, ctx: ArtworkContext): PlacedArtwork {
   const decor = ctx.decor(room.id);
-  const { width: fw, depth, gap } = decor.frame;
+  const { width: fw, depth } = decor.frame;
+  // Sous passe-partout, pas de vide entre l'œuvre et le cadre : le carton va jusqu'au montant.
+  const mat = cfg.mat ?? 0;
+  const gap = mat > 0 ? 0 : decor.frame.gap;
   const art = new THREE.Group();
   art.position.set(cfg.offset, ART_CENTER_Y, 0);
   holder.add(art);
@@ -129,14 +142,14 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
   // Sous une verrière, la lumière du jour suffit. Ailleurs, chaque œuvre a son projecteur :
   // son faisceau est peint sur le mur, ce qui coûte bien moins cher qu'une vraie lampe.
   if (!ctx.light(room.id).daylight && decor.light.spots > 0) {
-    const pool = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width + 1.7, cfg.height + 1.9), poolMaterial(decor.colors.wall, decor.light.spots));
+    const pool = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width + mat * 2 + 1.7, cfg.height + mat * 2 + 1.9), poolMaterial(decor.colors.wall, decor.light.spots));
     pool.position.set(0, 0.15, 0.006);
     pool.raycast = noRaycast;
     art.add(pool);
     holder.add(spotFixture(cfg.offset, clearHeight(room, decor), fixtureMaterial(decor)));
   }
 
-  const border = gap + fw;
+  const border = mat + gap + fw;
   const body = new THREE.Mesh(
     new THREE.BoxGeometry(cfg.width + border * 2, cfg.height + border * 2, depth),
     new THREE.MeshStandardMaterial({ color: litColor(decor.colors.frame, decor), roughness: 0.5 }),
@@ -149,8 +162,16 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
     recess.position.z = depth + 0.001;
     art.add(recess);
   }
+  if (mat > 0) {
+    // Passe-partout : un carton crème, dont la fenêtre est taillée en biseau autour de l'œuvre.
+    const board = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width + mat * 2, cfg.height + mat * 2), new THREE.MeshBasicMaterial({ color: MAT_COLOR, toneMapped: false, ...inFront(1) }));
+    board.position.z = depth + 0.001;
+    const bevel = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width + MAT_BEVEL * 2, cfg.height + MAT_BEVEL * 2), new THREE.MeshBasicMaterial({ color: MAT_BEVEL_COLOR, toneMapped: false, ...inFront(2) }));
+    bevel.position.z = depth + 0.0015;
+    art.add(board, bevel);
+  }
   // Une œuvre est toujours montrée dans ses couleurs exactes, comme sous un éclairage de musée.
-  const surface = new THREE.MeshBasicMaterial({ toneMapped: false, ...inFront(2) });
+  const surface = new THREE.MeshBasicMaterial({ toneMapped: false, ...inFront(3) });
   const canvas = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width, cfg.height), surface);
   canvas.position.z = depth + 0.002;
 
@@ -164,6 +185,7 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
     center: frame.center.clone().addScaledVector(frame.tangent, cfg.offset).setY(ART_CENTER_Y),
     span: cfg.width,
     depth: 0,
+    closest: closestView(Math.max(cfg.width, cfg.height)),
     normal: frame.normal,
     label: card,
     ready: !('src' in cfg.image),
@@ -221,6 +243,7 @@ export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: T
     center: new THREE.Vector3(x, cfg.plinth + cfg.height / 2, z),
     span: footprint,
     depth: footprint / 2,
+    closest: 1.2,
     label: card,
     ready: true,
     obstacle: { x, z, r: side * 0.71 + 0.25 },

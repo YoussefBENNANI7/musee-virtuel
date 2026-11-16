@@ -166,6 +166,29 @@ describe('erreurs détectées', () => {
     ]);
   });
 
+  it('un passe-partout hors limites, ou un lien qui n’est pas une adresse sûre', () => {
+    const museum = fixture();
+    painting(museum, 'portee').mat = 0.6;
+    painting(museum, 'maree-basse').link = 'http://exemple.org/notice';
+    painting(museum, 'petite-fugue').link = 'https://exemple.org/notice';
+    const errors = errorsOf(museum);
+    expect(errors).toContain('Œuvre "portee" : passe-partout invalide (entre 0 et 0,4 m)');
+    expect(errors).toContain('Œuvre "maree-basse" : lien invalide : "http://exemple.org/notice" (attendu : une adresse en https://)');
+    expect(errors.filter((e) => e.includes('petite-fugue'))).toEqual([]);
+  });
+
+  it('le passe-partout compte dans la place qu’une œuvre prend sur le mur', () => {
+    const museum = fixture();
+    const a = painting(museum, 'le-pays-d-avant');
+    const b = painting(museum, 'carreaux-de-l-atelier');
+    b.offset = a.offset + a.width / 2 + b.width / 2 + 0.3;
+    expect(warningsOf(museum).filter((w) => w.includes('recouvre'))).toEqual([]);
+    // Dix centimètres de carton de chaque côté : les deux œuvres se touchent désormais.
+    a.mat = 0.1;
+    b.mat = 0.1;
+    expect(warningsOf(museum).filter((w) => w.includes('recouvre'))).toHaveLength(1);
+  });
+
   it('des identifiants en double et une étape de parcours inconnue', () => {
     const museum = fixture();
     painting(museum, 'petite-fugue').id = 'equilibre-no-7';
@@ -200,6 +223,18 @@ describe('avertissements', () => {
     delete painting(museum, 'equilibre-no-7').title.en;
     expect(warningsOf(museum)).toEqual(['Œuvre "equilibre-no-7" : titre : traduction manquante (en)']);
     expect(errorsOf(museum)).toEqual([]);
+  });
+
+  it('un auteur, une date ou une mention qui manquent dans une langue', () => {
+    const museum = fixture();
+    const art = painting(museum, 'petite-fugue');
+    art.artist = { fr: 'Hélène Varga' };
+    art.year = { fr: 'vers 1958', en: 'c. 1958' };
+    art.credit = { fr: 'Musée des Horizons' };
+    const warnings = warningsOf(museum);
+    expect(warnings).toContain('Œuvre "petite-fugue" : artiste : traduction manquante (en)');
+    expect(warnings).toContain('Œuvre "petite-fugue" : mention : traduction manquante (en)');
+    expect(warnings.filter((w) => w.includes('date'))).toEqual([]);
   });
 
   it('un tableau dont les proportions ne sont plus celles de son image', () => {

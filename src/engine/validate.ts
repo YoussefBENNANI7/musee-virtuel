@@ -153,6 +153,10 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
       translated(where, 'technique', art.medium);
       translated(where, 'description', art.description);
       if (!art.artist) warning(where, 'artiste manquant');
+      else if (typeof art.artist !== 'string') translated(where, 'artiste', art.artist);
+      if (art.year && typeof art.year !== 'string') translated(where, 'date', art.year);
+      if (art.credit !== undefined) translated(where, 'mention', art.credit);
+      if (art.link !== undefined && !/^https:\/\/\S+$/.test(String(art.link))) error(where, `lien invalide : "${art.link}" (attendu : une adresse en https://)`);
       if (art.type === 'painting') checkPainting(art, room, layout, decor, where, error, warning);
       else if (art.type === 'sculpture') checkSculpture(art, room, half, where, error);
       else error(where, `type inconnu : "${(art as ArtworkConfig).type}"`);
@@ -204,8 +208,10 @@ function checkDecor(room: RoomConfig, style: Style, where: string, error: Report
   }
 }
 
-/** Demi-largeur occupée sur le mur par un tableau et son cadre. */
-const framedHalfWidth = (width: number, decor: Decor) => width / 2 + decor.frame.gap + decor.frame.width;
+/** Marge occupée autour d'une œuvre par son passe-partout (ou le vide du cadre) et son cadre. */
+const frameMargin = (art: { mat?: number }, decor: Decor) => (art.mat ? art.mat : decor.frame.gap) + decor.frame.width;
+/** Demi-largeur occupée sur le mur par un tableau, son passe-partout et son cadre. */
+const framedHalfWidth = (art: { width: number; mat?: number }, decor: Decor) => art.width / 2 + frameMargin(art, decor);
 
 function checkPainting(
   art: Extract<ArtworkConfig, { type: 'painting' }>,
@@ -218,14 +224,16 @@ function checkPainting(
 ) {
   if (!WALLS.includes(art.wall)) return error(where, 'mur inconnu (north, south, east ou west)');
   if (!(art.width > 0 && art.height > 0)) return error(where, 'dimensions invalides');
-  const reach = framedHalfWidth(art.width, decor);
+  if (art.mat !== undefined && !(art.mat >= 0 && art.mat <= 0.4)) error(where, 'passe-partout invalide (entre 0 et 0,4 m)');
+  const reach = framedHalfWidth(art, decor);
   const usable = wallFrame(room, art.wall, layout.wallThickness / 2).length;
   if (Math.abs(art.offset) + reach > usable / 2) error(where, 'dépasse du mur');
   for (const gap of layout.openings(room.id, art.wall)) {
     if (Math.abs(art.offset - gap.offset) < reach + gap.width / 2) error(where, 'accrochée en travers d\'une porte');
   }
-  if (ART_CENTER_Y + art.height / 2 + decor.frame.width > room.size[1] - 0.1) error(where, 'trop haute pour le plafond de la salle');
-  if (ART_CENTER_Y - art.height / 2 < 0.2) error(where, 'trop haute : elle toucherait le sol');
+  const margin = frameMargin(art, decor);
+  if (ART_CENTER_Y + art.height / 2 + margin > room.size[1] - 0.1) error(where, 'trop haute pour le plafond de la salle');
+  if (ART_CENTER_Y - art.height / 2 - margin < 0.2) error(where, 'trop haute : elle toucherait le sol');
 
   const image = art.image as { src?: unknown; generator?: unknown } | undefined;
   if (typeof image?.src === 'string') {
@@ -266,7 +274,7 @@ function checkOverlaps(room: RoomConfig, decor: Decor, warning: Report) {
     const hung = room.artworks.filter((a) => a.type === 'painting' && a.wall === wall) as Extract<ArtworkConfig, { type: 'painting' }>[];
     for (let i = 0; i < hung.length; i++) {
       for (let j = i + 1; j < hung.length; j++) {
-        const gap = Math.abs(hung[i].offset - hung[j].offset) - framedHalfWidth(hung[i].width, decor) - framedHalfWidth(hung[j].width, decor);
+        const gap = Math.abs(hung[i].offset - hung[j].offset) - framedHalfWidth(hung[i], decor) - framedHalfWidth(hung[j], decor);
         if (gap < 0) warning(`Œuvre "${hung[i].id}"`, `recouvre l'œuvre "${hung[j].id}" sur le mur ${wall}`);
       }
     }

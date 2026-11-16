@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { Controls } from './engine/controls';
-import { tr } from './engine/types';
+import { loc, tr } from './engine/types';
 import type { PlacedArtwork, World } from './engine/world';
 import { metaLine, type App } from './ui';
 
@@ -112,7 +112,7 @@ export function setupVR(o: Options) {
     g.fillRect(0, 0, PANEL_W, 14);
     g.textBaseline = 'top';
     g.font = '600 30px system-ui, sans-serif';
-    g.fillText(a.artist.toUpperCase(), 56, 56);
+    g.fillText(loc(a.artist, app.lang).toUpperCase(), 56, 56);
     g.fillStyle = '#1c1b19';
     g.font = 'italic 58px Georgia, serif';
     g.fillText(tr(a.title, app.lang), 56, 104, PANEL_W - 112);
@@ -121,7 +121,13 @@ export function setupVR(o: Options) {
     g.fillText(metaLine(app, a), 56, 184, PANEL_W - 112);
     g.fillStyle = '#1c1b19';
     g.font = '34px Georgia, serif';
-    wrap(tr(a.description, app.lang), 56, 250, PANEL_W - 112, 50, buttonTop - 60);
+    const credit = a.credit ? tr(a.credit, app.lang) : '';
+    wrap(tr(a.description, app.lang), 56, 250, PANEL_W - 112, 50, buttonTop - (credit ? 110 : 60));
+    if (credit) {
+      g.fillStyle = '#5b5852';
+      g.font = '26px system-ui, sans-serif';
+      g.fillText(credit, 56, buttonTop - 48, PANEL_W - 112);
+    }
 
     if (app.guide.available(a, app.lang)) {
       const playing = app.guide.playingId === a.id;

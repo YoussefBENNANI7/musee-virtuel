@@ -1,7 +1,7 @@
 import type { AudioGuide } from './audio';
 import type { Quality } from './engine/quality';
 import type { Style } from './engine/styles';
-import type { MuseumConfig } from './engine/types';
+import { loc, type MuseumConfig } from './engine/types';
 
 /** Textes de l'interface. Les textes du musée, eux, viennent de sa configuration. */
 export const UI: Record<string, Record<string, string>> = {
@@ -32,6 +32,7 @@ export const UI: Record<string, Record<string, string>> = {
     simpleIntro: 'Toutes les œuvres du musée, salle par salle, sans visite en 3D.',
     noWebgl: 'La visite en 3D n’est pas disponible sur cet appareil. Voici le musée en vue simplifiée.',
     height: 'H.',
+    record: 'Voir la notice du musée',
     error: 'Impossible de charger ce musée.',
     configErrors: 'La configuration de ce musée contient des erreurs',
   },
@@ -62,6 +63,7 @@ export const UI: Record<string, Record<string, string>> = {
     simpleIntro: 'Every artwork in the museum, room by room, without the 3D visit.',
     noWebgl: 'The 3D visit is not available on this device. Here is the museum in simple view.',
     height: 'H.',
+    record: 'View the museum record',
     error: 'This museum could not be loaded.',
     configErrors: 'This museum’s configuration contains errors',
   },
@@ -87,11 +89,29 @@ export interface View {
   setLang(lang: string): void;
 }
 
+type Artwork = MuseumConfig['rooms'][number]['artworks'][number];
+
+/**
+ * Remplit la mention d'une œuvre : son lieu de conservation, la licence de son image,
+ * et un lien vers sa notice sur le site du musée. Sans mention ni lien, la ligne disparaît.
+ */
+export function renderCredit(node: HTMLElement, app: App, a: Artwork) {
+  const text = a.credit ? (a.credit[app.lang] ?? Object.values(a.credit)[0] ?? '') : '';
+  node.replaceChildren();
+  node.hidden = !text && !a.link;
+  if (text) node.append(text);
+  if (a.link && /^https:\/\//.test(a.link)) {
+    if (text) node.append(' · ');
+    const link = Object.assign(document.createElement('a'), { href: a.link, target: '_blank', rel: 'noopener', textContent: app.ui().record });
+    node.append(link);
+  }
+}
+
 /** Ligne de légende d'une œuvre : date, technique, dimensions. */
-export function metaLine(app: App, a: MuseumConfig['rooms'][number]['artworks'][number]): string {
+export function metaLine(app: App, a: Artwork): string {
   const size =
     a.type === 'painting'
       ? `${Math.round(a.height * 100)} × ${Math.round(a.width * 100)} cm`
       : `${app.ui().height} ${Math.round(a.height * 100)} cm`;
-  return `${a.year} · ${a.medium[app.lang] ?? Object.values(a.medium)[0]} · ${size}`;
+  return `${loc(a.year, app.lang)} · ${a.medium[app.lang] ?? Object.values(a.medium)[0]} · ${size}`;
 }

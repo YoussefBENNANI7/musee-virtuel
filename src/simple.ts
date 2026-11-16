@@ -1,7 +1,7 @@
 import { imageSrcset, imageUrl } from './engine/images';
 import { paintingCanvas } from './engine/textures';
-import { tr, type ArtworkConfig } from './engine/types';
-import { $, metaLine, type App, type View } from './ui';
+import { loc, tr, type ArtworkConfig } from './engine/types';
+import { $, metaLine, renderCredit, type App, type View } from './ui';
 
 function h<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -44,7 +44,7 @@ export function startSimple(app: App, fallback: boolean): View {
   );
 
   function picture(a: ArtworkConfig): HTMLElement | null {
-    const alt = `${tr(a.title, app.lang)}, ${a.artist}`;
+    const alt = `${tr(a.title, app.lang)}, ${loc(a.artist, app.lang)}`;
     if (a.type === 'painting') {
       const img = h('img', { alt });
       img.style.aspectRatio = `${a.width} / ${a.height}`;
@@ -84,7 +84,7 @@ export function startSimple(app: App, fallback: boolean): View {
         const list = h('ol');
         for (const id of tour.stops) {
           const a = all.get(id);
-          if (a) list.append(h('li', {}, h('a', { href: `#art-${id}` }, `${tr(a.title, app.lang)}, ${a.artist}`)));
+          if (a) list.append(h('li', {}, h('a', { href: `#art-${id}` }, `${tr(a.title, app.lang)}, ${loc(a.artist, app.lang)}`)));
         }
         section.append(h('h3', {}, tr(tour.name, app.lang)), h('p', {}, tr(tour.description, app.lang)), list);
       }
@@ -97,11 +97,14 @@ export function startSimple(app: App, fallback: boolean): View {
         const body = h(
           'div',
           {},
-          h('p', { class: 'artist' }, a.artist),
+          h('p', { class: 'artist' }, loc(a.artist, app.lang)),
           h('h3', {}, tr(a.title, app.lang)),
           h('p', { class: 'meta' }, metaLine(app, a)),
           h('p', { class: 'desc' }, tr(a.description, app.lang)),
         );
+        const credit = h('p', { class: 'credit' });
+        renderCredit(credit, app, a);
+        body.append(credit);
         if (guide.available(a, app.lang)) {
           const btn = h('button', { class: 'btn', type: 'button' }, audioLabel(a.id));
           btn.dataset.audio = a.id;

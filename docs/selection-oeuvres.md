@@ -1,6 +1,8 @@
 # Sélection d'œuvres réelles pour le musée de démonstration
 
-Proposition du 16 novembre 2026. **Aucune de ces œuvres n'est encore intégrée au musée** : le porteur du projet valide la sélection d'abord.
+Sélection proposée le 16 novembre 2026 et **validée en entier par le porteur du projet** le même jour.
+
+État de l'intégration : les 16 tableaux, estampes et photographie proposés pour les cinq salles sont dans le musée. Restent les sculptures en 3D et la salle marocaine. Les variantes ne sont pas intégrées.
 
 Chaque notice a été relue à la source, dans le catalogue en ligne du musée ou sur la page du modèle 3D, le 16 novembre 2026. Les titres français sont des traductions à relire au moment de rédiger les cartels.
 
@@ -158,4 +160,4 @@ Ces modèles ne sont pas des pièces de musée. Ce sont des créations d'artiste
 - Les images en haute définition se téléchargent librement sur les sites du Metropolitan Museum, de l'Art Institute of Chicago et du musée de Cleveland.
 - Le modèle 3D de la Smithsonian se télécharge directement. Ceux de Sketchfab demandent un compte Sketchfab gratuit et sa clé d'accès.
 - Plusieurs modèles 3D sont lourds (30 Mo et plus) : il faudra les alléger pour le téléphone.
-- Les estampes et gravures mesurent 25 à 40 cm : elles demandent un passe-partout, que le moteur ne sait pas encore dessiner.
+- Les estampes et gravures mesurent 25 à 40 cm : elles sont présentées sous passe-partout.
