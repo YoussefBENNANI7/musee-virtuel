@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { closestView } from '../../src/engine/artworks';
+import { modelUrl } from '../../src/engine/sculptures';
 import { loc, tr } from '../../src/engine/types';
 import { demo } from './helpers';
 
@@ -26,12 +27,26 @@ describe('distance de regard', () => {
   });
 });
 
+describe('fichier d’un modèle 3D', () => {
+  const base = 'https://exemple.org/museums/demo/';
+
+  it('sert l’original tant que les versions allégées n’ont pas été préparées', () => {
+    expect(modelUrl({ src: 'models/venus.glb' }, base, true)).toBe(`${base}models/venus.glb`);
+  });
+
+  it('sert la version complète, ou la version légère sur un appareil modeste', () => {
+    const model = { src: 'models/venus.glb', web: true };
+    expect(modelUrl(model, base, false)).toBe(`${base}models/web/venus.glb`);
+    expect(modelUrl(model, base, true)).toBe(`${base}models/web/venus-leger.glb`);
+  });
+});
+
 describe('œuvres du musée de démonstration', () => {
   const works = demo().rooms.flatMap((room) => room.artworks);
   const paintings = works.filter((a) => a.type === 'painting');
 
   it('chaque tableau cite le musée qui le conserve et renvoie à sa notice', () => {
-    expect(paintings).toHaveLength(16);
+    expect(paintings).toHaveLength(29);
     for (const a of paintings) {
       expect(a.credit?.fr, a.id).toMatch(/domaine public/);
       expect(a.credit?.en, a.id).toMatch(/public domain/);
@@ -39,10 +54,20 @@ describe('œuvres du musée de démonstration', () => {
     }
   });
 
+  it('la sculpture numérisée cite son musée et a ses versions allégées', () => {
+    const scanned = works.filter((a) => a.type === 'sculpture' && 'src' in a.model);
+    expect(scanned.map((a) => a.id)).toEqual(['l-esclave-grecque']);
+    for (const a of scanned) {
+      expect(a.type === 'sculpture' && a.model).toEqual({ src: 'models/l-esclave-grecque.glb', web: true });
+      expect(a.credit?.fr).toMatch(/Smithsonian/);
+      expect(a.link).toMatch(/^https:\/\/americanart\.si\.edu\//);
+    }
+  });
+
   it('les œuvres sur papier sont sous passe-partout, les peintures non', () => {
     for (const a of paintings) {
       if (a.type !== 'painting') continue;
-      const onPaper = /Estampe|Gravure|Eau-forte|Photographie/.test(a.medium.fr);
+      const onPaper = /Estampe|Gravure|Eau-forte|Photographie|Dessin/.test(a.medium.fr);
       expect(Boolean(a.mat), a.id).toBe(onPaper);
     }
   });

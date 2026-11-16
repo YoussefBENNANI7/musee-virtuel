@@ -11,16 +11,22 @@
     "test:e2e": "playwright test",
     "check": "tsc --noEmit && vitest run",
     "vignettes": "node scripts/vignettes.mjs",
-    "images": "node scripts/images.mjs"
+    "images": "node scripts/images.mjs",
+    "modeles": "node scripts/modeles.mjs"
   },
   "dependencies": {
     "three": "^0.187.0"
   },
   "devDependencies": {
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
     "@playwright/test": "^1.63.0",
     "@types/node": "^26.6.6",
     "@types/three": "^0.187.0",
+    "draco3dgltf": "^1.5.9",
     "iwer": "^2.8.0",
+    "meshoptimizer": "^1.3.0",
     "sharp": "^0.35.5",
     "typescript": "^7.0.2",
     "vite": "^8.3.8",

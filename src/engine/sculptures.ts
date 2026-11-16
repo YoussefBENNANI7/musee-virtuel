@@ -1,24 +1,64 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
+import type { Quality } from './quality';
 import { rng } from './textures';
-import type { SculptureConfig } from './types';
+import type { ModelSource, SculptureConfig } from './types';
+
+export type FileModel = Extract<ModelSource, { src: string }>;
+
+/** Adresse du fichier à charger : la version préparée qui convient à l'appareil, sinon l'original. */
+export function modelUrl(model: FileModel, base: string, light: boolean): string {
+  if (!model.web) return new URL(model.src, base).href;
+  const slash = model.src.lastIndexOf('/');
+  const name = model.src.slice(slash + 1).replace(/\.[^.]+$/, '');
+  return new URL(`${model.src.slice(0, slash + 1)}web/${name}${light ? '-leger' : ''}.glb`, base).href;
+}
+
+let loader: GLTFLoader | null = null;
+
+/**
+ * Charge une sculpture numérisée. Sa matière est celle du relevé : on y ajoute seulement
+ * les reflets du musée, et on l'assombrit comme le reste de sa salle (`light`, entre 0 et 1).
+ */
+export function loadSculpture(model: FileModel, base: string, quality: Quality, env: THREE.Texture, light: number): Promise<THREE.Group> {
+  loader ??= new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  return loader.loadAsync(modelUrl(model, base, quality.lightModels)).then((gltf) => {
+    gltf.scene.traverse((node) => {
+      const mesh = node as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      for (const mat of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+        const std = mat as THREE.MeshStandardMaterial;
+        if (!std.isMeshStandardMaterial) continue;
+        std.envMap = env;
+        std.envMapIntensity = light;
+        std.color.multiplyScalar(light);
+        if (std.map) std.map.anisotropy = quality.anisotropy;
+      }
+    });
+    return gltf.scene;
+  });
+}
 
 /** `light` : part de lumière que la sculpture reçoit dans sa salle, entre 0 et 1. */
 export function sculptureMaterial(cfg: SculptureConfig, env: THREE.Texture, light = 1): THREE.Material {
+  const material = cfg.material ?? 'bronze';
   const presets = {
     bronze: { color: '#8a5a2e', metalness: 1, roughness: 0.36 },
     marble: { color: '#efebe3', metalness: 0, roughness: 0.32 },
     patina: { color: '#3f8073', metalness: 0.85, roughness: 0.5 },
     lacquer: { color: cfg.color ?? '#8f231c', metalness: 0.05, roughness: 0.22 },
   };
-  const material = new THREE.MeshStandardMaterial({ ...presets[cfg.material], envMap: env, envMapIntensity: 1.1 * light });
-  material.color.multiplyScalar(light);
-  return material;
+  const result = new THREE.MeshStandardMaterial({ ...presets[material], envMap: env, envMapIntensity: 1.1 * light });
+  result.color.multiplyScalar(light);
+  return result;
 }
 
 /** Sculpture fictive générée à partir d'une graine. Les vrais musées fourniront des modèles 3D. */
 export function sculptureShape(cfg: SculptureConfig, mat: THREE.Material): THREE.Group {
-  const r = rng(cfg.model.seed);
   const g = new THREE.Group();
+  if (!('generator' in cfg.model)) return g;
+  const r = rng(cfg.model.seed);
   switch (cfg.model.generator) {
     case 'knot': {
       const [p, q] = [[2, 3], [3, 4], [2, 5], [3, 5]][Math.floor(r() * 4)];

@@ -59,7 +59,8 @@ for (const art of paintings) {
   }
   art.image = { src: art.image.src, width, height, variants };
 
-  const fitted = Math.round(art.height * (width / height) * 100) / 100;
+  // Au millimètre : au centimètre près, une petite estampe serait déformée.
+  const fitted = Math.round(art.height * (width / height) * 1000) / 1000;
   if (fitted !== art.width) {
     resized.push(`${art.id} : largeur ${art.width} m → ${fitted} m`);
     art.width = fitted;

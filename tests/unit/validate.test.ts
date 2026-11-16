@@ -106,6 +106,25 @@ describe('erreurs détectées', () => {
     expect(errorsOf(museum)).toContain('Œuvre "ruban" : posée hors de la salle ou trop près d\'un mur');
   });
 
+  it('un modèle 3D qui n’est pas un fichier GLB, ou une sculpture sans modèle', () => {
+    const museum = fixture();
+    const works = museum.rooms.flatMap((r) => r.artworks);
+    const ruban = works.find((a) => a.id === 'ruban')!;
+    const orbites = works.find((a) => a.id === 'orbites')!;
+    const galet = works.find((a) => a.id === 'galet-qui-respire')!;
+    if (ruban.type === 'sculpture') ruban.model = { src: 'models/ruban.obj' };
+    if (orbites.type === 'sculpture') orbites.model = {} as never;
+    // Un modèle numérisé porte sa propre matière : le matériau n'est plus exigé.
+    if (galet.type === 'sculpture') {
+      galet.model = { src: 'models/galet.glb' };
+      delete galet.material;
+    }
+    const errors = errorsOf(museum);
+    expect(errors).toContain('Œuvre "ruban" : modèle : le fichier doit être au format GLB');
+    expect(errors).toContain('Œuvre "orbites" : modèle : indiquez "src" (fichier GLB) ou un "generator" connu');
+    expect(errors.filter((e) => e.includes('galet-qui-respire'))).toEqual([]);
+  });
+
   it('un banc posé dans un mur, ou un niveau d’éclairage hors limites', () => {
     const museum = fixture();
     const galerie = museum.rooms.find((r) => r.id === 'galerie')!;

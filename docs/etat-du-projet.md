@@ -66,7 +66,7 @@ Le 15 novembre 2026, le porteur a donné son avis sur l'ambiance : la base lui p
 |---|---|---|
 | 1. README | Installer, lancer et configurer le projet | Fait |
 | 2. Décor par salle | Chaque salle reçoit un décor : sol, murs, plafond, lumière, cadres, mobilier | Fait : les cinq salles ont leur décor, voir ci-dessous |
-| 3. Œuvres réelles | Recherche de vraies œuvres en accès libre, puis remplacement des œuvres fictives : tableaux, vrais modèles 3D (format GLB) avec de vraies ombres, nouveaux cartels, textes et parcours. Aussi : cadres variés, zoom haute définition | Sélection validée en entier par le porteur le 16 novembre 2026. **Les 16 tableaux, estampes et photographie sont intégrés.** Restent les sculptures en 3D, voir ci-dessous |
+| 3. Œuvres réelles | Recherche de vraies œuvres en accès libre, puis remplacement des œuvres fictives : tableaux, vrais modèles 3D (format GLB) avec de vraies ombres, nouveaux cartels, textes et parcours. Aussi : cadres variés, zoom haute définition | Sélection validée en entier par le porteur le 16 novembre 2026. **Les 29 tableaux, estampes, dessin et photographie sont intégrés, ainsi qu'une première sculpture numérisée.** Restent quatre sculptures, voir ci-dessous |
 | 3 bis. Salle marocaine | Nouvelle salle au plan, avec ses éléments d'architecture (arcs, zellige, plâtre sculpté, plafond de cèdre, fontaine) et ses objets traditionnels | À faire, après les œuvres réelles. Salle pilote à valider |
 | 4. Interface | Écran d'accueil du musée, nouvelle identité visuelle (typographie, icônes, commandes discrètes, fiches animées), clic au sol pour se déplacer, mini-plan permanent | À faire, après le décor pour s'accorder à l'ambiance définitive |
 | 5. Mise en ligne | Hébergement sur Vercel, puis vérification sur de vrais appareils | À faire, avec l'accord du porteur |
@@ -114,7 +114,11 @@ Pour ces œuvres, le moteur a appris à :
 - **approcher le visiteur** à une soixantaine de centimètres d'une petite estampe, au lieu de 1,20 m ;
 - replier un titre long sur deux lignes dans les cartels.
 
-**Reste à faire :** les cinq sculptures en 3D (chargement des modèles, allègement pour le téléphone, vraies ombres), puis la salle marocaine.
+**Fait ensuite : les 13 œuvres gardées en réserve**, ajoutées aux murs avec l'accord du porteur pour mieux les garnir (Gauguin, Van Gogh, Turner, Monet, Courbet, Mondrian, Dürer, Hokusai, Caillebotte). Le musée compte 29 tableaux et œuvres sur papier.
+
+**Fait : la première sculpture numérisée**, le *Modèle de L'Esclave grecque* de Hiram Powers (Smithsonian American Art Museum, domaine public), au centre de l'atrium à la place du « Nœud sans fin ». Le moteur charge désormais des modèles 3D au format GLB. `npm run modeles -- demo` en prépare deux versions allégées : une complète (100 000 triangles, 2,2 Mo ici) et une légère pour les appareils modestes (30 000 triangles, 0,8 Mo).
+
+**Reste à faire :** les quatre autres sculptures, qui viennent de Sketchfab et attendent la clé d'accès du porteur (prévue à un prochain jalon) ; en attendant, la Cour des Sculptures garde ses quatre sculptures dessinées par le code. Puis les vraies ombres des sculptures et la salle marocaine.
 
 | Salle | Proposition |
 |---|---|
@@ -134,18 +138,17 @@ Ce que la recherche a montré :
 
 ## 4. En attente du porteur du projet
 
-- **Un compte Sketchfab gratuit**, pour intégrer les sculptures : sa clé d'accès sert à télécharger quatre des cinq modèles 3D.
-- **Son avis sur l'accrochage** : à leur taille réelle, les œuvres paraissent petites dans les grandes salles. On peut garnir les murs avec les treize œuvres gardées en variantes.
+- **Un compte Sketchfab gratuit**, pour intégrer les quatre sculptures restantes : le porteur le créera à un prochain jalon. Sa clé d'accès se saisira dans un formulaire sécurisé.
+- **Sa relecture des textes des œuvres** : ils sont rédigés par Claude et n'ont pas été confrontés un par un aux notices des musées.
 - **Les voix de l'audioguide** : service de voix de qualité ou vraie personne, à décider.
 - **Des essais sur de vrais appareils** : téléphone (de préférence ancien), casque VR, lecteur d'écran (VoiceOver, TalkBack), voix de l'audioguide. Le casque exige une adresse HTTPS, donc l'hébergement.
 - **L'hébergement** : créer un compte Vercel et y relier le dépôt GitHub, le moment venu.
 
 ## 5. Limites connues
 
-- Les œuvres sont à leur taille réelle : l'atrium, la Salle des Horizons et le Cabinet des Couleurs, dessinés pour de plus grands formats, ont des murs peu garnis.
 - Tous les tableaux portent le cadre fin de leur salle : pas encore de cadres dorés ou anciens.
 - Le zoom en haute définition n'existe pas encore : on s'approche de l'œuvre, sans pouvoir l'agrandir.
-- Les sculptures sont générées par code ; le chargement de modèles 3D réels n'est pas encore branché.
+- Quatre sculptures sur cinq sont encore dessinées par le code.
 - Les sculptures ne projettent pas de vraie ombre, seulement une ombre douce au sol.
 - L'arabe (écriture de droite à gauche) n'est pas encore géré par l'interface.
 - Dans le casque VR, ni les parcours ni le plan ne sont disponibles.
@@ -186,9 +189,10 @@ src/engine/world.ts         Assemblage du musée, règles de déplacement, point
 src/engine/...              Contrôles, plan, mobilier, sculptures, textures, reflets, images
 
 scripts/images.mjs          Préparation des images d'un musée
+scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
-tests/unit/                 Tests unitaires (Vitest) : 98 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 41 tests
+tests/unit/                 Tests unitaires (Vitest) : 102 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 42 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration
@@ -213,7 +217,7 @@ vercel.json                 Configuration de l'hébergement (pas encore relié)
 - **Décor d'une salle** : le nom d'un décor de la bibliothèque (`"decor": "terre-cuite"` ; décors disponibles : `pierre-claire`, `argile-claire`, `terre-cuite`, `nuit`), ou ce décor corrigé réglage par réglage (`"decor": {"preset": "terre-cuite", "colors": {"wall": "#8e3f2c"}, "light": {"level": 0.9}}`). Réglages possibles : couleurs (`colors` : mur, sol, plafond, cadres, socles, bois, finitions, rails), sol (`floor` : `concrete`, `parquet`, `chevron`, `stone`), murs (`walls` : `paint`, `limewash`), brillance du sol (`gloss`), plafond, cadre, lumière (`light` : niveau, teinte, force des projecteurs), cartels (`labels`). Les anciens réglages `wall` (couleur des murs) et `light` (niveau d'éclairage) de la salle restent acceptés.
 - **Portes** : déclarées une seule fois, sur le mur d'une salle (`room`, `wall`, `offset`, `width`, hauteur facultative). L'ouverture dans la salle voisine est déduite.
 - **Tableaux** : mur, décalage le long du mur (positif vers la droite quand on fait face au mur), largeur et hauteur en mètres, image (`{"src": "images/nom.webp"}`), titre, artiste, date, technique, texte. Facultatifs : passe-partout (`"mat": 0.12`, en mètres), mention du musée d'origine (`credit`, par langue), lien vers la notice (`link`), enregistrement audio. L'artiste et la date s'écrivent une fois, ou par langue (`{"fr": "vers 1830", "en": "c. 1830"}`).
-- **Sculptures** : position dans la salle, hauteur, hauteur du socle, forme et matériau (bronze, marbre, bronze patiné, bois laqué).
+- **Sculptures** : position dans la salle, hauteur, hauteur du socle, et soit un modèle 3D numérisé (`"model": {"src": "models/nom.glb"}`, à préparer avec `npm run modeles`), soit une forme dessinée par le moteur avec son matériau (bronze, marbre, bronze patiné, bois laqué).
 - **Parcours** : nom, description et liste ordonnée des œuvres.
 - **Contrôle** : à l'ouverture, la configuration est vérifiée (porte qui ne mène nulle part, tableau en travers d'une porte, salle inaccessible, décor inconnu, traduction manquante, etc.).
 
@@ -226,6 +230,7 @@ npm run check                     # contrôle du code et tests unitaires
 npm run test:e2e                  # tests dans un navigateur (environ 3 minutes)
 npm run build                     # version publiable, dans dist/
 npm run images -- demo --attach   # associe et prépare les images déposées dans images/
+npm run modeles -- demo           # prépare les modèles 3D déposés dans models/
 npm run vignettes -- demo         # photographie les sculptures (le musée doit tourner)
 ```
 

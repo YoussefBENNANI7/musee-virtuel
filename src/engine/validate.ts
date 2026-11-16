@@ -264,8 +264,13 @@ function checkSculpture(
     error(where, 'posée hors de la salle ou trop près d\'un mur');
   }
   if (art.height + art.plinth > h - 0.1) error(where, 'trop haute pour le plafond de la salle');
-  if (!SCULPTURE_GENERATORS.includes(art.model?.generator)) error(where, 'modèle : "generator" inconnu');
-  if (!SCULPTURE_MATERIALS.includes(art.material)) error(where, `matériau inconnu : "${art.material}"`);
+  const model = art.model as { src?: unknown; generator?: unknown } | undefined;
+  if (typeof model?.src === 'string') {
+    if (!/\.glb$/i.test(model.src)) error(where, 'modèle : le fichier doit être au format GLB');
+  } else {
+    if (!SCULPTURE_GENERATORS.includes(model?.generator as string)) error(where, 'modèle : indiquez "src" (fichier GLB) ou un "generator" connu');
+    if (!SCULPTURE_MATERIALS.includes(art.material as string)) error(where, `matériau inconnu : "${art.material}"`);
+  }
 }
 
 /** Deux tableaux qui se recouvrent sur un même mur : gênant, mais pas bloquant. */

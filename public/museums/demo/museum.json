@@ -44,41 +44,45 @@
       },
       "artworks": [
         {
-          "id": "noeud-sans-fin",
+          "id": "l-esclave-grecque",
           "type": "sculpture",
           "position": [
             0,
             0
           ],
-          "height": 1.7,
-          "plinth": 0.5,
+          "height": 1.686,
+          "plinth": 0.6,
           "model": {
-            "generator": "knot",
-            "seed": 3
+            "src": "models/l-esclave-grecque.glb",
+            "web": true
           },
-          "material": "bronze",
           "title": {
-            "fr": "Nœud sans fin",
-            "en": "Endless Knot"
+            "fr": "Modèle de L'Esclave grecque",
+            "en": "Model of the Greek Slave"
           },
-          "artist": "Paolo Venier",
-          "year": "1991",
+          "artist": "Hiram Powers",
+          "year": "1843",
           "medium": {
-            "fr": "Bronze",
-            "en": "Bronze"
+            "fr": "Plâtre et pointes de métal",
+            "en": "Plaster and metal pins"
           },
           "description": {
-            "fr": "Une seule ligne de bronze qui se referme sur elle-même. Venier demandait qu'on en fasse le tour : la sculpture, disait-il, n'a ni face ni dos.",
-            "en": "A single line of bronze closing on itself. Venier asked viewers to walk around it: the sculpture, he said, has neither front nor back."
+            "fr": "Powers, sculpteur américain installé à Florence, représente une jeune Grecque enchaînée, capturée pendant la guerre d'indépendance de son pays. Ce plâtre est le modèle d'atelier : les petites pointes de métal qui le couvrent servaient à reporter ses mesures dans le marbre. La statue fut la sculpture américaine la plus célèbre de son siècle.",
+            "en": "Powers, an American sculptor settled in Florence, shows a young Greek woman in chains, captured during her country's war of independence. This plaster is the studio model: the small metal pins covering it were used to transfer its measurements to marble. The statue became the most famous American sculpture of its century."
           },
-          "photo": "thumbs/noeud-sans-fin.jpg"
+          "credit": {
+            "fr": "Smithsonian American Art Museum, Washington · modèle 3D dans le domaine public",
+            "en": "Smithsonian American Art Museum, Washington · public domain 3D model"
+          },
+          "link": "https://americanart.si.edu/collections/search/artwork/?id=20060",
+          "photo": "thumbs/l-esclave-grecque.jpg"
         },
         {
           "id": "deux-soeurs",
           "type": "painting",
           "wall": "north",
           "offset": -2.7,
-          "width": 0.81,
+          "width": 0.809,
           "height": 1.004,
           "image": {
             "src": "images/deux-soeurs.webp",
@@ -115,7 +119,7 @@
           "type": "painting",
           "wall": "north",
           "offset": 2.7,
-          "width": 0.77,
+          "width": 0.771,
           "height": 0.835,
           "image": {
             "src": "images/la-classe-de-danse.webp",
@@ -146,6 +150,80 @@
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
           "link": "https://www.metmuseum.org/art/collection/search/438817"
+        },
+        {
+          "id": "ia-orana-maria",
+          "type": "painting",
+          "wall": "south",
+          "offset": -1.7,
+          "width": 0.891,
+          "height": 1.137,
+          "image": {
+            "src": "images/ia-orana-maria.webp",
+            "width": 2350,
+            "height": 3000,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Ia Orana Maria (Je vous salue Marie)",
+            "en": "Ia Orana Maria (Hail Mary)"
+          },
+          "artist": "Paul Gauguin",
+          "year": "1891",
+          "medium": {
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
+          },
+          "description": {
+            "fr": "C'est la première grande toile que Gauguin peint à Tahiti. Le titre reprend, en tahitien, le salut de l'ange à Marie. La Vierge et l'Enfant sont une mère tahitienne et son fils ; à gauche, un ange aux ailes jaunes désigne la scène à deux femmes en prière.",
+            "en": "This is the first major canvas Gauguin painted in Tahiti. The title gives the angel's greeting to Mary in Tahitian. The Virgin and Child are a Tahitian mother and her son; on the left, an angel with yellow wings points them out to two women at prayer."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/438821"
+        },
+        {
+          "id": "cypres",
+          "type": "painting",
+          "wall": "south",
+          "offset": 1.7,
+          "width": 0.741,
+          "height": 0.934,
+          "image": {
+            "src": "images/cypres.webp",
+            "width": 1442,
+            "height": 1818,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Cyprès",
+            "en": "Cypresses"
+          },
+          "artist": "Vincent van Gogh",
+          "year": "1889",
+          "medium": {
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
+          },
+          "description": {
+            "fr": "Van Gogh peint ces cyprès en juin 1889, peu après son arrivée à l'asile de Saint-Rémy. Il écrit à son frère que ces arbres l'occupent sans cesse, et qu'ils sont beaux « comme un obélisque égyptien ». La peinture est posée en couches épaisses, presque en relief.",
+            "en": "Van Gogh painted these cypresses in June 1889, soon after arriving at the asylum in Saint-Rémy. He wrote to his brother that the trees were always on his mind, and that they were as beautiful “as an Egyptian obelisk”. The paint is laid on in thick layers, almost in relief."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/437980"
         }
       ]
     },
@@ -187,7 +265,7 @@
           "type": "painting",
           "wall": "east",
           "offset": -1.6,
-          "width": 1.62,
+          "width": 1.615,
           "height": 1.19,
           "image": {
             "src": "images/les-moissonneurs.webp",
@@ -227,7 +305,7 @@
           "type": "painting",
           "wall": "east",
           "offset": 2,
-          "width": 0.93,
+          "width": 0.932,
           "height": 0.732,
           "image": {
             "src": "images/champ-de-ble-avec-cypres.webp",
@@ -264,7 +342,7 @@
           "type": "painting",
           "wall": "west",
           "offset": -1.4,
-          "width": 1.63,
+          "width": 1.627,
           "height": 1.016,
           "image": {
             "src": "images/crepuscule-dans-la-nature-sauvage.webp",
@@ -301,7 +379,7 @@
           "type": "painting",
           "wall": "west",
           "offset": 2.2,
-          "width": 0.97,
+          "width": 0.973,
           "height": 0.572,
           "image": {
             "src": "images/la-montagne-sainte-victoire.webp",
@@ -335,6 +413,117 @@
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
           "link": "https://www.metmuseum.org/art/collection/search/435878"
+        },
+        {
+          "id": "l-incendie-du-parlement",
+          "type": "painting",
+          "wall": "north",
+          "offset": -3.4,
+          "width": 1.239,
+          "height": 0.92,
+          "image": {
+            "src": "images/l-incendie-du-parlement.webp",
+            "width": 3000,
+            "height": 2228,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "L'Incendie des Chambres des lords et des communes, 16 octobre 1834",
+            "en": "The Burning of the Houses of Lords and Commons, 16 October 1834"
+          },
+          "artist": "J. M. W. Turner",
+          "year": "1835",
+          "medium": {
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
+          },
+          "description": {
+            "fr": "Dans la nuit du 16 octobre 1834, le Parlement de Londres brûle. Turner est dans la foule, au bord de la Tamise, et remplit ses carnets de croquis. Il en tire deux tableaux l'année suivante. Le feu et son reflet dans le fleuve occupent presque toute la toile.",
+            "en": "On the night of 16 October 1834, the Houses of Parliament in London burned down. Turner was in the crowd on the banks of the Thames, filling his sketchbooks. He made two paintings of it the following year. The fire and its reflection in the river take up almost the whole canvas."
+          },
+          "credit": {
+            "fr": "Cleveland Museum of Art · image dans le domaine public",
+            "en": "Cleveland Museum of Art · public domain image"
+          },
+          "link": "https://clevelandart.org/art/1942.647"
+        },
+        {
+          "id": "promenade-sur-la-falaise",
+          "type": "painting",
+          "wall": "north",
+          "offset": 3.4,
+          "width": 0.831,
+          "height": 0.665,
+          "image": {
+            "src": "images/promenade-sur-la-falaise.webp",
+            "width": 3000,
+            "height": 2402,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Promenade sur la falaise à Pourville",
+            "en": "Cliff Walk at Pourville"
+          },
+          "artist": "Claude Monet",
+          "year": "1882",
+          "medium": {
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
+          },
+          "description": {
+            "fr": "En 1882, Monet passe plusieurs mois à Pourville, près de Dieppe, et peint sans relâche les falaises de la côte normande. Deux femmes se tiennent ici au bord du vide, dans le vent. La mer, l'herbe et le ciel sont faits des mêmes petites touches rapides.",
+            "en": "In 1882, Monet spent several months at Pourville, near Dieppe, tirelessly painting the cliffs of the Normandy coast. Here two women stand at the cliff's edge in the wind. Sea, grass and sky are all made of the same small, quick strokes."
+          },
+          "credit": {
+            "fr": "Art Institute of Chicago · image dans le domaine public",
+            "en": "Art Institute of Chicago · public domain image"
+          },
+          "link": "https://www.artic.edu/artworks/14620"
+        },
+        {
+          "id": "la-mer-calme",
+          "type": "painting",
+          "wall": "south",
+          "offset": -3.6,
+          "width": 0.734,
+          "height": 0.597,
+          "image": {
+            "src": "images/la-mer-calme.webp",
+            "width": 3000,
+            "height": 2441,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "La Mer calme",
+            "en": "The Calm Sea"
+          },
+          "artist": "Gustave Courbet",
+          "year": "1869",
+          "medium": {
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
+          },
+          "description": {
+            "fr": "Courbet passe l'été 1869 à Étretat, sur la côte normande, et y peint une série de marines. Celle-ci tient en trois bandes : la plage, la mer, le ciel. Le ciel occupe plus des deux tiers du tableau ; deux barques échouées donnent l'échelle.",
+            "en": "Courbet spent the summer of 1869 at Étretat, on the Normandy coast, where he painted a series of seascapes. This one comes down to three bands: beach, sea and sky. The sky fills more than two thirds of the picture; two beached boats give the scale."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/436005"
         }
       ]
     },
@@ -368,7 +557,7 @@
           "type": "painting",
           "wall": "north",
           "offset": -0.85,
-          "width": 1.02,
+          "width": 1.015,
           "height": 0.6,
           "image": {
             "src": "images/meules-fin-de-l-ete.webp",
@@ -405,7 +594,7 @@
           "type": "painting",
           "wall": "north",
           "offset": 0.85,
-          "width": 1.01,
+          "width": 1.011,
           "height": 0.653,
           "image": {
             "src": "images/meules-effet-de-neige.webp",
@@ -441,8 +630,8 @@
           "id": "improvisation-no-30",
           "type": "painting",
           "wall": "west",
-          "offset": 0,
-          "width": 1.11,
+          "offset": -1.25,
+          "width": 1.105,
           "height": 1.11,
           "image": {
             "src": "images/improvisation-no-30.webp",
@@ -481,8 +670,8 @@
           "id": "mahana-no-atua",
           "type": "painting",
           "wall": "east",
-          "offset": 0,
-          "width": 0.91,
+          "offset": -1.25,
+          "width": 0.912,
           "height": 0.68,
           "image": {
             "src": "images/mahana-no-atua.webp",
@@ -513,6 +702,154 @@
             "en": "Art Institute of Chicago · public domain image"
           },
           "link": "https://www.artic.edu/artworks/27943"
+        },
+        {
+          "id": "iris",
+          "type": "painting",
+          "wall": "north",
+          "offset": -3.2,
+          "width": 0.929,
+          "height": 0.737,
+          "image": {
+            "src": "images/iris.webp",
+            "width": 3000,
+            "height": 2379,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Iris",
+            "en": "Irises"
+          },
+          "artist": "Vincent van Gogh",
+          "year": "1890",
+          "medium": {
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
+          },
+          "description": {
+            "fr": "Van Gogh peint ce bouquet en mai 1890, dans les derniers jours de son séjour à Saint-Rémy. Le fond, aujourd'hui presque blanc, était rose : le pigment rouge s'est effacé avec le temps. Le peintre cherchait un accord doux entre ce rose et le bleu violacé des fleurs.",
+            "en": "Van Gogh painted this bouquet in May 1890, in the last days of his stay at Saint-Rémy. The background, now almost white, was once pink: the red pigment has faded over time. The painter was after a soft harmony between that pink and the violet-blue of the flowers."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/436528"
+        },
+        {
+          "id": "nympheas",
+          "type": "painting",
+          "wall": "north",
+          "offset": 3.2,
+          "width": 0.936,
+          "height": 0.899,
+          "image": {
+            "src": "images/nympheas.webp",
+            "width": 3000,
+            "height": 2881,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Nymphéas",
+            "en": "Water Lilies"
+          },
+          "artist": "Claude Monet",
+          "year": "1906",
+          "medium": {
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
+          },
+          "description": {
+            "fr": "Monet a fait creuser ce bassin dans son jardin de Giverny, et l'a peint pendant près de trente ans. Ici, plus de rive ni d'horizon : seulement la surface de l'eau, où flottent les fleurs et où se reflète le ciel.",
+            "en": "Monet had this pond dug in his garden at Giverny and painted it for nearly thirty years. Here there is no bank and no horizon: only the surface of the water, where the flowers float and the sky is reflected."
+          },
+          "credit": {
+            "fr": "Art Institute of Chicago · image dans le domaine public",
+            "en": "Art Institute of Chicago · public domain image"
+          },
+          "link": "https://www.artic.edu/artworks/16568"
+        },
+        {
+          "id": "la-chambre",
+          "type": "painting",
+          "wall": "west",
+          "offset": 1.35,
+          "width": 0.94,
+          "height": 0.736,
+          "image": {
+            "src": "images/la-chambre.webp",
+            "width": 3000,
+            "height": 2348,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "La Chambre",
+            "en": "The Bedroom"
+          },
+          "artist": "Vincent van Gogh",
+          "year": "1889",
+          "medium": {
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
+          },
+          "description": {
+            "fr": "C'est la chambre de Van Gogh dans la « maison jaune » d'Arles. Il l'a peinte trois fois ; cette version est la deuxième, refaite à Saint-Rémy en septembre 1889. Il voulait que les couleurs, posées en aplats, suggèrent le repos.",
+            "en": "This is Van Gogh's bedroom in the “Yellow House” in Arles. He painted it three times; this version is the second, made at Saint-Rémy in September 1889. He wanted the colours, laid on flat, to suggest rest."
+          },
+          "credit": {
+            "fr": "Art Institute of Chicago · image dans le domaine public",
+            "en": "Art Institute of Chicago · public domain image"
+          },
+          "link": "https://www.artic.edu/artworks/28560"
+        },
+        {
+          "id": "composition-rouge-jaune-bleu",
+          "type": "painting",
+          "wall": "east",
+          "offset": 1.25,
+          "width": 0.597,
+          "height": 0.62,
+          "image": {
+            "src": "images/composition-rouge-jaune-bleu.webp",
+            "width": 2890,
+            "height": 3000,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Composition avec rouge, jaune et bleu",
+            "en": "Composition with Red, Yellow, and Blue"
+          },
+          "artist": "Piet Mondrian",
+          "year": "1927",
+          "medium": {
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
+          },
+          "description": {
+            "fr": "Mondrian ne garde que l'essentiel : des lignes noires, du blanc et les trois couleurs primaires. Rien n'est symétrique, et pourtant tout tient en équilibre. La baguette claire qui entoure la toile est le cadre voulu par le peintre.",
+            "en": "Mondrian keeps only the essentials: black lines, white and the three primary colours. Nothing is symmetrical, yet everything holds in balance. The pale strip around the canvas is the frame the painter intended."
+          },
+          "credit": {
+            "fr": "Cleveland Museum of Art · image dans le domaine public",
+            "en": "Cleveland Museum of Art · public domain image"
+          },
+          "link": "https://clevelandart.org/art/1967.215"
         }
       ]
     },
@@ -547,7 +884,7 @@
           "type": "painting",
           "wall": "east",
           "offset": 0,
-          "width": 0.38,
+          "width": 0.382,
           "height": 0.257,
           "mat": 0.12,
           "image": {
@@ -588,7 +925,7 @@
           "type": "painting",
           "wall": "east",
           "offset": -2.1,
-          "width": 0.23,
+          "width": 0.234,
           "height": 0.34,
           "mat": 0.12,
           "image": {
@@ -626,7 +963,7 @@
           "type": "painting",
           "wall": "east",
           "offset": 2.1,
-          "width": 0.42,
+          "width": 0.415,
           "height": 0.337,
           "mat": 0.12,
           "image": {
@@ -664,7 +1001,7 @@
           "type": "painting",
           "wall": "north",
           "offset": 0,
-          "width": 0.3,
+          "width": 0.298,
           "height": 0.238,
           "mat": 0.12,
           "image": {
@@ -701,8 +1038,8 @@
           "id": "les-trois-arbres",
           "type": "painting",
           "wall": "south",
-          "offset": 0,
-          "width": 0.28,
+          "offset": -1.5,
+          "width": 0.277,
           "height": 0.213,
           "mat": 0.12,
           "image": {
@@ -734,6 +1071,126 @@
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
           "link": "https://www.metmuseum.org/art/collection/search/354633"
+        },
+        {
+          "id": "melencolia",
+          "type": "painting",
+          "wall": "north",
+          "offset": -1.5,
+          "width": 0.185,
+          "height": 0.241,
+          "mat": 0.12,
+          "image": {
+            "src": "images/melencolia.webp",
+            "width": 2303,
+            "height": 3000,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Melencolia I",
+            "en": "Melencolia I"
+          },
+          "artist": "Albrecht Dürer",
+          "year": "1514",
+          "medium": {
+            "fr": "Gravure au burin",
+            "en": "Engraving"
+          },
+          "description": {
+            "fr": "Une figure ailée reste assise, la tête dans la main, au milieu d'outils de géomètre et de charpentier dont elle ne se sert pas. Au mur, un carré magique : chaque ligne, chaque colonne et chaque diagonale donne 34. Sa dernière ligne porte la date de la gravure, 1514.",
+            "en": "A winged figure sits with her head in her hand, surrounded by the tools of geometry and carpentry, which she leaves unused. On the wall is a magic square: every row, column and diagonal adds up to 34. Its bottom row carries the date of the print, 1514."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/336228"
+        },
+        {
+          "id": "le-fuji-rouge",
+          "type": "painting",
+          "wall": "north",
+          "offset": 1.5,
+          "width": 0.374,
+          "height": 0.256,
+          "mat": 0.12,
+          "image": {
+            "src": "images/le-fuji-rouge.webp",
+            "width": 3000,
+            "height": 2055,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Vent du sud, ciel clair, dit Le Fuji rouge",
+            "en": "South Wind, Clear Sky, known as Red Fuji"
+          },
+          "artist": "Katsushika Hokusai",
+          "year": {
+            "fr": "début des années 1830",
+            "en": "early 1830s"
+          },
+          "medium": {
+            "fr": "Estampe, gravure sur bois en couleurs",
+            "en": "Woodblock print, ink and colour on paper"
+          },
+          "description": {
+            "fr": "Cette estampe vient de la même série que La Grande Vague, les Trente-six vues du mont Fuji. Aucun personnage ici : seulement la montagne, rougie par le soleil du petit matin, sous un ciel strié de nuages.",
+            "en": "This print comes from the same series as The Great Wave, the Thirty-six Views of Mount Fuji. There are no figures here: only the mountain, reddened by the early morning sun, under a sky streaked with clouds."
+          },
+          "credit": {
+            "fr": "Cleveland Museum of Art · image dans le domaine public",
+            "en": "Cleveland Museum of Art · public domain image"
+          },
+          "link": "https://clevelandart.org/art/1930.189"
+        },
+        {
+          "id": "rue-aux-saintes-maries",
+          "type": "painting",
+          "wall": "south",
+          "offset": 1.5,
+          "width": 0.317,
+          "height": 0.243,
+          "mat": 0.12,
+          "image": {
+            "src": "images/rue-aux-saintes-maries.webp",
+            "width": 3000,
+            "height": 2300,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Rue aux Saintes-Maries-de-la-Mer",
+            "en": "Street in Saintes-Maries-de-la-Mer"
+          },
+          "artist": "Vincent van Gogh",
+          "year": {
+            "fr": "juillet 1888",
+            "en": "July 1888"
+          },
+          "medium": {
+            "fr": "Dessin à la plume de roseau, encre brune",
+            "en": "Drawing in reed pen and brown ink"
+          },
+          "description": {
+            "fr": "En juin 1888, Van Gogh passe quelques jours aux Saintes-Maries-de-la-Mer, au bord de la Méditerranée. De retour à Arles, il redessine à la plume ce qu'il y a peint. Points, tirets et hachures remplacent les couleurs, à la manière des estampes japonaises qu'il admirait.",
+            "en": "In June 1888, Van Gogh spent a few days at Saintes-Maries-de-la-Mer, on the Mediterranean. Back in Arles, he redrew in pen what he had painted there. Dots, dashes and hatching stand in for colour, in the manner of the Japanese prints he admired."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/336318"
         }
       ]
     },
@@ -892,7 +1349,7 @@
           "type": "painting",
           "wall": "west",
           "offset": 0,
-          "width": 3.1,
+          "width": 3.099,
           "height": 2.075,
           "image": {
             "src": "images/un-dimanche-a-la-grande-jatte.webp",
@@ -923,6 +1380,43 @@
             "en": "Art Institute of Chicago · public domain image"
           },
           "link": "https://www.artic.edu/artworks/27992"
+        },
+        {
+          "id": "rue-de-paris-temps-de-pluie",
+          "type": "painting",
+          "wall": "south",
+          "offset": 0,
+          "width": 2.733,
+          "height": 2.122,
+          "image": {
+            "src": "images/rue-de-paris-temps-de-pluie.webp",
+            "width": 3000,
+            "height": 2329,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Rue de Paris, temps de pluie",
+            "en": "Paris Street; Rainy Day"
+          },
+          "artist": "Gustave Caillebotte",
+          "year": "1877",
+          "medium": {
+            "fr": "Huile sur toile",
+            "en": "Oil on canvas"
+          },
+          "description": {
+            "fr": "Un carrefour du Paris tout neuf du baron Haussmann, près de la gare Saint-Lazare, sous la pluie. Caillebotte a montré ce très grand tableau à l'exposition impressionniste de 1877. Les passants, coupés par le bord de la toile, semblent saisis comme par une photographie.",
+            "en": "A crossroads in Baron Haussmann's brand-new Paris, near the Saint-Lazare station, in the rain. Caillebotte showed this very large painting at the Impressionist exhibition of 1877. The passers-by, cut off by the edge of the canvas, look as if caught by a photograph."
+          },
+          "credit": {
+            "fr": "Art Institute of Chicago · image dans le domaine public",
+            "en": "Art Institute of Chicago · public domain image"
+          },
+          "link": "https://www.artic.edu/artworks/20684"
         }
       ]
     }
@@ -966,7 +1460,7 @@
         "en": "Six works to discover the museum in fifteen minutes."
       },
       "stops": [
-        "noeud-sans-fin",
+        "l-esclave-grecque",
         "les-moissonneurs",
         "champ-de-ble-avec-cypres",
         "meules-fin-de-l-ete",

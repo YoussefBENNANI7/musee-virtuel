@@ -24,6 +24,8 @@ for (const room of museum.rooms) {
     const page = await browser.newPage({ viewport: { width: 800, height: 800 } });
     await page.goto(`${server}/?m=${encodeURIComponent(museumId)}&q=medium`);
     await page.waitForSelector('body.ready');
+    // Les images et les modèles 3D arrivent après l'ouverture : on attend que tout soit en place.
+    await page.waitForFunction(() => window.__museum.world.artworks.every((a) => a.ready), null, { timeout: 60000 });
     await page.waitForTimeout(600);
     const dataUrl = await page.evaluate((id) => window.__museum.thumb(id), art.id);
     writeFileSync(new URL(`thumbs/${art.id}.jpg`, dir), Buffer.from(dataUrl.split(',')[1], 'base64'));

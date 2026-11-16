@@ -2,7 +2,7 @@
 
 Sélection proposée le 16 novembre 2026 et **validée en entier par le porteur du projet** le même jour.
 
-État de l'intégration : les 16 tableaux, estampes et photographie proposés pour les cinq salles sont dans le musée. Restent les sculptures en 3D et la salle marocaine. Les variantes ne sont pas intégrées.
+État de l'intégration : les 29 tableaux et œuvres sur papier des cinq salles sont dans le musée, variantes comprises, ainsi que la sculpture S5. Restent les sculptures venues de Sketchfab et la salle marocaine.
 
 Chaque notice a été relue à la source, dans le catalogue en ligne du musée ou sur la page du modèle 3D, le 16 novembre 2026. Les titres français sont des traductions à relire au moment de rédiger les cartels.
 

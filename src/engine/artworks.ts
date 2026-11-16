@@ -4,7 +4,7 @@ import { groundShadow } from './furniture';
 import { ART_CENTER_Y, type WallFrame } from './layout';
 import type { RoomLight } from './lighting';
 import type { Quality } from './quality';
-import { sculptureMaterial, sculptureShape } from './sculptures';
+import { loadSculpture, sculptureMaterial, sculptureShape } from './sculptures';
 import { artworkTexture, poolTexture } from './textures';
 import type { ArtworkConfig, PaintingConfig, RoomConfig, SculptureConfig } from './types';
 
@@ -216,38 +216,62 @@ export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: T
   parent.add(art);
 
   const decor = ctx.decor(room.id);
-  // La forme est mise à l'échelle pour atteindre la hauteur demandée, puis centrée sur le socle.
   // Une sculpture reste mise en valeur par son éclairage, même dans une salle tamisée.
-  const shape = sculptureShape(cfg, sculptureMaterial(cfg, ctx.env, Math.min(1, 0.4 + 0.6 * objectLight(decor))));
-  const box = new THREE.Box3().setFromObject(shape);
-  const size = box.getSize(new THREE.Vector3());
-  const scale = cfg.height / size.y;
-  shape.scale.setScalar(scale);
-  shape.position.set(-((box.min.x + box.max.x) / 2) * scale, cfg.plinth - box.min.y * scale, -((box.min.z + box.max.z) / 2) * scale);
-  const footprint = Math.max(size.x, size.z) * scale;
-
-  const side = THREE.MathUtils.clamp(footprint * 0.8, 0.5, 1.3);
-  const plinth = new THREE.Mesh(
-    new THREE.BoxGeometry(side, cfg.plinth, side),
-    new THREE.MeshStandardMaterial({ color: litColor(decor.colors.plinth, decor), roughness: 0.8 }),
-  );
+  const light = Math.min(1, 0.4 + 0.6 * objectLight(decor));
+  // Le socle et l'ombre sont taillés à la mesure de la sculpture, une fois sa forme connue.
+  const plinth = new THREE.Mesh(new THREE.BoxGeometry(1, cfg.plinth, 1), new THREE.MeshStandardMaterial({ color: litColor(decor.colors.plinth, decor), roughness: 0.8 }));
   plinth.position.y = cfg.plinth / 2;
   const card = label(decor);
-  card.position.set(side / 2 + 0.002, Math.min(cfg.plinth - 0.12, 0.8), 0);
   card.rotation.y = Math.PI / 2;
-  art.add(shape, plinth, card, groundShadow(side, side));
+  const shadow = groundShadow(1, 1);
+  art.add(plinth, card, shadow);
 
   const placed: PlacedArtwork = {
     config: cfg,
     room,
     center: new THREE.Vector3(x, cfg.plinth + cfg.height / 2, z),
-    span: footprint,
-    depth: footprint / 2,
+    span: 0.8,
+    depth: 0.4,
     closest: 1.2,
     label: card,
-    ready: true,
-    obstacle: { x, z, r: side * 0.71 + 0.25 },
+    ready: false,
+    obstacle: { x, z, r: 0.8 },
   };
+  /** Met la forme à l'échelle de la hauteur demandée, la centre sur le socle, et ajuste celui-ci. */
+  const fit = (shape: THREE.Object3D | null) => {
+    let footprint = 0.8;
+    if (shape) {
+      const box = new THREE.Box3().setFromObject(shape);
+      const size = box.getSize(new THREE.Vector3());
+      const scale = cfg.height / size.y;
+      shape.scale.multiplyScalar(scale);
+      shape.position.set(-((box.min.x + box.max.x) / 2) * scale, cfg.plinth - box.min.y * scale, -((box.min.z + box.max.z) / 2) * scale);
+      footprint = Math.max(size.x, size.z) * scale;
+      art.add(shape);
+    }
+    const side = THREE.MathUtils.clamp(footprint * 0.8, 0.5, 1.3);
+    plinth.scale.set(side, 1, side);
+    shadow.scale.set(side, side, 1);
+    card.position.set(side / 2 + 0.002, Math.min(cfg.plinth - 0.12, 0.8), 0);
+    placed.span = footprint;
+    placed.depth = footprint / 2;
+    placed.obstacle!.r = side * 0.71 + 0.25;
+  };
+
+  if ('src' in cfg.model) {
+    // Le modèle arrive après la construction : en attendant, le socle est seul.
+    fit(null);
+    loadSculpture(cfg.model, ctx.base, ctx.quality, ctx.env, light)
+      .then((shape) => {
+        fit(shape);
+        placed.ready = true;
+        ctx.onLoad();
+      })
+      .catch(() => console.error(`[musée] modèle 3D introuvable : ${(cfg.model as { src: string }).src}`));
+  } else {
+    fit(sculptureShape(cfg, sculptureMaterial(cfg, ctx.env, light)));
+    placed.ready = true;
+  }
   art.userData.artwork = placed;
   return placed;
 }

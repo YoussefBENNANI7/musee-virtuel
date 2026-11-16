@@ -23,6 +23,15 @@ export type PaintingGenerator = 'geometric' | 'fields' | 'lines' | 'circles' | '
 export type SculptureGenerator = 'knot' | 'blob' | 'rings' | 'stack' | 'ribbon';
 export type SculptureMaterial = 'bronze' | 'marble' | 'patina' | 'lacquer';
 
+export type ModelSource =
+  /**
+   * Modèle 3D fourni par le musée, au format GLB. `npm run modeles` en prépare les versions
+   * allégées (models/web/nom.glb et nom-leger.glb) et l'indique par `web`.
+   */
+  | { src: string; web?: boolean }
+  /** Sculpture fictive dessinée par le moteur à partir d'une graine. */
+  | { generator: SculptureGenerator; seed: number };
+
 export type ImageSource =
   /**
    * Image fournie par le musée. `npm run images` complète les autres champs :
@@ -74,8 +83,9 @@ export interface SculptureConfig extends ArtworkBase {
   height: number;
   /** Hauteur du socle. */
   plinth: number;
-  model: { generator: SculptureGenerator; seed: number };
-  material: SculptureMaterial;
+  model: ModelSource;
+  /** Matière d'une sculpture dessinée par le moteur. Un modèle numérisé porte la sienne. */
+  material?: SculptureMaterial;
   color?: string;
 }
 

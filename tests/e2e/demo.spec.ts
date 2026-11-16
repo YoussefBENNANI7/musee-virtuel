@@ -61,6 +61,46 @@ test('démo : la fiche d’une œuvre cite le musée qui la conserve, dans les d
   await expect(credit.locator('a')).toHaveText('View the museum record');
 });
 
+test('démo : la sculpture numérisée se charge, à la bonne taille, en version légère sur un appareil modeste', async ({ page }) => {
+  const requested: string[] = [];
+  page.on('request', (r) => r.url().endsWith('.glb') && requested.push(new URL(r.url()).pathname));
+  const errors: string[] = [];
+  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  const sculpture = () =>
+    page.evaluate(() => {
+      const m = (window as any).__museum;
+      const art = m.world.artworks.find((a: any) => a.config.id === 'l-esclave-grecque');
+      const shape = art.label.parent.children.find((c: any) => c.isGroup);
+      if (!art.ready || !shape) return null;
+      shape.updateWorldMatrix(true, true);
+      let min = Infinity;
+      let max = -Infinity;
+      shape.traverse((n: any) => {
+        if (!n.isMesh) return;
+        n.geometry.computeBoundingBox();
+        const box = n.geometry.boundingBox.clone().applyMatrix4(n.matrixWorld);
+        min = Math.min(min, box.min.y);
+        max = Math.max(max, box.max.y);
+      });
+      return { bottom: min, height: max - min, walkable: m.world.walkable(art.center.x, art.center.z) };
+    });
+
+  await page.goto('/?q=medium');
+  await page.waitForSelector('body.ready');
+  await expect.poll(sculpture, { timeout: 30_000 }).not.toBeNull();
+  const s = (await sculpture())!;
+  // Haute de 1,686 m, posée sur son socle de 60 cm, que le visiteur contourne.
+  expect(s.height).toBeCloseTo(1.686, 2);
+  expect(s.bottom).toBeCloseTo(0.6, 2);
+  expect(s.walkable).toBe(false);
+
+  await page.goto('/?q=low');
+  await page.waitForSelector('body.ready');
+  await expect.poll(sculpture, { timeout: 30_000 }).not.toBeNull();
+  expect(requested).toEqual(['/museums/demo/models/web/l-esclave-grecque.glb', '/museums/demo/models/web/l-esclave-grecque-leger.glb']);
+  expect(errors).toEqual([]);
+});
+
 test('une œuvre sans mention ni lien n’affiche pas de ligne vide', async ({ page }) => {
   await page.route('**/museums/fixture/museum.json', (route) =>
     route.fulfill({ path: new URL('../fixtures/museum.json', import.meta.url).pathname }),
