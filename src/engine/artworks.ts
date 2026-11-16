@@ -297,6 +297,8 @@ export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: T
   const fit = (shape: THREE.Object3D | null) => {
     let footprint = 0.8;
     if (shape) {
+      // Tournée avant d'être mesurée : le socle suit l'emprise de la sculpture telle qu'elle est posée.
+      if (cfg.turn) shape.rotation.y = THREE.MathUtils.degToRad(cfg.turn);
       shape.traverse((node) => {
         node.castShadow = true;
         node.receiveShadow = true;
@@ -322,7 +324,7 @@ export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: T
   if ('src' in cfg.model) {
     // Le modèle arrive après la construction : en attendant, le socle est seul.
     fit(null);
-    loadSculpture(cfg.model, ctx.base, ctx.quality, ctx.env, light)
+    loadSculpture(cfg.model, ctx.base, ctx.quality, ctx.env, light * (cfg.tone ?? 1))
       .then((shape) => {
         fit(shape);
         placed.ready = true;

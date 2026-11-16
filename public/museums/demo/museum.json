@@ -1543,141 +1543,165 @@
       ],
       "artworks": [
         {
-          "id": "galet-qui-respire",
+          "id": "vase-fangyi",
           "type": "sculpture",
           "position": [
             2.2,
             -2.3
           ],
-          "height": 0.6,
-          "plinth": 1,
+          "height": 0.353,
+          "plinth": 1.1,
           "model": {
-            "generator": "blob",
-            "seed": 8
+            "src": "models/vase-fangyi.glb",
+            "web": true
           },
-          "material": "marble",
           "title": {
-            "fr": "Galet qui respire",
-            "en": "Breathing Pebble"
+            "fr": "Vase rituel à vin (fangyi)",
+            "en": "Ritual wine container (fangyi)"
           },
-          "artist": "Noor Rahimi",
-          "year": "2015",
-          "medium": {
-            "fr": "Marbre",
-            "en": "Marble"
+          "artist": {
+            "fr": "Chine, Luoyang",
+            "en": "China, Luoyang"
           },
-          "description": {
-            "fr": "Rahimi polit ses marbres à la main pendant des mois, jusqu'à ce que la pierre semble molle. Elle refuse toute arête vive.",
-            "en": "Rahimi polishes her marbles by hand for months, until the stone looks soft. She rejects any sharp edge."
+          "year": {
+            "fr": "vers 1100 av. J.-C., début des Zhou de l’Ouest",
+            "en": "c. 1100 BCE, Early Western Zhou dynasty"
           },
-          "photo": "thumbs/galet-qui-respire.jpg",
-          "audio": {
-            "fr": "audio/galet-qui-respire.fr.mp3",
-            "en": "audio/galet-qui-respire.en.mp3"
-          }
-        },
-        {
-          "id": "orbites",
-          "type": "sculpture",
-          "position": [
-            -2.6,
-            -2.3
-          ],
-          "height": 0.9,
-          "plinth": 0.9,
-          "model": {
-            "generator": "rings",
-            "seed": 14
-          },
-          "material": "patina",
-          "title": {
-            "fr": "Orbites",
-            "en": "Orbits"
-          },
-          "artist": "Lucien Morvan",
-          "year": "1968",
-          "medium": {
-            "fr": "Bronze patiné",
-            "en": "Patinated bronze"
-          },
-          "description": {
-            "fr": "Trois anneaux qui ne se touchent qu'en deux points. Morvan, ancien horloger, calculait ses équilibres au dixième de millimètre.",
-            "en": "Three rings that touch at only two points. Morvan, a former watchmaker, calculated his balances to a tenth of a millimetre."
-          },
-          "photo": "thumbs/orbites.jpg",
-          "audio": {
-            "fr": "audio/orbites.fr.mp3",
-            "en": "audio/orbites.en.mp3"
-          }
-        },
-        {
-          "id": "totem-rouge",
-          "type": "sculpture",
-          "position": [
-            -2.6,
-            2.3
-          ],
-          "height": 1.2,
-          "plinth": 0.6,
-          "model": {
-            "generator": "stack",
-            "seed": 6
-          },
-          "material": "lacquer",
-          "title": {
-            "fr": "Totem rouge",
-            "en": "Red Totem"
-          },
-          "artist": "Salma Haddou",
-          "year": "2008",
-          "medium": {
-            "fr": "Bois laqué",
-            "en": "Lacquered wood"
-          },
-          "description": {
-            "fr": "Six blocs empilés, chacun légèrement tourné par rapport au précédent. C'est l'unique sculpture de Haddou, réalisée avec des chutes de l'atelier familial.",
-            "en": "Six stacked blocks, each turned slightly from the one below. It is Haddou's only sculpture, made from offcuts of the family workshop."
-          },
-          "color": "#7d1f19",
-          "photo": "thumbs/totem-rouge.jpg",
-          "audio": {
-            "fr": "audio/totem-rouge.fr.mp3",
-            "en": "audio/totem-rouge.en.mp3"
-          }
-        },
-        {
-          "id": "ruban",
-          "type": "sculpture",
-          "position": [
-            2.2,
-            2.3
-          ],
-          "height": 1,
-          "plinth": 0.8,
-          "model": {
-            "generator": "ribbon",
-            "seed": 11
-          },
-          "material": "bronze",
-          "title": {
-            "fr": "Ruban",
-            "en": "Ribbon"
-          },
-          "artist": "Paolo Venier",
-          "year": "1996",
           "medium": {
             "fr": "Bronze",
             "en": "Bronze"
           },
           "description": {
-            "fr": "Une étude pour le Nœud sans fin, plus libre et plus nerveuse. Venier la gardait sur son bureau.",
-            "en": "A study for the Endless Knot, freer and more restless. Venier kept it on his desk."
+            "fr": "Ce vase en forme de petite maison, avec son couvercle en toit, servait à offrir du vin aux ancêtres pendant les cérémonies. Ses faces portent des masques d'animaux fabuleux, les taotie, entourés de serpents et d'oiseaux. La patine verte est venue avec les siècles : le bronze neuf avait la couleur de l'or.",
+            "en": "This vessel shaped like a small house, with a roof for a lid, was used to offer wine to the ancestors during ceremonies. Its sides bear masks of fabulous animals, the taotie, surrounded by serpents and birds. The green patina came with the centuries: new bronze was the colour of gold."
           },
-          "photo": "thumbs/ruban.jpg",
-          "audio": {
-            "fr": "audio/ruban.fr.mp3",
-            "en": "audio/ruban.en.mp3"
-          }
+          "credit": {
+            "fr": "Freer Gallery of Art, Smithsonian, Washington · modèle 3D dans le domaine public",
+            "en": "Freer Gallery of Art, Smithsonian, Washington · public domain 3D model"
+          },
+          "link": "https://asia.si.edu/object/F1930.54a-b/",
+          "photo": "thumbs/vase-fangyi.jpg"
+        },
+        {
+          "id": "danseuse",
+          "type": "sculpture",
+          "position": [
+            -2.6,
+            -2.3
+          ],
+          "height": 0.446,
+          "plinth": 1.1,
+          "model": {
+            "src": "models/danseuse.glb",
+            "web": true
+          },
+          "title": {
+            "fr": "Danseuse",
+            "en": "Figure of a Dancer"
+          },
+          "artist": {
+            "fr": "Agathon Léonard, Manufacture de Sèvres",
+            "en": "Agathon Léonard, Sèvres Porcelain Manufactory"
+          },
+          "year": {
+            "fr": "vers 1900",
+            "en": "c. 1900"
+          },
+          "medium": {
+            "fr": "Porcelaine moulée (biscuit)",
+            "en": "Molded porcelain (bisque)"
+          },
+          "description": {
+            "fr": "La tête renversée, un bras levé, la danseuse retient sa longue robe de l'autre main. Agathon Léonard l'a modelée pour la Manufacture de Sèvres, qui l'a tirée en biscuit : une porcelaine laissée sans émail, au grain mat comme celui du marbre. Le mouvement du tissu est le vrai sujet de cette figure de l'Art nouveau.",
+            "en": "Head thrown back, one arm raised, the dancer gathers her long gown with the other hand. Agathon Léonard modelled her for the Sèvres manufactory, which cast her in bisque: porcelain left unglazed, with a matt grain like marble. The movement of the cloth is the real subject of this Art Nouveau figure."
+          },
+          "credit": {
+            "fr": "Cooper Hewitt, Smithsonian Design Museum, New York · modèle 3D soumis aux conditions d’utilisation de la Smithsonian (usage non commercial)",
+            "en": "Cooper Hewitt, Smithsonian Design Museum, New York · 3D model subject to the Smithsonian terms of use (non-commercial use)"
+          },
+          "link": "https://collection.cooperhewitt.org/view/objects/asitem/id/17969",
+          "tone": 0.62,
+          "photo": "thumbs/danseuse.jpg"
+        },
+        {
+          "id": "bouddha-cosmique",
+          "type": "sculpture",
+          "position": [
+            -2.6,
+            2.3
+          ],
+          "height": 1.513,
+          "plinth": 0.35,
+          "model": {
+            "src": "models/bouddha-cosmique.glb",
+            "web": true
+          },
+          "title": {
+            "fr": "Bouddha à la robe des royaumes de l’existence, dit « Bouddha cosmique »",
+            "en": "Buddha draped in robes portraying the Realms of Existence, known as the “Cosmic Buddha”"
+          },
+          "artist": {
+            "fr": "Chine, probablement province du Henan",
+            "en": "China, probably Henan province"
+          },
+          "year": {
+            "fr": "550–577, dynastie des Qi du Nord",
+            "en": "550–577, Northern Qi dynasty"
+          },
+          "medium": {
+            "fr": "Calcaire",
+            "en": "Limestone"
+          },
+          "description": {
+            "fr": "La robe de ce Bouddha est couverte de scènes sculptées en très faible relief : elles montrent les royaumes de l'existence, des cieux jusqu'aux enfers. C'est ce qui lui vaut son surnom de « Bouddha cosmique ». La tête et les mains ont disparu. Approchez-vous et tournez autour de lui : les reliefs se lisent mieux en lumière rasante.",
+            "en": "This Buddha's robe is covered with scenes carved in very low relief: they show the realms of existence, from the heavens down to the hells. This is what earned it the name “Cosmic Buddha”. The head and hands are lost. Come closer and walk around it: the reliefs read best in raking light."
+          },
+          "credit": {
+            "fr": "Freer Gallery of Art, Smithsonian, Washington · modèle 3D dans le domaine public",
+            "en": "Freer Gallery of Art, Smithsonian, Washington · public domain 3D model"
+          },
+          "link": "https://asia.si.edu/object/F1923.15/",
+          "photo": "thumbs/bouddha-cosmique.jpg"
+        },
+        {
+          "id": "defense-sculptee",
+          "type": "sculpture",
+          "position": [
+            2.2,
+            2.3
+          ],
+          "height": 0.724,
+          "plinth": 0.95,
+          "model": {
+            "src": "models/defense-sculptee.glb",
+            "web": true
+          },
+          "title": {
+            "fr": "Défense sculptée",
+            "en": "Carved tusk"
+          },
+          "artist": {
+            "fr": "Artiste kongo, côte de Loango",
+            "en": "Kongo artist, Loango Coast"
+          },
+          "year": {
+            "fr": "vers 1860",
+            "en": "c. 1860"
+          },
+          "medium": {
+            "fr": "Ivoire",
+            "en": "Ivory"
+          },
+          "description": {
+            "fr": "Une frise en spirale court sur toute la défense. Elle montre la vie de la côte de Loango au dix-neuvième siècle : un comptoir de commerce, un navire européen, un homme attaqué par un éléphant, mais aussi une file de captifs enchaînés. Les artistes kongo sculptaient ces défenses pour les vendre aux Européens de passage.",
+            "en": "A spiral frieze runs the whole length of the tusk. It shows life on the Loango Coast in the nineteenth century: a trading house, a European ship, a man attacked by an elephant, but also a line of chained captives. Kongo artists carved these tusks to sell them to passing Europeans."
+          },
+          "credit": {
+            "fr": "National Museum of African Art, Smithsonian, Washington · modèle 3D dans le domaine public",
+            "en": "National Museum of African Art, Smithsonian, Washington · public domain 3D model"
+          },
+          "link": "https://www.si.edu/object/nmafa_96-28-1",
+          "photo": "thumbs/defense-sculptee.jpg"
         },
         {
           "id": "un-dimanche-a-la-grande-jatte",

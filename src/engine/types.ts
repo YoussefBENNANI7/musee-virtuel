@@ -99,6 +99,13 @@ export interface SculptureConfig extends ArtworkBase {
   height: number;
   /** Hauteur du socle. */
   plinth: number;
+  /**
+   * Part de lumière gardée par un modèle numérisé, entre 0 et 1 (1 par défaut). À baisser pour une
+   * matière très claire, comme une porcelaine blanche, qui perdrait son relief en pleine lumière.
+   */
+  tone?: number;
+  /** Rotation de la sculpture sur son socle, en degrés, vue de dessus dans le sens inverse des aiguilles d'une montre. */
+  turn?: number;
   model: ModelSource;
   /** Matière d'une sculpture dessinée par le moteur. Un modèle numérisé porte la sienne. */
   material?: SculptureMaterial;

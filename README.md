@@ -2,7 +2,7 @@
 
 Une visite de musée en 3D, dans le navigateur, sur ordinateur, téléphone et casque VR. Chaque musée est décrit par un simple dossier de configuration : ses salles, ses œuvres, ses textes et ses couleurs. Le même moteur sert tous les musées.
 
-Le dépôt contient un musée de démonstration complet, le « Musée des Horizons ». Ses tableaux, estampes et photographie sont de vraies œuvres en accès libre (Bruegel, Van Gogh, Monet, Hokusai, Seurat…), avec leur musée d'origine. Une première sculpture est un vrai modèle numérisé en 3D ; les autres sont encore dessinées par le code.
+Le dépôt contient un musée de démonstration complet, le « Musée des Horizons ». Ses tableaux, estampes et photographie sont de vraies œuvres en accès libre (Bruegel, Van Gogh, Monet, Hokusai, Seurat…), avec leur musée d'origine. Ses cinq sculptures sont de vrais modèles numérisés en 3D, que l'on peut examiner sous tous les angles.
 
 Pour la vision du projet, les décisions prises et l'avancement, voir [`docs/etat-du-projet.md`](docs/etat-du-projet.md).
 
@@ -83,7 +83,7 @@ public/museums/demo/
 - **Portes** (`doors`) : déclarées une seule fois, sur le mur d'une salle. L'ouverture dans la salle voisine est déduite.
 - **Tableaux** : mur, décalage le long du mur, taille en mètres, image, titre, artiste, date, technique, texte. On peut ajouter un passe-partout (`mat`), la mention du musée qui conserve l'œuvre (`credit`) et un lien vers sa notice (`link`). Un enregistrement audio par langue est facultatif : sans lui, le texte est lu par une voix de synthèse.
 - **Détails commentés** d'un tableau (`details`) : des points à regarder de près dans l'agrandissement, chacun avec sa position dans l'image (de 0 à 1, depuis la gauche puis depuis le haut), un titre et un texte.
-- **Sculptures** : position dans la salle, hauteur, socle, et un modèle 3D au format GLB (`"model": {"src": "models/nom.glb"}`) ou une forme dessinée par le moteur. Après avoir déposé un modèle dans `models/`, lancer `npm run modeles -- mon-musee`.
+- **Sculptures** : position dans la salle, hauteur, socle, rotation (`turn`), clarté (`tone`), et un modèle 3D au format GLB (`"model": {"src": "models/nom.glb"}`) ou une forme dessinée par le moteur. Après avoir déposé un modèle dans `models/`, lancer `npm run modeles -- mon-musee`.
 - **Parcours** (`tours`) : nom, description et liste ordonnée d'œuvres.
 - **Langues** : chaque texte s'écrit dans toutes les langues du musée, par exemple `{ "fr": "Atrium", "en": "Atrium" }`.
 

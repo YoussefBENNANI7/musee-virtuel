@@ -4,6 +4,8 @@ import { PROD_URL } from '../../playwright.config';
 /** Ces tests portent sur le vrai musée de démonstration, pas sur le musée de test. */
 
 test('démo : chaque œuvre s’ouvre depuis le point de vue qui lui fait face', async ({ page }) => {
+  // 47 œuvres à visiter une à une, dont cinq sculptures numérisées : le test est long.
+  test.setTimeout(300_000);
   const errors: string[] = [];
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   page.on('pageerror', (e) => errors.push(String(e)));
@@ -17,7 +19,7 @@ test('démo : chaque œuvre s’ouvre depuis le point de vue qui lui fait face',
   expect(works.length).toBeGreaterThan(0);
   // Toutes les images des œuvres finissent de charger.
   await expect
-    .poll(() => page.evaluate(() => (window as any).__museum.world.artworks.filter((a: any) => !a.ready).length), { timeout: 30_000 })
+    .poll(() => page.evaluate(() => (window as any).__museum.world.artworks.filter((a: any) => !a.ready).length), { timeout: 60_000 })
     .toBe(0);
   for (const work of works) {
     await page.evaluate((id) => (window as any).__museum.standBefore(id, 3), work.id);
@@ -61,7 +63,7 @@ test('démo : la fiche d’une œuvre cite le musée qui la conserve, dans les d
   await expect(credit.locator('a')).toHaveText('View the museum record');
 });
 
-test('démo : la sculpture numérisée se charge, à la bonne taille, en version légère sur un appareil modeste', async ({ page }) => {
+test('démo : les sculptures numérisées se chargent, à la bonne taille, en version légère sur un appareil modeste', async ({ page }) => {
   const requested: string[] = [];
   page.on('request', (r) => r.url().endsWith('.glb') && requested.push(new URL(r.url()).pathname));
   const errors: string[] = [];
@@ -97,7 +99,10 @@ test('démo : la sculpture numérisée se charge, à la bonne taille, en version
   await page.goto('/?q=low&accueil=non');
   await page.waitForSelector('body.ready');
   await expect.poll(sculpture, { timeout: 30_000 }).not.toBeNull();
-  expect(requested).toEqual(['/museums/demo/models/web/l-esclave-grecque.glb', '/museums/demo/models/web/l-esclave-grecque-leger.glb']);
+  // Chaque sculpture a été demandée dans sa version complète, puis dans sa version légère, et dans aucune autre.
+  await expect.poll(() => requested.length, { timeout: 30_000 }).toBe(10);
+  const ids = ['bouddha-cosmique', 'danseuse', 'defense-sculptee', 'l-esclave-grecque', 'vase-fangyi'];
+  expect([...requested].sort()).toEqual(ids.flatMap((id) => [`/museums/demo/models/web/${id}-leger.glb`, `/museums/demo/models/web/${id}.glb`]).sort());
   expect(errors).toEqual([]);
 });
 

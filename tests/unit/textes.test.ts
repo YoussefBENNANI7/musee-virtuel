@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { closestView } from '../../src/engine/artworks';
 import { horseshoe } from '../../src/engine/building';
@@ -70,13 +71,18 @@ describe('œuvres du musée de démonstration', () => {
     }
   });
 
-  it('la sculpture numérisée cite son musée et a ses versions allégées', () => {
-    const scanned = works.filter((a) => a.type === 'sculpture' && 'src' in a.model);
-    expect(scanned.map((a) => a.id)).toEqual(['l-esclave-grecque']);
-    for (const a of scanned) {
-      expect(a.type === 'sculpture' && a.model).toEqual({ src: 'models/l-esclave-grecque.glb', web: true });
-      expect(a.credit?.fr).toMatch(/Smithsonian/);
-      expect(a.link).toMatch(/^https:\/\/americanart\.si\.edu\//);
+  it('toutes les sculptures sont de vrais modèles numérisés, avec leur musée et leurs versions allégées', () => {
+    const sculptures = works.filter((a) => a.type === 'sculpture');
+    expect(sculptures.map((a) => a.id).sort()).toEqual(['bouddha-cosmique', 'danseuse', 'defense-sculptee', 'l-esclave-grecque', 'vase-fangyi']);
+    for (const a of sculptures) {
+      // Plus aucune sculpture dessinée par le code dans la démo.
+      expect(a.type === 'sculpture' && a.model, a.id).toEqual({ src: `models/${a.id}.glb`, web: true });
+      for (const file of [`models/${a.id}.glb`, `models/web/${a.id}.glb`, `models/web/${a.id}-leger.glb`, `thumbs/${a.id}.jpg`]) {
+        expect(existsSync(new URL(`../../public/museums/demo/${file}`, import.meta.url)), file).toBe(true);
+      }
+      expect(a.credit?.fr, a.id).toMatch(/Smithsonian/);
+      expect(a.credit?.fr, a.id).toMatch(/domaine public|conditions d’utilisation/);
+      expect(a.link, a.id).toMatch(/^https:\/\//);
     }
   });
 

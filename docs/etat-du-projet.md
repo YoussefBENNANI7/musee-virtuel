@@ -137,7 +137,22 @@ Pour ces œuvres, le moteur a appris à :
 
 **Fait : la première sculpture numérisée**, le *Modèle de L'Esclave grecque* de Hiram Powers (Smithsonian American Art Museum, domaine public), au centre de l'atrium à la place du « Nœud sans fin ». Le moteur charge désormais des modèles 3D au format GLB. `npm run modeles -- demo` en prépare deux versions allégées : une complète (100 000 triangles, 2,2 Mo ici) et une légère pour les appareils modestes (30 000 triangles, 0,8 Mo).
 
-**Reste à faire :** les quatre autres sculptures, qui viennent de Sketchfab et attendent la clé d'accès du porteur (prévue à un prochain jalon) ; en attendant, la Cour des Sculptures garde ses quatre sculptures dessinées par le code. Puis les vraies ombres des sculptures et la salle marocaine.
+**Fait le 16 novembre 2026 : quatre vraies sculptures dans la Cour**, à la place des quatre sculptures dessinées par le code. Elles viennent toutes de la Smithsonian, dont les modèles 3D se téléchargent sans compte (`3d-api.si.edu`), à leur taille réelle :
+
+| Œuvre | Origine | Licence |
+|---|---|---|
+| *Bouddha à la robe des royaumes de l'existence*, dit « Bouddha cosmique », Chine, 550–577, calcaire, 1,51 m | Freer Gallery of Art, F1923.15 | Domaine public (CC0) |
+| *Vase rituel à vin (fangyi)*, Chine, Luoyang, vers 1100 av. J.-C., bronze, 35 cm | Freer Gallery of Art, F1930.54a-b | Domaine public (CC0) |
+| *Défense sculptée*, artiste kongo, côte de Loango, vers 1860, ivoire, 72 cm | National Museum of African Art, 96-28-1 | Domaine public (CC0) |
+| *Danseuse*, Agathon Léonard pour la Manufacture de Sèvres, vers 1900, biscuit de porcelaine, 45 cm | Cooper Hewitt, 1910-41-1 | **Conditions d'utilisation de la Smithsonian (usage non commercial)** : à revoir avant une diffusion publique |
+
+- Le vase est fourni en deux parties (corps et couvercle), réunies en un seul fichier.
+- Deux réglages de sculpture ont été ajoutés : `turn` (rotation sur le socle, en degrés) et `tone` (part de lumière gardée, pour une matière très claire : la danseuse est à 0,62, sinon son biscuit blanc perdait tout relief).
+- Leurs textes sont rédigés par Claude d'après les notices des musées ; le porteur ne les a pas relus. La défense montre, entre autres scènes, une file de captifs enchaînés : le texte le dit sobrement.
+- Leurs voix seront produites avec les dix restantes, à la reprise programmée du 17 novembre 2026.
+- Autres modèles repérés à la Smithsonian, non retenus : *The Dying Tecumseh* de Ferdinand Pettrich (marbre de 2 m de long, demanderait un grand socle bas), un buste de George Washington, un masque mortuaire de Lincoln, deux reliefs bouddhiques.
+
+**Reste à faire :** les sculptures de la sélection d'origine qui viennent de Sketchfab (Vénus de Milo, Amenhotep III, Shiva Nataraja, tête de Rodin) attendent la clé d'accès du porteur ; elles pourront s'ajouter ou remplacer certaines des quatre ci-dessus.
 
 | Salle | Proposition |
 |---|---|
@@ -235,7 +250,7 @@ Pour la réunion : ouvrir le musée, cliquer « Entrer », puis Parcours → « 
 
 - **Son avis sur le Patio marocain enrichi** : couleurs du zellige, choix des pièces, présentation des objets en volume.
 
-- **Un compte Sketchfab gratuit**, pour intégrer les quatre sculptures restantes : le porteur le créera à un prochain jalon. Sa clé d'accès se saisira dans un formulaire sécurisé.
+- **Son avis sur les quatre nouvelles sculptures de la Cour**, et un compte Sketchfab gratuit, pour intégrer les sculptures de la sélection d'origine : le porteur le créera à un prochain jalon. Sa clé d'accès se saisira dans un formulaire sécurisé.
 - **Son écoute de l'audioguide dans la visite** (voix B), en particulier la prononciation des noms propres.
 - **Des essais sur de vrais appareils** : téléphone (de préférence ancien), casque VR, lecteur d'écran (VoiceOver, TalkBack), voix de l'audioguide. Le casque exige une adresse HTTPS, donc l'hébergement.
 - **L'hébergement** : créer un compte Vercel et y relier le dépôt GitHub, le moment venu.
@@ -243,7 +258,6 @@ Pour la réunion : ouvrir le musée, cliquer « Entrer », puis Parcours → « 
 ## 5. Limites connues
 
 - L'agrandissement en haute définition n'existe que dans la visite 3D, pas dans la vue simplifiée ni en casque.
-- Quatre sculptures sur cinq sont encore dessinées par le code.
 - L'arabe (écriture de droite à gauche) n'est pas encore géré par l'interface.
 - Dans le casque VR, ni les parcours ni le plan ne sont disponibles.
 - La VR n'a été testée qu'en émulation (casque Meta Quest 3 émulé).

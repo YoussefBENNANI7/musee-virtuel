@@ -176,7 +176,11 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
         if (art.details?.length && !('src' in art.image)) warning(where, 'les détails commentés ne s’affichent que pour une œuvre fournie en fichier image');
       }
       if (art.type === 'painting') checkPainting(art, room, layout, decor, where, error, warning);
-      else if (art.type === 'sculpture') checkSculpture(art, room, half, where, error);
+      else if (art.type === 'sculpture') {
+        if (art.tone !== undefined && !(art.tone > 0 && art.tone <= 1)) error(where, 'réglage "tone" invalide (attendu : un nombre entre 0 et 1)');
+        if (art.turn !== undefined && !Number.isFinite(art.turn)) error(where, 'réglage "turn" invalide (attendu : un angle en degrés)');
+        checkSculpture(art, room, half, where, error);
+      }
       else error(where, `type inconnu : "${(art as ArtworkConfig).type}"`);
     }
     checkOverlaps(room, decor, warning);
