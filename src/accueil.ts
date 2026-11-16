@@ -6,7 +6,10 @@ import type { App } from './ui';
  * puis le bouton d'entrée. Le musée reste visible derrière un voile clair.
  * `?accueil=non` dans l'adresse ouvre directement la visite.
  */
-export function showWelcome(app: App, actions: { setLang(lang: string): void; simpleView(): void }) {
+export function showWelcome(
+  app: App,
+  actions: { setLang(lang: string): void; simpleView(): void; progress(): number; onEnter(): void },
+) {
   const touch = matchMedia('(pointer: coarse)').matches;
   const box = document.createElement('div');
   box.id = 'welcome';
@@ -58,12 +61,29 @@ export function showWelcome(app: App, actions: { setLang(lang: string): void; si
     const card = el('div', 'welcome-card');
     const emblem = el('div', 'welcome-emblem');
     emblem.setAttribute('aria-hidden', 'true');
-    card.append(emblem, el('p', 'welcome-kicker', t.welcomeKicker), title, el('p', 'welcome-stats', stats.join(' · ')), enter, how, foot);
+    // Avancée du chargement des œuvres : une ligne discrète, qui s'efface une fois tout arrivé.
+    const loading = el('p', 'welcome-loading', t.loading);
+    loading.id = 'welcome-loading';
+    loading.setAttribute('role', 'status');
+    loading.append(el('span', 'track'));
+    card.append(emblem, el('p', 'welcome-kicker', t.welcomeKicker), title, el('p', 'welcome-stats', stats.join(' · ')), enter, loading, how, foot);
     box.replaceChildren(card);
+    showProgress();
     enter.focus();
   }
+  function showProgress() {
+    const loading = box.querySelector<HTMLElement>('.welcome-loading');
+    if (!loading) return;
+    const part = actions.progress();
+    loading.style.setProperty('--part', String(part));
+    loading.classList.toggle('done', part >= 1);
+    if (part >= 1) window.clearInterval(watch);
+  }
+  const watch = window.setInterval(showProgress, 200);
 
   function close() {
+    window.clearInterval(watch);
+    actions.onEnter();
     window.removeEventListener('keydown', onKey, true);
     box.classList.add('leaving');
     document.body.classList.remove('welcoming');

@@ -4,8 +4,45 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Musée virtuel</title>
+    <style>
+      /* Écran de chargement : écrit ici pour s'afficher tout de suite, avant le reste de l'interface. */
+      .splash {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        display: grid;
+        place-items: center;
+        background: #f8f4e9;
+        transition: opacity 0.6s;
+      }
+      .splash svg {
+        width: 56px;
+        height: 56px;
+        fill: #a8472a;
+        animation: splash 1.6s ease-in-out infinite;
+      }
+      @keyframes splash {
+        50% {
+          opacity: 0.35;
+          transform: scale(0.86) rotate(22.5deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .splash svg {
+          animation: none;
+        }
+      }
+      .ready .splash,
+      .failed .splash {
+        opacity: 0;
+        pointer-events: none;
+      }
+    </style>
   </head>
   <body>
+    <div class="splash" aria-hidden="true">
+      <svg viewBox="-12 -12 24 24"><path d="M0-11 3.2-7.7 7.8-7.8 7.7-3.2 11 0 7.7 3.2 7.8 7.8 3.2 7.7 0 11-3.2 7.7-7.8 7.8-7.7 3.2-11 0-7.7-3.2-7.8-7.8-3.2-7.7z" /></svg>
+    </div>
     <canvas id="scene" aria-label="Visite virtuelle en 3D"></canvas>
 
     <header id="bar" class="bar">
@@ -44,6 +81,7 @@
           <button id="tour-prev" class="btn" type="button"></button>
           <button id="tour-next" class="btn primary" type="button"></button>
         </div>
+        <button id="tour-auto" class="link" type="button"></button>
         <button id="tour-quit" class="link" type="button"></button>
       </nav>
     </aside>

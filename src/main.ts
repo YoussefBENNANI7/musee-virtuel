@@ -89,7 +89,20 @@ async function start() {
   applyLang();
   window.addEventListener('pagehide', () => app.guide.stop());
   // La visite 3D s'ouvre sur un écran d'accueil ; ?accueil=non mène droit dans le musée.
-  if (!simple && params.get('accueil') !== 'non') showWelcome(app, { setLang, simpleView: switchView });
+  // ?presentation=identifiant-du-parcours lance ce parcours en mode présentation dès l'entrée.
+  const enter = () => {
+    view.intro?.(false);
+    const tourId = params.get('presentation');
+    if (tourId) view.present?.(tourId);
+  };
+  if (simple) {
+    // La vue simplifiée n'a ni accueil ni présentation.
+  } else if (params.get('accueil') !== 'non') {
+    view.intro?.(true);
+    showWelcome(app, { setLang, simpleView: switchView, progress: () => view.progress?.() ?? 1, onEnter: enter });
+  } else {
+    enter();
+  }
   document.body.classList.add('ready');
 }
 
@@ -116,4 +129,5 @@ start().catch((err) => {
   } else {
     $('help').textContent = ui.error;
   }
+  document.body.classList.add('failed');
 });

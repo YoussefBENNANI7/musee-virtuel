@@ -106,6 +106,9 @@ export function startVisit(app: App): View {
   const first = world.spawn(museum.start.room);
   controls.teleport(first.x, first.z, first.yaw);
   const byId = new Map(world.artworks.map((a) => [a.config.id, a]));
+  let intro = false;
+  // Pas de mouvement d'ouverture pour qui a demandé moins d'animations, ni sur un appareil modeste.
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches || quality.tier === 'low';
 
   // --- Casque VR -----------------------------------------------------------
   const vr = setupVR({
@@ -158,6 +161,13 @@ export function startVisit(app: App): View {
   guide.onChange = () => {
     renderAudio();
     vr.refresh();
+    // Mode présentation : le commentaire terminé, on passe à l'œuvre suivante après une pause.
+    if (presenting && awaiting && guide.playingId === null) {
+      // Une lecture qui s'arrête à peine commencée a été refusée par le navigateur : on laisse le temps de regarder.
+      const refused = performance.now() - spokeAt < 2000;
+      awaiting = null;
+      presentTimer = window.setTimeout(advance, refused ? SILENT_STOP : PAUSE);
+    }
   };
   $('p-audio').addEventListener('click', () => current && guide.toggle(current.config, app.lang, app.base));
   const zoom = setupZoom(() => ui() as never);
@@ -235,6 +245,7 @@ export function startVisit(app: App): View {
     $('p-close').focus({ preventScroll: true });
   }
   function closePanel() {
+    stopPresentation();
     guide.stop();
     current = null;
     panel.hidden = true;
@@ -295,6 +306,8 @@ export function startVisit(app: App): View {
   };
 
   controls.onTap = (ndc) => {
+    // Le visiteur reprend la main : la présentation automatique s'arrête.
+    stopPresentation();
     const { art, ground } = pick(ndc);
     if (art) return openArtwork(art);
     // Fiche ouverte : un clic à côté la referme, sans déplacer le visiteur.
@@ -320,9 +333,68 @@ export function startVisit(app: App): View {
   const toursDialog = $('tours');
   $('tours-open').hidden = tours.length === 0;
 
+  // --- Mode présentation : le parcours se déroule seul, avec la voix ---------------
+  const ARRIVAL = 2600; // ms, le temps d'arriver devant l'œuvre avant de parler
+  const PAUSE = 1800; // ms de silence après un commentaire
+  const SILENT_STOP = 12000; // ms devant une œuvre sans voix
+  let presenting = false;
+  let awaiting: string | null = null;
+  let spokeAt = 0;
+  let presentTimer = 0;
+  /** Devant l'œuvre de l'étape : attend l'arrivée, puis lance son commentaire. */
+  function narrate() {
+    window.clearTimeout(presentTimer);
+    awaiting = null;
+    presentTimer = window.setTimeout(() => {
+      if (!presenting || !current) return;
+      if (!guide.available(current.config, app.lang)) {
+        presentTimer = window.setTimeout(advance, SILENT_STOP);
+        return;
+      }
+      awaiting = current.config.id;
+      spokeAt = performance.now();
+      guide.play(current.config, app.lang, app.base);
+    }, ARRIVAL);
+  }
+  function advance() {
+    if (!presenting || !tour) return;
+    if (tour.index === tour.cfg.stops.length - 1) {
+      endTour();
+      closePanel();
+      carnet.announce(ui().presentDone);
+      return;
+    }
+    tour.index++;
+    showStop();
+    narrate();
+  }
+  function startPresentation(cfg: TourConfig) {
+    tour = { cfg, index: 0 };
+    presenting = true;
+    document.body.classList.add('presenting');
+    showStop();
+    narrate();
+  }
+  function stopPresentation() {
+    if (!presenting) return;
+    presenting = false;
+    awaiting = null;
+    window.clearTimeout(presentTimer);
+    document.body.classList.remove('presenting');
+    renderTour();
+  }
+  $('tour-auto').addEventListener('click', () => {
+    if (presenting) return stopPresentation();
+    presenting = true;
+    document.body.classList.add('presenting');
+    renderTour();
+    narrate();
+  });
+
   function renderTour() {
     const nav = $('tour-nav');
     nav.hidden = !tour;
+    $('tour-auto').textContent = presenting ? ui().presentStop : ui().presentStart;
     $('tour-resume').hidden = !tour || !panel.hidden;
     if (!tour) return;
     const n = tour.cfg.stops.length;
@@ -344,6 +416,7 @@ export function startVisit(app: App): View {
     renderTour();
   }
   function endTour() {
+    stopPresentation();
     tour = null;
     renderTour();
   }
@@ -369,7 +442,20 @@ export function startVisit(app: App): View {
         tour = { cfg, index: 0 };
         showStop();
       });
-      item.append(text, go);
+      // Le même parcours, déroulé tout seul : pour une démonstration, ou pour se laisser guider.
+      const auto = document.createElement('button');
+      auto.type = 'button';
+      auto.className = 'btn';
+      auto.textContent = ui().present;
+      auto.setAttribute('aria-label', `${ui().present} : ${tr(cfg.name, app.lang)}`);
+      auto.addEventListener('click', () => {
+        toursDialog.hidden = true;
+        startPresentation(cfg);
+      });
+      const actions = document.createElement('span');
+      actions.className = 'tour-actions';
+      actions.append(go, auto);
+      item.append(text, actions);
       body.append(item);
     }
   }
@@ -383,12 +469,14 @@ export function startVisit(app: App): View {
     if (!tour || tour.index === 0) return;
     tour.index--;
     showStop();
+    if (presenting) narrate();
   });
   $('tour-next').addEventListener('click', () => {
     if (!tour) return;
     if (tour.index === tour.cfg.stops.length - 1) return endTour();
     tour.index++;
     showStop();
+    if (presenting) narrate();
   });
   $('tour-quit').addEventListener('click', endTour);
   $('tour-resume-btn').addEventListener('click', showStop);
@@ -496,6 +584,8 @@ export function startVisit(app: App): View {
       if (performance.now() <= renderUntil) renderer.render(scene, camera);
       return;
     }
+    // Ouverture : derrière l'écran d'accueil, le regard parcourt lentement la salle.
+    if (intro && !calm) controls.yaw += dt * 0.07;
     controls.update(dt);
     const p = camera.position;
     const here = world.roomAt(p.x, p.z);
@@ -581,7 +671,7 @@ export function startVisit(app: App): View {
       return { x: ((v.x + 1) / 2) * canvas.clientWidth, y: ((1 - v.y) / 2) * canvas.clientHeight };
     };
     Object.assign(window, {
-      __museum: { screenAt, marker, inspect, carnet, style: style.id, decors: Object.fromEntries([...world.decors].map(([id, d]) => [id, d.preset])), quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
+      __museum: { screenAt, marker, inspect, carnet, presenting: () => presenting, style: style.id, decors: Object.fromEntries([...world.decors].map(([id, d]) => [id, d.preset])), quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
     });
   }
 
@@ -589,6 +679,15 @@ export function startVisit(app: App): View {
     setLang() {
       guide.stop();
       applyTexts();
+    },
+    progress: () => world.artworks.filter((a) => a.ready).length / Math.max(1, world.artworks.length),
+    intro(on) {
+      if (intro && !on && !calm) controls.glideTo(new THREE.Vector3(first.x, 0, first.z), first.yaw);
+      intro = on;
+    },
+    present(tourId) {
+      const cfg = tours.find((t) => t.id === tourId);
+      if (cfg) startPresentation(cfg);
     },
   };
 }

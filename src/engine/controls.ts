@@ -183,7 +183,9 @@ export class Controls {
       this.camera.position.lerp(this.glide.pos, t);
       this.yaw += (this.glide.yaw - this.yaw) * t;
       this.pitch += (this.glide.pitch - this.pitch) * t;
-      if (this.camera.position.distanceTo(this.glide.pos) < 0.01) this.glide = null;
+      // Arrivé quand le visiteur est en place et que son regard a fini de tourner.
+      const turned = Math.abs(this.glide.yaw - this.yaw) < 0.003 && Math.abs(this.glide.pitch - this.pitch) < 0.003;
+      if (turned && this.camera.position.distanceTo(this.glide.pos) < 0.01) this.glide = null;
     } else {
       this.yaw += turn * TURN_SPEED * dt;
       const len = Math.hypot(forward, strafe);

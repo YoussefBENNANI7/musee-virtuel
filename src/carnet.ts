@@ -111,6 +111,8 @@ export function setupCarnet(app: App, actions: { goToRoom(roomId: string): void 
       if (seen.size === all.size) announce(t.carnetAllDone);
       else if (done === total) announce(t.carnetRoomToast.replace('{room}', tr(museum.rooms.find((r) => r.id === roomId)!.name, app.lang)));
     },
+    /** Affiche un court message au-dessus de la barre de commandes. */
+    announce,
     close() {
       if (dialog.hidden) return false;
       dialog.hidden = true;

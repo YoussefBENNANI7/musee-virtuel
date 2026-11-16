@@ -36,8 +36,13 @@ export const UI: Record<string, Record<string, string>> = {
     carnetReset: 'Recommencer le carnet',
     tours: 'Parcours',
     toursTitle: 'Parcours de visite',
-    toursHint: 'Un parcours vous conduit d’œuvre en œuvre, à votre rythme.',
+    toursHint: 'Un parcours vous conduit d’œuvre en œuvre, à votre rythme. « Présentation » le déroule tout seul, avec la voix.',
     stops: 'étapes',
+    present: 'Présentation',
+    presentStart: 'Lancer la présentation automatique',
+    presentStop: 'Arrêter la présentation automatique',
+    presentDone: 'La présentation est terminée.',
+    loading: 'Les œuvres s’installent…',
     startTour: 'Commencer',
     step: 'Étape {i} sur {n}',
     prev: 'Précédent',
@@ -100,8 +105,13 @@ export const UI: Record<string, Record<string, string>> = {
     carnetReset: 'Start the journal again',
     tours: 'Tours',
     toursTitle: 'Guided tours',
-    toursHint: 'A tour takes you from one artwork to the next, at your own pace.',
+    toursHint: 'A tour takes you from one artwork to the next, at your own pace. “Presentation” plays it by itself, with the voice.',
     stops: 'stops',
+    present: 'Presentation',
+    presentStart: 'Start the automatic presentation',
+    presentStop: 'Stop the automatic presentation',
+    presentDone: 'The presentation is over.',
+    loading: 'The artworks are settling in…',
     startTour: 'Start',
     step: 'Stop {i} of {n}',
     prev: 'Previous',
@@ -153,6 +163,12 @@ export interface App {
 
 export interface View {
   setLang(lang: string): void;
+  /** Part des œuvres déjà chargées, de 0 à 1. */
+  progress?(): number;
+  /** Ouverture : tant que l'accueil est affiché, le regard parcourt lentement la salle. */
+  intro?(on: boolean): void;
+  /** Lance un parcours en mode présentation : il se déroule seul, avec la voix. */
+  present?(tourId: string): void;
 }
 
 type Artwork = MuseumConfig['rooms'][number]['artworks'][number];
