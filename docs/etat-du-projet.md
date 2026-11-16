@@ -89,7 +89,7 @@ Le moteur lit déjà un enregistrement par œuvre et par langue quand on lui en 
 - **Catalogue** : 48 voix féminines natives en français, 69 en anglais britannique, 104 en anglais américain (`npm run voix -- --catalogue fr-FR`).
 - **Trois voix proposées au porteur**, sur une page d'écoute (https://claude.ai/artifact/Jx5VYkFSDNBGQXornja2Zi) : A `sulafat` (voix de studio, la même dans les deux langues) ; B `fr:fr-fr-tutor-4+en:en-gb-tutor-11` (voix natives chaleureuses, ton de radio) ; C `fr:fr-fr-tutor-2+en:en-gb-tutor-12` (voix natives graves et posées).
 - **Choix du porteur (16 novembre 2026) : la voix B**, et le paiement à l'usage. La facturation est activée sur le projet Google : il passe au niveau « Tier 1 », limité à **100 extraits par jour**.
-- **Production** : 84 extraits sur 94 faits le 16 novembre 2026 (37 minutes d'audio, 14 Mo, environ 27 s par extrait). Le volume est égalisé (EBU R128, -18 LUFS). Il manque les deux langues de cinq pièces du patio : `dalail-al-khayrat`, `carreaux-calligraphies`, `carreau-zellige`, `cour-tetouan`, `couple-marocain`. Elles gardent la voix du navigateur en attendant ; une reprise est programmée le 17 novembre 2026 au matin, avec `npm run voix -- demo`.
+- **Production** : 88 extraits sur 94 faits le 16 novembre 2026 (environ 43 minutes d'audio, 27 à 42 s par extrait), y compris les quatre nouvelles sculptures de la Cour. Le volume est égalisé (EBU R128, -18 LUFS). Le quota de 100 extraits par jour glisse sur 24 heures : il se libère peu à peu. Il manque les deux langues de trois pièces du patio : `carreau-zellige`, `cour-tetouan`, `couple-marocain`. Elles gardent la voix du navigateur en attendant ; une reprise est programmée le 17 novembre 2026 au matin, avec `npm run voix -- demo`.
 - **Contrôles** : aucun extrait de durée anormale ; un seul silence de plus d'une seconde, une pause naturelle d'1,3 s après le cartel des *Trois Arbres*. Les tests vérifient que chaque voix déclarée existe et correspond au texte actuel de l'œuvre ; un test de bout en bout vérifie que la démo joue bien le fichier enregistré, en français puis en anglais. Le test qui exige une voix pour chaque œuvre sera ajouté quand la production sera complète.
 - Claude ne peut pas écouter le résultat : la prononciation des noms propres se contrôle à l'oreille, par le porteur.
 
@@ -149,7 +149,7 @@ Pour ces œuvres, le moteur a appris à :
 - Le vase est fourni en deux parties (corps et couvercle), réunies en un seul fichier.
 - Deux réglages de sculpture ont été ajoutés : `turn` (rotation sur le socle, en degrés) et `tone` (part de lumière gardée, pour une matière très claire : la danseuse est à 0,62, sinon son biscuit blanc perdait tout relief).
 - Leurs textes sont rédigés par Claude d'après les notices des musées ; le porteur ne les a pas relus. La défense montre, entre autres scènes, une file de captifs enchaînés : le texte le dit sobrement.
-- Leurs voix seront produites avec les dix restantes, à la reprise programmée du 17 novembre 2026.
+- Leurs voix sont enregistrées (voix B).
 - Autres modèles repérés à la Smithsonian, non retenus : *The Dying Tecumseh* de Ferdinand Pettrich (marbre de 2 m de long, demanderait un grand socle bas), un buste de George Washington, un masque mortuaire de Lincoln, deux reliefs bouddhiques.
 
 **Reste à faire :** les sculptures de la sélection d'origine qui viennent de Sketchfab (Vénus de Milo, Amenhotep III, Shiva Nataraja, tête de Rodin) attendent la clé d'accès du porteur ; elles pourront s'ajouter ou remplacer certaines des quatre ci-dessus.
