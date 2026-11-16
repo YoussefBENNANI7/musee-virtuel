@@ -43,6 +43,7 @@ Pour voir le musée sur un téléphone branché au même réseau wifi, utiliser 
 | `?decor=cabinet:nuit` | Montre une salle dans un autre décor (`?decor=nuit` pour toutes les salles) |
 | `?q=high`, `?q=medium`, `?q=low` | Force un niveau de qualité du rendu |
 | `?vue=simple` | Ouvre la vue simplifiée, sans 3D |
+| `?ui=cimaise`, `?ui=nocturne`, `?ui=zellige` | Provisoire : montre une des trois directions d'interface proposées |
 | `?debug` | Affiche le détail des erreurs de configuration |
 
 Plusieurs options se combinent avec `&`, par exemple `http://localhost:5173/?m=demo&q=low`.

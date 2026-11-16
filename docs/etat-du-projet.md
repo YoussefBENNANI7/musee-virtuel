@@ -68,7 +68,7 @@ Le 15 novembre 2026, le porteur a donné son avis sur l'ambiance : la base lui p
 | 2. Décor par salle | Chaque salle reçoit un décor : sol, murs, plafond, lumière, cadres, mobilier | Fait : les cinq salles ont leur décor, voir ci-dessous |
 | 3. Œuvres réelles | Recherche de vraies œuvres en accès libre, puis remplacement des œuvres fictives : tableaux, vrais modèles 3D (format GLB) avec de vraies ombres, nouveaux cartels, textes et parcours. Aussi : cadres variés, zoom haute définition | Sélection validée en entier par le porteur le 16 novembre 2026. **Les 29 tableaux, estampes, dessin et photographie sont intégrés, ainsi qu'une première sculpture numérisée.** Restent quatre sculptures, voir ci-dessous |
 | 3 bis. Salle marocaine | Nouvelle salle au plan, avec ses éléments d'architecture (arcs, zellige, plâtre sculpté, plafond de cèdre, fontaine) et ses objets traditionnels | **Salle pilote faite**, voir ci-dessous. Attend l'avis du porteur |
-| 4. Interface | Écran d'accueil du musée, nouvelle identité visuelle (typographie, icônes, commandes discrètes, fiches animées), clic au sol pour se déplacer, mini-plan permanent | À faire, après le décor pour s'accorder à l'ambiance définitive |
+| 4. Interface | Écran d'accueil du musée, nouvelle identité visuelle (typographie, icônes, commandes discrètes, fiches animées), clic au sol pour se déplacer, mini-plan permanent | **Trois directions proposées**, voir ci-dessous. Attend le choix du porteur ; le reste suit ce choix |
 | 5. Mise en ligne | Hébergement sur Vercel, puis vérification sur de vrais appareils | À faire, avec l'accord du porteur |
 | 6. Outil d'administration | L'éditeur de l'étape 2 du produit. Les réglages de décor y deviendront des options | À faire |
 
@@ -169,7 +169,27 @@ Limites de cette salle pilote :
 - Les objets en volume de la sélection (plat, poignard, instruments, bijoux) ne sont pas exposés : ils n'existent qu'en photographie. Les modèles 3D d'artistes (lanterne, théière, tajine) attendent la clé Sketchfab.
 - La largeur du tapis vient de son image : elle dépasse celle que donne le musée (1,79 m).
 
+### Interface : trois directions à comparer
+
+Trois habillages de l'interface sont proposés au porteur. Ils ne remplacent rien : l'interface habituelle reste celle par défaut, et chaque direction ne s'affiche qu'avec le paramètre d'adresse `?ui=`. Chacune habille l'en-tête, les commandes, la fiche d'œuvre, et ajoute un écran d'accueil (nom du musée, nombre de salles, d'œuvres et de parcours, bouton d'entrée, rappel des gestes, vue simplifiée, langues).
+
+| Direction | Adresse | Caractère |
+|---|---|---|
+| Cimaise | `?ui=cimaise` | Galerie classique : ivoire, lettres à empattements, filets fins, commandes en haut, en mots |
+| Nocturne | `?ui=nocturne` | Contemporain : verre sombre, grand titre, barre de commandes en bas avec icônes |
+| Zellige | `?ui=zellige` | Chaleureux : crème, vert et terre cuite, étoile à huit branches, frise de zellige, grandes icônes nommées en bas |
+
+`?accueil=non`, ajouté à l'une de ces adresses, ouvre la visite sans passer par l'écran d'accueil.
+
+- Page de comparaison, avec les captures sur ordinateur et sur téléphone : https://claude.ai/artifact/5ZaXQyHAFdN3Vex22X2aKG. Avis de Claude : Zellige en premier choix (la plus accueillante, les plus grands boutons), Cimaise en second ; un mélange est possible.
+- Le code de cet aperçu est dans `src/apercu-ui.ts` et `src/apercu-ui.css`. Il est provisoire : une fois la direction choisie, elle passe dans `src/style.css`, les deux autres sont supprimées, et le paramètre `?ui=` disparaît.
+- Seuls l'accueil, l'en-tête, les commandes et la fiche sont habillés. La liste des parcours, le plan, la vue simplifiée, l'agrandissement et le casque VR gardent l'habillage d'origine jusqu'au choix.
+- Piège rencontré : sur téléphone, une fiche pleine largeur, défilante et sans aucune bordure fait disparaître la vue 3D dans Chrome. La fiche garde donc toujours un filet en haut.
+- Suite prévue après le choix : appliquer la direction à toute l'interface, puis le clic au sol pour se déplacer et le mini-plan permanent.
+
 ## 4. En attente du porteur du projet
+
+- **Son choix d'une direction pour l'interface** : Cimaise, Nocturne, Zellige, ou un mélange. Voir la page de comparaison ci-dessus.
 
 - **Son avis sur le Patio marocain enrichi** : couleurs du zellige, choix des pièces, présentation des objets en volume.
 
@@ -209,6 +229,7 @@ src/audio.ts                Audioguide
 src/zoom.ts                 Agrandissement d'une œuvre en haute définition
 src/ui.ts                   Textes de l'interface (français, anglais)
 src/style.css               Styles de l'interface
+src/apercu-ui.ts, .css      Provisoire : les trois directions d'interface à comparer (?ui=)
 
 src/engine/types.ts         Format de la configuration d'un musée
 src/engine/validate.ts      Contrôle de la configuration, erreurs lisibles
@@ -226,7 +247,7 @@ scripts/images.mjs          Préparation des images d'un musée
 scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
 tests/unit/                 Tests unitaires (Vitest) : 106 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 44 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 45 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration
@@ -242,6 +263,7 @@ vercel.json                 Configuration de l'hébergement (pas encore relié)
 | `?decor=cabinet:nuit` | Montre une salle dans un autre décor, sans toucher à sa configuration. `?decor=nuit` l'applique à toutes les salles ; plusieurs demandes se séparent par des virgules |
 | `?q=high`, `?q=medium`, `?q=low` | Force un niveau de qualité |
 | `?vue=simple` | Ouvre la vue simplifiée |
+| `?ui=cimaise`, `?ui=nocturne`, `?ui=zellige` | Provisoire : montre une des trois directions d'interface à comparer. Avec `&accueil=non`, sans l'écran d'accueil |
 | `?debug` | Affiche le détail des erreurs de configuration, même dans la version publiée |
 
 ### Configurer un musée (`museum.json`)

@@ -1,4 +1,5 @@
 import './style.css';
+import { setupUiPreview } from './apercu-ui';
 import { AudioGuide } from './audio';
 import { withDecorOverrides } from './engine/decors';
 import { detectQuality } from './engine/quality';
@@ -85,6 +86,7 @@ async function start() {
   });
   applyLang();
   window.addEventListener('pagehide', () => app.guide.stop());
+  setupUiPreview(app, params, langSelect);
   document.body.classList.add('ready');
 }
 

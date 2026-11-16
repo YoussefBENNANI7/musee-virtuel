@@ -109,3 +109,27 @@ test('un musée introuvable affiche un message simple', async ({ page }) => {
   await page.goto('/?m=inexistant');
   await expect(page.locator('#help')).toHaveText('Impossible de charger ce musée.');
 });
+
+test('les directions d’interface à comparer ne s’affichent que sur demande', async ({ page }) => {
+  // Sans paramètre : l'interface habituelle, sans écran d'accueil.
+  await openMuseum(page);
+  await expect(page.locator('#welcome')).toHaveCount(0);
+  expect(await page.evaluate(() => document.body.dataset.ui)).toBeUndefined();
+
+  for (const ui of ['cimaise', 'nocturne', 'zellige']) {
+    const errors = await openMuseum(page, { query: `&ui=${ui}` });
+    expect(await page.evaluate(() => document.body.dataset.ui)).toBe(ui);
+    // L'écran d'accueil nomme le musée ; les commandes attendent derrière lui.
+    await expect(page.locator('#welcome-title')).toHaveText('Musée des Horizons');
+    await expect(page.locator('#bar')).toBeHidden();
+    await page.locator('.welcome-enter').click();
+    await expect(page.locator('#welcome')).toHaveCount(0);
+    await expect(page.locator('#bar')).toBeVisible();
+    expect(errors).toEqual([]);
+  }
+
+  // « accueil=non » ouvre la visite directement, dans l'habillage demandé.
+  await openMuseum(page, { query: '&ui=zellige&accueil=non' });
+  await expect(page.locator('#welcome')).toHaveCount(0);
+  expect(await page.evaluate(() => document.body.dataset.ui)).toBe('zellige');
+});
