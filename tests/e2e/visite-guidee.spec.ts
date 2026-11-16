@@ -12,7 +12,7 @@ test.describe('audioguide', () => {
     await expect(button).toHaveText('Arrêter la lecture');
     const spoken = await page.evaluate(() => (window as any).__spoken[0]);
     expect(spoken.lang).toBe('fr-FR');
-    expect(spoken.text).toContain('Équilibre n° 7. Hélène Varga, 1962.');
+    expect(spoken.text).toContain('Équilibre numéro 7. Hélène Varga, 1962.');
 
     // Fin naturelle de la lecture : le bouton revient à son état initial.
     await page.evaluate(() => (window as any).__lastSpeech.onend());

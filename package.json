@@ -12,7 +12,8 @@
     "check": "tsc --noEmit && vitest run",
     "vignettes": "node scripts/vignettes.mjs",
     "images": "node scripts/images.mjs",
-    "modeles": "node scripts/modeles.mjs"
+    "modeles": "node scripts/modeles.mjs",
+    "voix": "NODE_USE_ENV_PROXY=1 node --no-warnings scripts/voix.mjs"
   },
   "dependencies": {
     "three": "^0.187.0"

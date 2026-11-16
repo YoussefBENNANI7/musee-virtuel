@@ -1,5 +1,5 @@
+import { narrationText } from './engine/narration';
 import type { ArtworkConfig } from './engine/types';
-import { loc, tr } from './engine/types';
 
 const VOICE_LANG: Record<string, string> = { fr: 'fr-FR', en: 'en-GB', ar: 'ar-SA', es: 'es-ES' };
 
@@ -36,8 +36,7 @@ export class AudioGuide {
       this.audio.addEventListener('error', done);
       void this.audio.play().catch(done);
     } else if ('speechSynthesis' in window) {
-      const text = `${tr(cfg.title, lang)}. ${loc(cfg.artist, lang)}, ${loc(cfg.year, lang)}. ${tr(cfg.description, lang)}`;
-      const speech = new SpeechSynthesisUtterance(text);
+      const speech = new SpeechSynthesisUtterance(narrationText(cfg, lang));
       speech.lang = VOICE_LANG[lang] ?? lang;
       const voice = speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith(lang));
       if (voice) speech.voice = voice;
