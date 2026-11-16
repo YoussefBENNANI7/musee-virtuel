@@ -147,6 +147,8 @@ export function setupInspect(options: {
 
       background = scene.background;
       scene.background = BACKGROUND;
+      // Seule cette sculpture passe sur le calque que regarde la caméra : ni la salle, ni les autres œuvres.
+      target.shape?.traverse((node) => node.layers.enable(ALONE_LAYER));
       camera.layers.set(ALONE_LAYER);
       document.body.classList.add('inspecting');
       box.hidden = false;
@@ -155,6 +157,7 @@ export function setupInspect(options: {
     },
     close() {
       if (!art) return;
+      art.shape?.traverse((node) => node.layers.disable(ALONE_LAYER));
       art = null;
       pointers.clear();
       box.hidden = true;

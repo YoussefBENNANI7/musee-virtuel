@@ -9,7 +9,7 @@ import { artworkTexture, poolTexture } from './textures';
 import type { ArtworkConfig, PaintingConfig, RoomConfig, SculptureConfig } from './types';
 
 /** Une œuvre installée dans le musée. */
-/** Calque supplémentaire des sculptures : il permet de les montrer seules, sans la salle, pour les examiner. */
+/** Calque à part : la sculpture qu'on examine y est placée, pour la montrer seule, sans la salle ni les autres œuvres. */
 export const ALONE_LAYER = 1;
 
 export interface PlacedArtwork {
@@ -300,7 +300,6 @@ export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: T
       shape.traverse((node) => {
         node.castShadow = true;
         node.receiveShadow = true;
-        node.layers.enable(ALONE_LAYER);
       });
       placed.shape = shape;
       const box = new THREE.Box3().setFromObject(shape);

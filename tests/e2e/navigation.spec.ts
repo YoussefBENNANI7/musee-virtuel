@@ -236,6 +236,14 @@ test('une sculpture s’examine seule, sous tous les angles, puis la visite repr
   await expect(panel(page)).toBeHidden();
   const state = () => page.evaluate(() => ({ ...(window as any).__museum.inspect.state }));
   const start = await state();
+  // Elle est vraiment seule : aucune des cinq autres sculptures du salon n'est sur le calque montré.
+  const shown = () =>
+    page.evaluate(() =>
+      (window as any).__museum.world.artworks
+        .filter((a: any) => a.shape && a.shape.layers.isEnabled(1))
+        .map((a: any) => a.config.id as string),
+    );
+  expect(await shown()).toEqual(['noeud-sans-fin']);
 
   // Glisser fait tourner autour de la sculpture ; la molette approche.
   await page.mouse.move(500, 400);
@@ -255,6 +263,7 @@ test('une sculpture s’examine seule, sous tous les angles, puis la visite repr
   await page.keyboard.press('Escape');
   await expect(viewer).toBeHidden();
   await expect(panel(page)).toBeVisible();
+  expect(await shown()).toEqual([]);
   const after = await position(page);
   expect(Math.hypot(after.x - before.x, after.z - before.z)).toBeLessThan(0.01);
   expect(errors).toEqual([]);
