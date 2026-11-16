@@ -357,7 +357,7 @@ function shade(color: string, k: number, warm = 0): string {
 }
 
 /** Côté, en mètres, de la surface couverte par une répétition de chaque texture de sol. */
-export const FLOOR_TILE = { concrete: 3, parquet: 2, chevron: 0.9 } as const;
+export const FLOOR_TILE = { concrete: 3, parquet: 2, chevron: 0.9, stone: 2.4 } as const;
 
 /**
  * Parquet en chevrons (point de Hongrie) : des travées de lames coupées en biais, qui se
@@ -438,6 +438,105 @@ export function chevronTexture(color: string, quality: Quality = TIERS.high): TH
   g.fillRect(-seam / 2, 0, seam, size);
   g.fillRect(size - seam / 2, 0, seam, size);
   g.fillRect(col - seam / 2, 0, seam, size);
+  g.globalAlpha = 1;
+  return tiling(c, quality);
+}
+
+/**
+ * Dalles de pierre calcaire : de grandes dalles de 120 cm sur 60, posées à joints décalés.
+ * Une répétition couvre quatre rangées, soit 2,40 m de côté. Chaque dalle a sa nuance,
+ * une ou deux veines pâles et un grain fin.
+ */
+export function stoneTexture(color: string, quality: Quality = TIERS.high): THREE.Texture {
+  const size = quality.textureSize;
+  const { c, g } = canvasOf(size, size);
+  const px = size / 1024;
+  const rows = 4;
+  const rowH = size / rows;
+  const slabW = size / 2;
+  g.fillStyle = color;
+  g.fillRect(0, 0, size, size);
+
+  /** Dessine une dalle à sa place, et à nouveau de l'autre côté du bord pour que la texture se raccorde. */
+  const eachSlab = (draw: (x: number, y: number, r: () => number) => void) => {
+    for (let row = 0; row < rows; row++) {
+      for (let k = 0; k < 2; k++) {
+        const x = k * slabW + (row % 2 ? slabW / 2 : 0);
+        for (const wrap of [-size, 0]) draw(x + wrap, row * rowH, rng(7 + row * 31 + k * 17));
+      }
+    }
+  };
+  eachSlab((x, y, r) => {
+    g.fillStyle = shade(color, (r() - 0.5) * 0.09, (r() - 0.5) * 0.008);
+    g.fillRect(x, y, slabW, rowH);
+  });
+  // Nuages de la pierre : de larges plages floues, communes à toutes les dalles.
+  const r = rng(211);
+  g.filter = `blur(${Math.round(size * 0.03)}px)`;
+  for (let i = 0; i < 60; i++) {
+    const x = r() * size;
+    const y = r() * size;
+    const rx = size * (0.04 + r() * 0.1);
+    const ry = rx * (0.4 + r() * 0.6);
+    const angle = r() * Math.PI;
+    g.fillStyle = r() > 0.5 ? '#ffffff' : '#3a3024';
+    g.globalAlpha = 0.02 + r() * 0.035;
+    for (const dx of [-size, 0, size]) {
+      for (const dy of [-size, 0, size]) {
+        g.beginPath();
+        g.ellipse(x + dx, y + dy, rx, ry, angle, 0, Math.PI * 2);
+        g.fill();
+      }
+    }
+  }
+  g.filter = 'none';
+  // Veines : une ou deux lignes pâles et sinueuses par dalle.
+  eachSlab((x, y, rs) => {
+    rs();
+    rs();
+    g.save();
+    g.beginPath();
+    g.rect(x, y, slabW, rowH);
+    g.clip();
+    const veins = 1 + Math.floor(rs() * 2);
+    for (let v = 0; v < veins; v++) {
+      const y0 = y + rs() * rowH;
+      const slope = (rs() - 0.5) * 0.5;
+      const wave = rowH * (0.03 + rs() * 0.06);
+      const phase = rs() * 6;
+      g.strokeStyle = rs() > 0.35 ? '#ffffff' : '#5a4c3a';
+      g.globalAlpha = 0.05 + rs() * 0.07;
+      g.lineWidth = (1 + rs() * 2.2) * px;
+      g.beginPath();
+      for (let t = 0; t <= 24; t++) {
+        const xx = x + (slabW * t) / 24;
+        const yy = y0 + (xx - x) * slope + Math.sin(phase + t * 0.55) * wave;
+        if (t === 0) g.moveTo(xx, yy);
+        else g.lineTo(xx, yy);
+      }
+      g.stroke();
+    }
+    g.restore();
+  });
+  // Grain fin.
+  for (let i = 0; i < size * 12; i++) {
+    g.fillStyle = r() > 0.5 ? '#ffffff' : '#2e261c';
+    g.globalAlpha = 0.025 + r() * 0.045;
+    g.fillRect(r() * size, r() * size, 1.5, 1.5);
+  }
+  // Joints : une ligne sombre, bordée d'un filet clair sur l'arête de la dalle voisine.
+  const joint = Math.max(1.5, 2.6 * px);
+  eachSlab((x, y) => {
+    g.globalAlpha = 0.3;
+    g.fillStyle = '#2e261c';
+    g.fillRect(x, y - joint / 2, slabW, joint);
+    g.fillRect(x - joint / 2, y, joint, rowH);
+    g.globalAlpha = 0.1;
+    g.fillStyle = '#ffffff';
+    g.fillRect(x, y + joint / 2, slabW, joint * 0.7);
+    g.fillRect(x + joint / 2, y, joint * 0.7, rowH);
+  });
+  // Le joint du bas de la dernière rangée est celui du haut de la première, une répétition plus loin.
   g.globalAlpha = 1;
   return tiling(c, quality);
 }

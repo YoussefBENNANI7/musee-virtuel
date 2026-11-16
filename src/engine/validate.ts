@@ -18,7 +18,7 @@ export interface Issue {
 const PAINTING_GENERATORS = ['geometric', 'fields', 'lines', 'circles', 'mosaic', 'landscape'];
 const SCULPTURE_GENERATORS = ['knot', 'blob', 'rings', 'stack', 'ribbon'];
 const SCULPTURE_MATERIALS = ['bronze', 'marble', 'patina', 'lacquer'];
-const FLOORINGS = ['concrete', 'parquet', 'chevron'];
+const FLOORINGS = ['concrete', 'parquet', 'chevron', 'stone'];
 const WALL_FINISHES = ['paint', 'limewash'];
 const BASEBOARDS = ['skirting', 'shadow-gap', 'none'];
 const CEILINGS = ['flat', 'skylight', 'cove'];

@@ -33,6 +33,11 @@ describe('configurations livrées', () => {
     expect(validateMuseum(fixture(), classic)).toEqual([]);
   });
 
+  it('chaque salle du musée de démonstration a son décor', () => {
+    const decors = Object.fromEntries(demo().rooms.map((r) => [r.id, r.decor]));
+    expect(decors).toEqual({ atrium: 'pierre-claire', horizons: 'argile-claire', cabinet: 'terre-cuite', galerie: 'nuit', cour: 'pierre-claire' });
+  });
+
   it('les deux musées restent valides dans chaque décor de la bibliothèque', () => {
     for (const decor of Object.keys(DECORS)) {
       for (const style of Object.values(STYLES)) {
@@ -123,7 +128,7 @@ describe('erreurs détectées', () => {
     cabinet.decor = { walls: 'crépi' as never, ceiling: { type: 'skylight' } as never, labels: 'fluo' as never, frame: { width: 0.8 } };
     rotonde.wall = 'rouge';
     const errors = errorsOf(museum);
-    expect(errors).toContain('Salle "hall" : décor inconnu : "rococo" (décors disponibles : argile-claire, terre-cuite, nuit)');
+    expect(errors).toContain('Salle "hall" : décor inconnu : "rococo" (décors disponibles : pierre-claire, argile-claire, terre-cuite, nuit)');
     expect(errors).toContain('Salle "galerie" : décor : couleur invalide pour "wall" : "bleu" (attendu : "#rrggbb")');
     expect(errors).toContain('Salle "galerie" : décor : sol inconnu : "moquette"');
     expect(errors).toContain('Salle "galerie" : décor : niveau d\'éclairage invalide (entre 0 et 2)');

@@ -1,6 +1,6 @@
 # Musée virtuel personnalisable : état du projet
 
-Mis à jour le 15 novembre 2026. Ce document permet de reprendre le projet dans une nouvelle conversation sans rien perdre : vision, décisions prises, avancement, points en attente et organisation du code.
+Mis à jour le 16 novembre 2026. Ce document permet de reprendre le projet dans une nouvelle conversation sans rien perdre : vision, décisions prises, avancement, points en attente et organisation du code.
 
 ---
 
@@ -8,7 +8,9 @@ Mis à jour le 15 novembre 2026. Ce document permet de reprendre le projet dans 
 
 Une plateforme de visites virtuelles en 3D, en marque blanche, vendue à des musées, en priorité de petits musées peu connus. Le porteur du projet configure lui-même chaque musée pour son client (salles, œuvres, textes, couleurs), puis le lui commercialise.
 
-La visite est **gratuite pour le public**, dans une logique d'inclusion : démocratiser l'accès à l'art. La démonstration commerciale utilise des œuvres et des artistes **fictifs**.
+La visite est **gratuite pour le public**, dans une logique d'inclusion : démocratiser l'accès à l'art.
+
+Le musée de démonstration sert d'abord à une **présentation interne** : le porteur le montre à sa hiérarchie pour proposer des musées virtuels gratuits et inclusifs. Il doit donc être aussi réaliste que possible, avec de **vraies œuvres** (décision du 15 novembre 2026, qui remplace l'ancienne règle des œuvres fictives).
 
 ## 2. Décisions prises
 
@@ -28,8 +30,11 @@ La visite est **gratuite pour le public**, dans une logique d'inclusion : démoc
 | Inclusion | Vue simplifiée sans 3D, utilisable au clavier et au lecteur d'écran |
 | Hébergement | Vercel, mis en pause : à faire après la modernisation |
 | Direction artistique | Galerie contemporaine claire, immersive, moderne, créative |
-| Ambiance des salles | Chaque salle a son propre décor, accordé aux œuvres qu'elle expose (décision du 15 novembre 2026) |
-| Images de la démo | Produites par le porteur avec son générateur d'images, à partir des prompts de `docs/prompts-images.md` |
+| Ambiance des salles | Chaque salle a son propre décor, accordé aux œuvres qu'elle expose. Les décors proposés sont tous utilisés, pour alterner salles claires et salles de caractère (décisions du 15 novembre 2026) |
+| Œuvres de la démo | De vraies œuvres en accès libre **remplacent** les 16 tableaux fictifs et les sculptures dessinées par le code. Les cartels portent les vrais titres, auteurs, dates et le musée d'origine |
+| Licences des œuvres | La démo étant une présentation interne, les licences « non commerciales » sont acceptées. À qualité égale, on prend le domaine public. La licence de chaque œuvre est notée ; la question sera revue avant toute mise en ligne publique |
+| Salle marocaine | Une **nouvelle salle** d'ambiance marocaine historique et traditionnelle (zellige, plâtre sculpté, plafond de cèdre, arcs, fontaine), avec de nouveaux objets traditionnels. Sobre et inspirée de vrais lieux ; salle pilote à valider d'abord |
+| Anciennes images | Les 16 images produites avec le générateur du porteur (`docs/prompts-images.md`) restent en place jusqu'à leur remplacement |
 
 ### Les trois étapes du produit
 
@@ -61,42 +66,45 @@ Le 15 novembre 2026, le porteur a donné son avis sur l'ambiance : la base lui p
 | Étape | Contenu | État |
 |---|---|---|
 | 1. README | Installer, lancer et configurer le projet | Fait |
-| 2. Décor par salle | Chaque salle reçoit un décor : sol, murs, plafond, lumière, cadres, mobilier | **Salle pilote faite**, voir ci-dessous. Attend le choix du porteur avant d'être étendu aux quatre autres salles |
-| 3. Œuvres | Sculptures issues de vrais modèles 3D (format GLB) avec de vraies ombres, cadres variés, zoom haute définition, salle immersive sombre au sud de l'atrium | À faire |
+| 2. Décor par salle | Chaque salle reçoit un décor : sol, murs, plafond, lumière, cadres, mobilier | Fait : les cinq salles ont leur décor, voir ci-dessous |
+| 3. Œuvres réelles | Recherche de vraies œuvres en accès libre, puis remplacement des œuvres fictives : tableaux, vrais modèles 3D (format GLB) avec de vraies ombres, nouveaux cartels, textes et parcours. Aussi : cadres variés, zoom haute définition | **Sélection en cours**, à valider par le porteur avant toute intégration |
+| 3 bis. Salle marocaine | Nouvelle salle au plan, avec ses éléments d'architecture (arcs, zellige, plâtre sculpté, plafond de cèdre, fontaine) et ses objets traditionnels | À faire, après les œuvres réelles. Salle pilote à valider |
 | 4. Interface | Écran d'accueil du musée, nouvelle identité visuelle (typographie, icônes, commandes discrètes, fiches animées), clic au sol pour se déplacer, mini-plan permanent | À faire, après le décor pour s'accorder à l'ambiance définitive |
 | 5. Mise en ligne | Hébergement sur Vercel, puis vérification sur de vrais appareils | À faire, avec l'accord du porteur |
 | 6. Outil d'administration | L'éditeur de l'étape 2 du produit. Les réglages de décor y deviendront des options | À faire |
 
 Les voix de l'audioguide peuvent se faire à tout moment : le moteur lit déjà un enregistrement par œuvre et par langue quand on lui en fournit un. Il ne manque que les fichiers.
 
-Viendront aussi : ambiance sonore par salle, contenus enrichis (lien direct vers une œuvre, favoris, vidéos).
+Viendront aussi : salle immersive sombre au sud de l'atrium, ambiance sonore par salle, contenus enrichis (lien direct vers une œuvre, favoris, vidéos).
 
-### Décor par salle : la salle pilote
+### Décor par salle
 
-Le moteur sait désormais donner un décor à chaque salle. Un décor réunit le revêtement et la couleur du sol, la finition et la couleur des murs, le plafond, le niveau et la teinte de la lumière, la force des projecteurs, les cadres, les socles, les bancs et les cartels. Une salle sans décor suit le style du musée, comme avant.
+Le moteur donne un décor à chaque salle. Un décor réunit le revêtement et la couleur du sol, la finition et la couleur des murs, le plafond, le niveau et la teinte de la lumière, la force des projecteurs, les cadres, les socles, les bancs et les cartels. Une salle sans décor suit le style du musée.
 
-Nouveautés du moteur :
+Ce que le moteur sait faire :
 
-- **Sols** : parquet de chêne en chevrons (point de Hongrie), en plus du béton ciré et du parquet droit. Brillance du sol réglable par salle.
-- **Murs** : badigeon de chaux légèrement nuagé, en plus de la peinture unie.
+- **Sols** : béton ciré, parquet droit, parquet de chêne en chevrons (point de Hongrie), dalles de pierre calcaire. Brillance du sol réglable par salle.
+- **Murs** : peinture unie ou badigeon de chaux légèrement nuagé.
 - **Plafond flottant** : un panneau abaissé, détaché des murs par une gorge lumineuse qui lave le haut des murs.
 - **Lumière** : niveau et teinte par salle. Une salle sombre reçoit par ses portes la lumière de sa voisine plus claire. Les cadres, les bancs et les socles s'assombrissent avec leur salle.
 - **Cartels sombres** à lettres claires pour une salle obscure, rails et projecteurs de la couleur voulue, barre de seuil entre deux sols différents.
 
-La salle pilote est le **Cabinet des Couleurs**. Trois décors y sont proposés. Aucun n'est encore appliqué : la configuration de la démo garde l'ancien décor (murs terre cuite, sol en béton, plafond blanc), avec seulement un banc en plus.
+La bibliothèque compte quatre décors. Le porteur a choisi de les utiliser tous, pour alterner les ambiances :
 
-| Décor | Ambiance | Adresse pour le voir |
+| Salle | Décor | Ambiance |
 |---|---|---|
-| `argile-claire` | Salle lumineuse et douce : badigeon rosé, chêne clair en chevrons, plafond flottant blanc | `?decor=cabinet:argile-claire` |
-| `terre-cuite` | Bain de couleur : murs et plafond terre cuite, chêne fumé en chevrons, lumière chaude sur les œuvres | `?decor=cabinet:terre-cuite` |
-| `nuit` | Écrin sombre : murs et plafond bleu nuit, sol noir poli, œuvres comme éclairées de l'intérieur | `?decor=cabinet:nuit` |
+| Atrium | `pierre-claire` | Grand volume clair sous verrière : dalles de pierre calcaire, murs blancs, socle de pierre |
+| Salle des Horizons | `argile-claire` | Salle lumineuse et douce : badigeon rosé, chêne clair en chevrons, plafond flottant blanc |
+| Cabinet des Couleurs | `terre-cuite` | Bain de couleur : murs et plafond terre cuite, chêne fumé en chevrons, lumière chaude sur les œuvres |
+| Galerie des Lignes | `nuit` | Écrin sombre : murs et plafond bleu nuit, sol noir poli, œuvres comme éclairées de l'intérieur |
+| Cour des Sculptures | `pierre-claire` | Comme l'atrium : la lumière du jour ne va pas avec un décor sombre |
+
+Pour essayer un autre décor sans rien modifier : `?decor=galerie:terre-cuite` (une salle) ou `?decor=nuit` (toutes).
 
 ## 4. En attente du porteur du projet
 
-- **Son choix parmi les trois décors** du Cabinet des Couleurs (`argile-claire`, `terre-cuite`, `nuit`), ou ses remarques. Le principe retenu sera ensuite appliqué aux quatre autres salles, chacune selon ses œuvres.
+- **Son accord sur la sélection d'œuvres réelles** : rien n'entre dans le musée sans lui.
 - **Les voix de l'audioguide** : service de voix de qualité ou vraie personne, à décider.
-- **Deux images à refaire** avec un vrai générateur d'images : `dunes-04h12` et `ronds-dans-l-eau`. Présentées comme des photographies argentiques, elles n'en ont pas l'aspect, et la seconde apparaît presque noire dans la galerie. Garder les mêmes noms de fichiers.
-- **La licence** du générateur d'images : elle doit autoriser l'usage commercial.
 - **Des essais sur de vrais appareils** : téléphone (de préférence ancien), casque VR, lecteur d'écran (VoiceOver, TalkBack), voix de l'audioguide. Le casque exige une adresse HTTPS, donc l'hébergement.
 - **L'hébergement** : créer un compte Vercel et y relier le dépôt GitHub, le moment venu.
 
@@ -144,7 +152,7 @@ src/engine/...              Contrôles, plan, mobilier, sculptures, textures, re
 
 scripts/images.mjs          Préparation des images d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
-tests/unit/                 Tests unitaires (Vitest) : 87 tests
+tests/unit/                 Tests unitaires (Vitest) : 89 tests
 tests/e2e/                  Tests dans un navigateur (Playwright) : 39 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/prompts-images.md      Prompts de génération des 16 images
@@ -166,7 +174,7 @@ vercel.json                 Configuration de l'hébergement (pas encore relié)
 
 - **Repère** : le nord est vers les `z` négatifs. Une position s'écrit `[x, z]` en mètres ; une taille de salle `[largeur, hauteur, profondeur]`.
 - **Salles** : nom, position, taille, décor (facultatif), plafond plat, verrière (`{"type": "skylight", "margin": 1.8}`) ou plafond flottant (`{"type": "cove"}`), bancs.
-- **Décor d'une salle** : le nom d'un décor de la bibliothèque (`"decor": "terre-cuite"`), ou ce décor corrigé réglage par réglage (`"decor": {"preset": "terre-cuite", "colors": {"wall": "#8e3f2c"}, "light": {"level": 0.9}}`). Réglages possibles : couleurs (`colors` : mur, sol, plafond, cadres, socles, bois, finitions, rails), sol (`floor` : `concrete`, `parquet`, `chevron`), murs (`walls` : `paint`, `limewash`), brillance du sol (`gloss`), plafond, cadre, lumière (`light` : niveau, teinte, force des projecteurs), cartels (`labels`). Les anciens réglages `wall` (couleur des murs) et `light` (niveau d'éclairage) de la salle restent acceptés.
+- **Décor d'une salle** : le nom d'un décor de la bibliothèque (`"decor": "terre-cuite"` ; décors disponibles : `pierre-claire`, `argile-claire`, `terre-cuite`, `nuit`), ou ce décor corrigé réglage par réglage (`"decor": {"preset": "terre-cuite", "colors": {"wall": "#8e3f2c"}, "light": {"level": 0.9}}`). Réglages possibles : couleurs (`colors` : mur, sol, plafond, cadres, socles, bois, finitions, rails), sol (`floor` : `concrete`, `parquet`, `chevron`, `stone`), murs (`walls` : `paint`, `limewash`), brillance du sol (`gloss`), plafond, cadre, lumière (`light` : niveau, teinte, force des projecteurs), cartels (`labels`). Les anciens réglages `wall` (couleur des murs) et `light` (niveau d'éclairage) de la salle restent acceptés.
 - **Portes** : déclarées une seule fois, sur le mur d'une salle (`room`, `wall`, `offset`, `width`, hauteur facultative). L'ouverture dans la salle voisine est déduite.
 - **Tableaux** : mur, décalage le long du mur (positif vers la droite quand on fait face au mur), largeur et hauteur en mètres, image (`{"src": "images/nom.webp"}`), titre, artiste, date, technique, texte. Enregistrement audio facultatif.
 - **Sculptures** : position dans la salle, hauteur, hauteur du socle, forme et matériau (bronze, marbre, bronze patiné, bois laqué).
@@ -191,4 +199,5 @@ npm run vignettes -- demo         # photographie les sculptures (le musée doit 
 - **Le porteur du projet n'est pas développeur** : commandes exactes à copier, explications simples, sur Mac.
 - **Avant et après chaque modification du moteur** : les tests doivent passer, puis le rendu est vérifié par des captures sur ordinateur et sur téléphone.
 - **Un aperçu à la fin de chaque lot**, et pas de lot touchant à l'identité visuelle sans l'avis du porteur.
-- **Œuvres** : les prompts d'images sont fournis par Claude ; le porteur génère les images et les dépose (format, nommage et règles dans `docs/prompts-images.md`).
+- **Œuvres** : Claude cherche de vraies œuvres en accès libre et vérifie la licence de chacune à la source ; le porteur valide la sélection avant toute intégration.
+- **Accès aux collections des musées** : les sessions dans le cloud passent par l'environnement « musee-virtuel », qui autorise les sites du Metropolitan Museum, de l'Art Institute of Chicago, du musée de Cleveland, de Wikimedia Commons, de la Smithsonian et de Sketchfab.

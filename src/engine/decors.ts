@@ -36,6 +36,18 @@ export const COVE_DEFAULTS = { inset: 0.3, drop: 0.28 };
  * le reste vient du style du musée.
  */
 export const DECORS: Record<string, DecorPreset> = {
+  'pierre-claire': {
+    name: { fr: 'Pierre claire', en: 'Pale stone' },
+    summary: {
+      fr: 'Grand volume clair et minéral : dalles de pierre calcaire, murs blancs, socles de pierre. Fait pour la lumière du jour et la sculpture.',
+      en: 'A bright, mineral hall: limestone slabs, white walls, stone plinths. Made for daylight and sculpture.',
+    },
+    settings: {
+      colors: { floor: '#d6cebf', plinth: '#ddd6c9' },
+      floor: 'stone',
+      gloss: 0.2,
+    },
+  },
   'argile-claire': {
     name: { fr: 'Argile claire', en: 'Pale clay' },
     summary: {

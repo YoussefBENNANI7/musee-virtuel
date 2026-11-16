@@ -2,7 +2,7 @@
 
 Une visite de musée en 3D, dans le navigateur, sur ordinateur, téléphone et casque VR. Chaque musée est décrit par un simple dossier de configuration : ses salles, ses œuvres, ses textes et ses couleurs. Le même moteur sert tous les musées.
 
-Le dépôt contient un musée de démonstration complet, le « Musée des Horizons », avec des œuvres et des artistes fictifs.
+Le dépôt contient un musée de démonstration complet, le « Musée des Horizons ». Ses œuvres sont pour l'instant fictives ; de vraies œuvres en accès libre doivent les remplacer.
 
 Pour la vision du projet, les décisions prises et l'avancement, voir [`docs/etat-du-projet.md`](docs/etat-du-projet.md).
 
@@ -77,7 +77,7 @@ public/museums/demo/
 
 - **Repère** : le nord est en haut du plan. Une position s'écrit `[x, z]` en mètres ; une taille de salle `[largeur, hauteur, profondeur]`.
 - **Salles** (`rooms`) : nom, position, taille, plafond (plat, verrière ou plafond flottant), bancs, et la liste des œuvres.
-- **Décor d'une salle** (`decor`) : le nom d'un décor de la bibliothèque, par exemple `"decor": "terre-cuite"`. Il règle d'un coup le sol, les murs, le plafond, la lumière et les cadres. Décors disponibles : `argile-claire`, `terre-cuite`, `nuit`. Sans décor, la salle suit le style du musée.
+- **Décor d'une salle** (`decor`) : le nom d'un décor de la bibliothèque, par exemple `"decor": "terre-cuite"`. Il règle d'un coup le sol, les murs, le plafond, la lumière et les cadres. Décors disponibles : `pierre-claire`, `argile-claire`, `terre-cuite`, `nuit`. Sans décor, la salle suit le style du musée.
 - **Portes** (`doors`) : déclarées une seule fois, sur le mur d'une salle. L'ouverture dans la salle voisine est déduite.
 - **Tableaux** : mur, décalage le long du mur, taille en mètres, image, titre, artiste, date, technique, texte. Un enregistrement audio par langue est facultatif : sans lui, le texte est lu par une voix de synthèse.
 - **Sculptures** : position dans la salle, hauteur, socle, forme et matériau.

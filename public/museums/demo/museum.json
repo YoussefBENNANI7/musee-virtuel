@@ -37,6 +37,7 @@
         7.5,
         10
       ],
+      "decor": "pierre-claire",
       "ceiling": {
         "type": "skylight",
         "margin": 1.8
@@ -153,6 +154,7 @@
         4.6,
         9
       ],
+      "decor": "argile-claire",
       "benches": [
         {
           "position": [
@@ -315,8 +317,7 @@
         4.2,
         8
       ],
-      "wall": "#9c4a35",
-      "light": 0.92,
+      "decor": "terre-cuite",
       "benches": [
         {
           "position": [
@@ -471,6 +472,7 @@
         4.4,
         10
       ],
+      "decor": "nuit",
       "benches": [
         {
           "position": [
@@ -658,6 +660,7 @@
         6,
         10
       ],
+      "decor": "pierre-claire",
       "ceiling": {
         "type": "skylight",
         "margin": 1.8

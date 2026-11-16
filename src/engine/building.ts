@@ -4,7 +4,7 @@ import { WALLS, wallFrame, type Layout, type WallFrame } from './layout';
 import { MAX_LIGHT, colorAt, doorSpill, roomLight, skylightOpening, sunPatch, type RoomLight } from './lighting';
 import type { Quality } from './quality';
 import type { Style } from './styles';
-import { FLOOR_TILE, WALL_TILE, chevronTexture, concreteTexture, limewashTexture, parquetTexture, skyTexture, sunPatchTexture } from './textures';
+import { FLOOR_TILE, WALL_TILE, chevronTexture, concreteTexture, limewashTexture, parquetTexture, skyTexture, stoneTexture, sunPatchTexture } from './textures';
 import type { Baseboard, MuseumConfig, RoomConfig, WallId } from './types';
 
 /**
@@ -133,7 +133,7 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
   };
   const floorTexture = (decor: Decor) =>
     once(`sol:${decor.floor}:${decor.colors.floor}`, () =>
-      ({ concrete: concreteTexture, parquet: parquetTexture, chevron: chevronTexture })[decor.floor](decor.colors.floor, quality),
+      ({ concrete: concreteTexture, parquet: parquetTexture, chevron: chevronTexture, stone: stoneTexture })[decor.floor](decor.colors.floor, quality),
     );
   const ceilingMaterial = (decor: Decor) => once(`plafond:${decor.colors.ceiling}`, () => litMaterial(decor.colors.ceiling));
   const wallMaterial = (decor: Decor) =>

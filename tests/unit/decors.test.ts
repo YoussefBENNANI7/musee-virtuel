@@ -79,6 +79,15 @@ describe('décor d’une salle', () => {
     expect(plain.floor).toBe('concrete');
   });
 
+  it('un décor peut ne changer que le sol et les socles : la pierre claire garde les murs du style', () => {
+    const decor = resolveDecor(contemporary, room({ decor: 'pierre-claire' }));
+    expect(decor.floor).toBe('stone');
+    expect(decor.colors.wall).toBe(contemporary.palette.wall);
+    expect(decor.colors.ceiling).toBe(contemporary.palette.ceiling);
+    expect(decor.colors.plinth).not.toBe(contemporary.palette.plinth);
+    expect(decor.light.level).toBe(1);
+  });
+
   it('un nom de décor inconnu laisse la salle dans le style du musée', () => {
     const decor = resolveDecor(contemporary, room({ decor: 'rococo' }));
     expect(decor.preset).toBeNull();

@@ -50,7 +50,7 @@ export function startVisit(app: App): View {
 
   const world = buildWorld(museum, { lang: app.lang, base: app.base, style, quality, env, onLoad: invalidate });
   scene.add(world.group);
-  const reflection = quality.reflections ? buildFloorReflection(museum, world.decors) : null;
+  const reflection = quality.reflections ? buildFloorReflection(museum, world.decors, world.layout.wallThickness) : null;
   if (reflection) scene.add(reflection.object);
   controls.walkable = world.walkable;
   const first = world.spawn(museum.start.room);

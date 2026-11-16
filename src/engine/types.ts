@@ -6,8 +6,8 @@ export type WallId = 'north' | 'south' | 'east' | 'west';
 /** Style d'architecture du musée : voir styles.ts. */
 export type StyleId = 'contemporary' | 'classic';
 
-/** Revêtement de sol : béton ciré, parquet à lames droites, parquet en chevrons (point de Hongrie). */
-export type Flooring = 'concrete' | 'parquet' | 'chevron';
+/** Revêtement de sol : béton ciré, parquet à lames droites, parquet en chevrons (point de Hongrie), dalles de pierre. */
+export type Flooring = 'concrete' | 'parquet' | 'chevron' | 'stone';
 /** Finition des murs : peinture unie, ou badigeon de chaux légèrement nuagé. */
 export type WallFinish = 'paint' | 'limewash';
 /** Bas des murs : plinthe rapportée, joint creux, ou rien. */

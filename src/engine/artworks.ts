@@ -49,6 +49,13 @@ export function litColor(color: string, decor: Decor): THREE.Color {
 const LABEL_W = 0.3;
 const LABEL_H = 0.15;
 const noRaycast = () => {};
+/**
+ * Réglage d'une matière plaquée sur une autre (halo sur le mur, toile sur son cadre) : elle passe
+ * toujours devant, même dans le reflet du sol, où la profondeur est mesurée moins finement.
+ * `rank` : 1 pour la première couche, 2 pour celle qui la recouvre.
+ */
+const inFront = (rank: number) => ({ polygonOffset: true, polygonOffsetFactor: -rank, polygonOffsetUnits: -rank });
+
 /** Un matériau de halo par couleur de mur et par force de projecteur. */
 const poolMaterials = new Map<string, THREE.Material>();
 function poolMaterial(wallColor: string, strength: number): THREE.Material {
@@ -71,6 +78,7 @@ function poolMaterial(wallColor: string, strength: number): THREE.Material {
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       toneMapped: false,
+      ...inFront(1),
     });
     poolMaterials.set(key, mat);
   }
@@ -137,12 +145,12 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
   art.add(body);
   if (gap > 0) {
     // Caisse américaine : un vide sombre sépare la toile du cadre.
-    const recess = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width + gap * 2, cfg.height + gap * 2), new THREE.MeshBasicMaterial({ color: 0x050505 }));
+    const recess = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width + gap * 2, cfg.height + gap * 2), new THREE.MeshBasicMaterial({ color: 0x050505, ...inFront(1) }));
     recess.position.z = depth + 0.001;
     art.add(recess);
   }
   // Une œuvre est toujours montrée dans ses couleurs exactes, comme sous un éclairage de musée.
-  const surface = new THREE.MeshBasicMaterial({ toneMapped: false });
+  const surface = new THREE.MeshBasicMaterial({ toneMapped: false, ...inFront(2) });
   const canvas = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width, cfg.height), surface);
   canvas.position.z = depth + 0.002;
 
