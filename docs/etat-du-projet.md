@@ -211,7 +211,7 @@ Ce mélange est maintenant l'interface du musée, appliquée partout : accueil, 
 
 ### Autour de l'œuvre, et pack présentation
 
-Lot demandé par le porteur le 16 novembre 2026, fait en autonomie, pour impressionner lors de la présentation à sa hiérarchie.
+Lot demandé par le porteur le 16 novembre 2026, fait en autonomie, pour impressionner lors de la présentation à sa hiérarchie. Aperçu en images, sur ordinateur et sur téléphone : https://claude.ai/artifact/Uea2TDhDisxa2BCQVwTcrx.
 
 **Autour de l'œuvre**
 
