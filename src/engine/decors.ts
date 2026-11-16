@@ -13,6 +13,8 @@ export interface Decor {
   floor: Flooring;
   walls: WallFinish;
   gloss: number;
+  dado: number;
+  frieze: number;
   baseboard: Baseboard;
   ceiling: Exclude<CeilingConfig, { type: 'skylight' }>;
   frame: FrameShape;
@@ -78,6 +80,23 @@ export const DECORS: Record<string, DecorPreset> = {
       light: { level: 0.8, tint: '#ffefdc', spots: 1.5 },
     },
   },
+  riad: {
+    name: { fr: 'Riad', en: 'Riad' },
+    summary: {
+      fr: 'Patio marocain : soubassement de zellige, murs de chaux blanche, frise de plâtre sculpté, plafond de cèdre. Fait pour la lumière du jour.',
+      en: 'A Moroccan courtyard: zellige dado, white limewashed walls, carved plaster frieze, cedar ceiling. Made for daylight.',
+    },
+    settings: {
+      colors: { wall: '#f4eee2', ceiling: '#7b4c2c', floor: '#efe8da', trim: '#1f4f46', frame: '#4a2e1c', plinth: '#efe7d8', wood: '#6b4226' },
+      floor: 'zellige',
+      walls: 'limewash',
+      gloss: 0.22,
+      dado: 1.2,
+      frieze: 0.75,
+      baseboard: 'none',
+      light: { level: 1, tint: '#fff5e4', spots: 1 },
+    },
+  },
   nuit: {
     name: { fr: 'Nuit', en: 'Night' },
     summary: {
@@ -106,7 +125,7 @@ function apply(base: Decor, over: Omit<DecorConfig, 'preset'> | undefined): Deco
   const defined = <T extends object>(o: T | undefined) => Object.fromEntries(Object.entries(o ?? {}).filter(([, v]) => v !== undefined && v !== null));
   return {
     ...base,
-    ...(defined({ floor: over.floor, walls: over.walls, gloss: over.gloss, baseboard: over.baseboard, ceiling: over.ceiling, labels: over.labels }) as Partial<Decor>),
+    ...(defined({ floor: over.floor, walls: over.walls, gloss: over.gloss, dado: over.dado, frieze: over.frieze, baseboard: over.baseboard, ceiling: over.ceiling, labels: over.labels }) as Partial<Decor>),
     colors: { ...base.colors, ...defined(over.colors) },
     frame: { ...base.frame, ...defined(over.frame) },
     light: { ...base.light, ...defined(over.light) },
@@ -122,6 +141,8 @@ export function resolveDecor(style: Style, room: Pick<RoomConfig, 'decor' | 'wal
     floor: style.floor,
     walls: 'paint',
     gloss: DEFAULT_GLOSS,
+    dado: 0,
+    frieze: 0,
     baseboard: style.baseboard,
     ceiling: { type: 'flat' },
     frame: style.frame,

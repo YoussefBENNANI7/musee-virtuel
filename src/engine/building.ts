@@ -4,7 +4,36 @@ import { WALLS, wallFrame, type Layout, type WallFrame } from './layout';
 import { MAX_LIGHT, colorAt, doorSpill, roomLight, skylightOpening, sunPatch, type RoomLight } from './lighting';
 import type { Quality } from './quality';
 import type { Style } from './styles';
-import { FLOOR_TILE, WALL_TILE, chevronTexture, concreteTexture, limewashTexture, parquetTexture, skyTexture, stoneTexture, sunPatchTexture } from './textures';
+import {
+  FLOOR_TILE,
+  PLASTER_TILE,
+  WALL_TILE,
+  ZELLIGE_TILE,
+  chevronTexture,
+  concreteTexture,
+  limewashTexture,
+  parquetTexture,
+  plasterTexture,
+  skyTexture,
+  stoneTexture,
+  sunPatchTexture,
+  zelligeTexture,
+} from './textures';
+
+/** Zellige des murs : croix blanches, étoiles bleues, vertes et miel. Au sol : un damier plus sobre. */
+const WALL_ZELLIGE = ['#f1ead9', '#1f4f8a', '#1f6b55', '#c8902f', '#1f4f8a'];
+const FLOOR_ZELLIGE = ['#efe8da', '#e2d8c3', '#d9ceb7', '#e2d8c3', '#d9ceb7'];
+const FLOOR_ACCENT = '#1f6b55';
+
+/**
+ * Profil d'un arc outrepassé inscrit dans une ouverture de `width` sur `height` :
+ * rayon du cercle, hauteur de son centre, et demi-largeur du passage entre les piédroits.
+ */
+export function horseshoe(width: number, height: number): { radius: number; centerY: number; halfClear: number; springY: number } {
+  const radius = Math.min(width / 2 - 0.02, height * 0.42);
+  const centerY = height - 0.02 - radius;
+  return { radius, centerY, halfClear: radius * Math.cos(Math.PI / 6), springY: centerY - radius / 2 };
+}
 import type { Baseboard, MuseumConfig, RoomConfig, WallId } from './types';
 
 /**
@@ -21,6 +50,8 @@ import type { Baseboard, MuseumConfig, RoomConfig, WallId } from './types';
  */
 export interface Building {
   group: THREE.Group;
+  /** Matière de zellige, pour le mobilier paré de carreaux. */
+  zellige(): THREE.Material;
   wall(roomId: string, wall: WallId): { holder: THREE.Group; frame: WallFrame };
   light(roomId: string): RoomLight;
 }
@@ -133,8 +164,19 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
   };
   const floorTexture = (decor: Decor) =>
     once(`sol:${decor.floor}:${decor.colors.floor}`, () =>
-      ({ concrete: concreteTexture, parquet: parquetTexture, chevron: chevronTexture, stone: stoneTexture })[decor.floor](decor.colors.floor, quality),
+      decor.floor === 'zellige'
+        ? zelligeTexture([decor.colors.floor, ...FLOOR_ZELLIGE.slice(1)], quality, FLOOR_ACCENT)
+        : { concrete: concreteTexture, parquet: parquetTexture, chevron: chevronTexture, stone: stoneTexture }[decor.floor](decor.colors.floor, quality),
     );
+  /** Revêtements plaqués sur les murs : ils passent toujours devant, même dans le reflet du sol. */
+  const cladding = (key: string, map: () => THREE.Texture) =>
+    once(`habillage:${key}`, () => {
+      const material = litMaterial('#ffffff', map());
+      material.polygonOffset = true;
+      material.polygonOffsetFactor = -1;
+      material.polygonOffsetUnits = -1;
+      return material;
+    });
   const ceilingMaterial = (decor: Decor) => once(`plafond:${decor.colors.ceiling}`, () => litMaterial(decor.colors.ceiling));
   const wallMaterial = (decor: Decor) =>
     once(`mur:${decor.walls}:${decor.colors.wall}`, () => litMaterial(decor.colors.wall, decor.walls === 'limewash' ? limewashTexture(quality) : undefined));
@@ -197,6 +239,28 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
           base.position.x = (from + to) / 2;
           holder.add(base);
         }
+        const mid = (from + to) / 2;
+        /** Bande de revêtement plaquée sur le pan, entre deux hauteurs. */
+        const band = (material: THREE.Material, bottom: number, top: number, tile: number) => {
+          const mesh = lit(new THREE.Mesh(gridGeometry(to - from, top - bottom, { u0: mid, v0: (bottom + top) / 2, tile }), material), light);
+          mesh.position.set(mid, (bottom + top) / 2, 0.003);
+          mesh.raycast = noRaycast;
+          holder.add(mesh);
+        };
+        const edge = (y: number) => {
+          const strip = new THREE.Mesh(new THREE.BoxGeometry(to - from, 0.05, 0.012), baseMat);
+          strip.position.set(mid, y, 0.006);
+          strip.raycast = noRaycast;
+          holder.add(strip);
+        };
+        if (decor.dado > 0) {
+          band(cladding('zellige', () => zelligeTexture(WALL_ZELLIGE, quality)), 0, Math.min(decor.dado, h), ZELLIGE_TILE);
+          edge(Math.min(decor.dado, h) + 0.025);
+        }
+        if (decor.frieze > 0 && h - decor.frieze > decor.dado + 0.5) {
+          band(cladding('platre', () => plasterTexture(quality)), h - decor.frieze, h, PLASTER_TILE);
+          edge(h - decor.frieze - 0.025);
+        }
         // Semelle sombre dans l'épaisseur du mur, au ras du sol. On ne la voit jamais directement :
         // elle empêche le reflet du sol de laisser filtrer, au pied du mur, la clarté de la salle voisine.
         const start = from <= -frame.length / 2 + 0.01 ? from - half : from;
@@ -246,6 +310,40 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
       const top = new THREE.Mesh(new THREE.BoxGeometry(passage.width, 0.12, depth), trimMat);
       top.position.y = passage.height - 0.06;
       portal.add(top);
+    }
+
+    if (passage.door.arch === 'horseshoe') {
+      // Arc outrepassé : l'ouverture rectangulaire est refermée par un mur découpé en fer à cheval.
+      const { width: w, height: ph } = passage;
+      const { radius, centerY, halfClear, springY } = horseshoe(w, ph);
+      const outline = new THREE.Shape();
+      outline.moveTo(-w / 2, 0);
+      outline.lineTo(-w / 2, ph);
+      outline.lineTo(w / 2, ph);
+      outline.lineTo(w / 2, 0);
+      outline.lineTo(halfClear, 0);
+      outline.lineTo(halfClear, springY);
+      outline.absarc(0, centerY, radius, -Math.PI / 6, (Math.PI * 7) / 6, false);
+      outline.lineTo(-halfClear, 0);
+      outline.closePath();
+      passage.rooms.forEach((room, i) => {
+        // Chaque face de l'arc a la matière et la lumière des murs de sa salle.
+        const geometry = new THREE.ShapeGeometry(outline, 24);
+        const uv = geometry.attributes.uv;
+        for (let k = 0; k < uv.count; k++) uv.setXY(k, uv.getX(k) / WALL_TILE, uv.getY(k) / WALL_TILE);
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(uv.count * 3).fill(1), 3));
+        const face = lit(new THREE.Mesh(geometry, wallMaterial(decors.get(room.id)!)), lights.get(room.id)!);
+        // La salle où la porte est déclarée se trouve du côté des z positifs du passage.
+        face.position.z = i === 0 ? half + 0.002 : -half - 0.002;
+        if (i === 1) face.rotation.y = Math.PI;
+        portal.add(face);
+      });
+      // L'intrados : l'épaisseur du mur, visible sous l'arc.
+      const through = new THREE.ExtrudeGeometry(outline, { depth: t, bevelEnabled: false, curveSegments: 24 });
+      through.translate(0, 0, -half);
+      const hidden = new THREE.MeshBasicMaterial({ visible: false });
+      const intrados = new THREE.MeshBasicMaterial({ color: new THREE.Color(palette.wall).multiplyScalar(0.86), toneMapped: false });
+      portal.add(new THREE.Mesh(through, [hidden, intrados]));
     }
 
     // Deux sols différents se rejoignent sous la porte : une barre de seuil couvre leur jonction.
@@ -371,6 +469,7 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
 
   return {
     group,
+    zellige: () => once('zellige:mobilier', () => new THREE.MeshBasicMaterial({ map: zelligeTexture(WALL_ZELLIGE, quality), toneMapped: false })),
     wall: (roomId, wall) => walls.get(`${roomId}:${wall}`)!,
     light: (roomId) => lights.get(roomId)!,
   };

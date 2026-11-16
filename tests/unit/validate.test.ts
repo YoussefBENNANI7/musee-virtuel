@@ -35,7 +35,7 @@ describe('configurations livrées', () => {
 
   it('chaque salle du musée de démonstration a son décor', () => {
     const decors = Object.fromEntries(demo().rooms.map((r) => [r.id, r.decor]));
-    expect(decors).toEqual({ atrium: 'pierre-claire', horizons: 'argile-claire', cabinet: 'terre-cuite', galerie: 'nuit', cour: 'pierre-claire' });
+    expect(decors).toEqual({ atrium: 'pierre-claire', horizons: 'argile-claire', cabinet: 'terre-cuite', galerie: 'nuit', cour: 'pierre-claire', riad: 'riad' });
   });
 
   it('les deux musées restent valides dans chaque décor de la bibliothèque', () => {
@@ -125,6 +125,28 @@ describe('erreurs détectées', () => {
     expect(errors.filter((e) => e.includes('galet-qui-respire'))).toEqual([]);
   });
 
+  it('un arc inconnu ou trop étroit, une fontaine contre un mur, un objet sans cadre trop bas', () => {
+    const museum = fixture();
+    museum.doors[0].arch = 'ogive' as never;
+    museum.doors[1].arch = 'horseshoe';
+    museum.doors[1].width = 1.2;
+    museum.rooms[0].fountain = { position: [4.5, 0] };
+    museum.rooms[3].fountain = { position: [0, 0] };
+    const door = painting(museum, 'maree-basse');
+    door.frameless = true;
+    door.height = 3;
+    door.y = 1.4;
+    const errors = errorsOf(museum);
+    expect(errors).toContain('Porte de "hall" (mur north) : arc inconnu : "ogive"');
+    expect(errors).toContain('Porte de "hall" (mur east) : trop étroite pour un arc outrepassé (minimum 1,6 m)');
+    expect(errors).toContain('Salle "hall" : fontaine : posée hors de la salle ou trop près d\'un mur');
+    expect(errors.filter((e) => e.includes('rotonde') && e.includes('fontaine'))).toEqual([]);
+    expect(errors).toContain('Œuvre "maree-basse" : trop haute : elle toucherait le sol');
+    // Relevée de quinze centimètres, la même pièce tient : un objet sans cadre peut frôler le sol.
+    door.y = 1.55;
+    expect(errorsOf(museum).filter((e) => e.includes('maree-basse'))).toEqual([]);
+  });
+
   it('un banc posé dans un mur, ou un niveau d’éclairage hors limites', () => {
     const museum = fixture();
     const galerie = museum.rooms.find((r) => r.id === 'galerie')!;
@@ -147,7 +169,7 @@ describe('erreurs détectées', () => {
     cabinet.decor = { walls: 'crépi' as never, ceiling: { type: 'skylight' } as never, labels: 'fluo' as never, frame: { width: 0.8 } };
     rotonde.wall = 'rouge';
     const errors = errorsOf(museum);
-    expect(errors).toContain('Salle "hall" : décor inconnu : "rococo" (décors disponibles : pierre-claire, argile-claire, terre-cuite, nuit)');
+    expect(errors).toContain('Salle "hall" : décor inconnu : "rococo" (décors disponibles : pierre-claire, argile-claire, terre-cuite, riad, nuit)');
     expect(errors).toContain('Salle "galerie" : décor : couleur invalide pour "wall" : "bleu" (attendu : "#rrggbb")');
     expect(errors).toContain('Salle "galerie" : décor : sol inconnu : "moquette"');
     expect(errors).toContain('Salle "galerie" : décor : niveau d\'éclairage invalide (entre 0 et 2)');

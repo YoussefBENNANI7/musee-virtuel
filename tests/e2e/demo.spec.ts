@@ -101,6 +101,33 @@ test('démo : la sculpture numérisée se charge, à la bonne taille, en version
   expect(errors).toEqual([]);
 });
 
+test('démo : on entre à pied dans le patio marocain par l’arc, et la fontaine se contourne', async ({ page }) => {
+  await page.goto('/?q=medium');
+  await page.waitForSelector('body.ready');
+  const m = (fn: string) => page.evaluate(`(() => { const m = window.__museum; return ${fn}; })()`);
+  expect(await m('m.decors.riad')).toBe('riad');
+  // Depuis le Cabinet des Couleurs, face au nord, dans l'axe de la porte.
+  await page.evaluate(() => (window as any).__museum.controls.teleport(0, -20, 0));
+  await page.keyboard.down('KeyW');
+  await expect(page.locator('#room-name')).toHaveText('Patio marocain', { timeout: 30_000 });
+  // Le visiteur continue tout droit et s'arrête devant la fontaine, au centre du patio (z = -27,5).
+  await expect
+    .poll(async () => {
+      const a = (await m('m.camera.position.z')) as number;
+      await page.waitForTimeout(400);
+      return Math.abs(((await m('m.camera.position.z')) as number) - a) < 0.005 ? a : null;
+    }, { timeout: 30_000 })
+    .not.toBeNull();
+  await page.keyboard.up('KeyW');
+  const z = (await m('m.camera.position.z')) as number;
+  expect(z).toBeLessThan(-23);
+  expect(z).toBeGreaterThan(-26.2);
+  expect(await m('m.world.walkable(0, -27.5)')).toBe(false);
+  // De part et d'autre de l'arc, le mur arrête le visiteur.
+  expect(await m('m.world.walkable(1.05, -22)')).toBe(false);
+  expect(await m('m.world.walkable(0, -22)')).toBe(true);
+});
+
 test('une œuvre sans mention ni lien n’affiche pas de ligne vide', async ({ page }) => {
   await page.route('**/museums/fixture/museum.json', (route) =>
     route.fulfill({ path: new URL('../fixtures/museum.json', import.meta.url).pathname }),

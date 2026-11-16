@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { fixtureMaterial, hangPainting, placeSculpture, TRACK_DISTANCE, type ArtworkContext, type PlacedArtwork } from './artworks';
 import { buildBuilding } from './building';
 import { clearHeight, resolveDecor, type Decor } from './decors';
-import { benchFootprint, buildBench } from './furniture';
+import { FOUNTAIN_RADIUS, benchFootprint, buildBench, buildFountain } from './furniture';
 import { EYE_HEIGHT, WALLS, buildLayout, type Layout } from './layout';
 import type { Quality } from './quality';
 import type { Style } from './styles';
@@ -80,6 +80,12 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
       const bx = room.position[0] + bench.position[0];
       const bz = room.position[1] + bench.position[1];
       blocked.push((x, z) => Math.abs(x - bx) < hx + 0.3 && Math.abs(z - bz) < hz + 0.3);
+    }
+    if (room.fountain) {
+      group.add(buildFountain(room.fountain.position, room, decor, building.zellige()));
+      const fx = room.position[0] + room.fountain.position[0];
+      const fz = room.position[1] + room.fountain.position[1];
+      blocked.push((x, z) => Math.hypot(x - fx, z - fz) < FOUNTAIN_RADIUS + 0.3);
     }
     for (const cfg of room.artworks) {
       if (cfg.type === 'sculpture') artworks.push(placeSculpture(cfg, room, group, ctx));

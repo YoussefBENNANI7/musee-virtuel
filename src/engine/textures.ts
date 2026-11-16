@@ -357,7 +357,111 @@ function shade(color: string, k: number, warm = 0): string {
 }
 
 /** Côté, en mètres, de la surface couverte par une répétition de chaque texture de sol. */
-export const FLOOR_TILE = { concrete: 3, parquet: 2, chevron: 0.9, stone: 2.4 } as const;
+export const FLOOR_TILE = { concrete: 3, parquet: 2, chevron: 0.9, stone: 2.4, zellige: 0.8 } as const;
+/** Côté, en mètres, d'une répétition du zellige et du plâtre sculpté des murs. */
+export const ZELLIGE_TILE = 0.5;
+export const PLASTER_TILE = 0.75;
+
+/**
+ * Étoile à huit branches : deux carrés superposés, l'un tourné d'un huitième de tour.
+ * C'est le motif de base du zellige ; entre quatre étoiles voisines se dessine une croix.
+ */
+function star(g: CanvasRenderingContext2D, x: number, y: number, r: number) {
+  g.beginPath();
+  for (let i = 0; i < 16; i++) {
+    const a = (i * Math.PI) / 8;
+    const d = i % 2 ? r * 0.765 : r;
+    g[i ? 'lineTo' : 'moveTo'](x + Math.cos(a) * d, y + Math.sin(a) * d);
+  }
+  g.closePath();
+}
+
+/**
+ * Zellige : un semis d'étoiles à huit branches et de croix, séparées par un joint clair.
+ * `colors` : le fond (les croix), puis les teintes des étoiles, prises tour à tour.
+ * Une répétition couvre deux étoiles dans chaque sens.
+ */
+export function zelligeTexture(colors: string[], quality: Quality = TIERS.high, accent?: string): THREE.Texture {
+  const size = quality.textureSize;
+  const { c, g } = canvasOf(size, size);
+  const cell = size / 2;
+  const r = rng(57);
+  const [ground, ...stars] = colors;
+  g.fillStyle = ground;
+  g.fillRect(0, 0, size, size);
+  g.lineJoin = 'miter';
+  for (let j = 0; j <= 2; j++) {
+    for (let i = 0; i <= 2; i++) {
+      const x = i * cell;
+      const y = j * cell;
+      star(g, x, y, cell / 2);
+      g.fillStyle = stars[((i % 2) + (j % 2) * 2) % stars.length];
+      g.fill();
+      g.strokeStyle = '#f4efe2';
+      g.lineWidth = size / 130;
+      g.stroke();
+      // Petite étoile au cœur de la grande : claire, ou de la couleur d'accent sur un sol sobre.
+      star(g, x, y, cell / 6);
+      g.fillStyle = accent && (i + j) % 2 === 0 ? accent : '#f4efe2';
+      g.fill();
+      // Carreau posé sur la pointe au centre de chaque croix.
+      if (i < 2 && j < 2) {
+        g.save();
+        g.translate(x + cell / 2, y + cell / 2);
+        g.rotate(Math.PI / 4);
+        g.fillStyle = accent ?? stars[(i + j * 2 + 1) % stars.length];
+        g.fillRect(-cell / 9, -cell / 9, (cell * 2) / 9, (cell * 2) / 9);
+        g.strokeRect(-cell / 9, -cell / 9, (cell * 2) / 9, (cell * 2) / 9);
+        g.restore();
+      }
+    }
+  }
+  // Émail irrégulier : chaque carreau est taillé et cuit à la main.
+  for (let i = 0; i < size * 10; i++) {
+    g.fillStyle = r() > 0.5 ? '#ffffff' : '#000000';
+    g.globalAlpha = 0.02 + r() * 0.05;
+    g.fillRect(r() * size, r() * size, 2, 2);
+  }
+  g.globalAlpha = 1;
+  return tiling(c, quality);
+}
+
+/**
+ * Plâtre sculpté : le même réseau d'étoiles, ton sur ton, creusé dans un enduit blanc cassé.
+ * L'ombre et la lumière de chaque arête donnent le relief.
+ */
+export function plasterTexture(quality: Quality = TIERS.high): THREE.Texture {
+  const size = quality.textureSize;
+  const { c, g } = canvasOf(size, size);
+  const cell = size / 2;
+  g.fillStyle = '#cbbd9f';
+  g.fillRect(0, 0, size, size);
+  // Trois plans de relief : le fond en creux, les grandes étoiles en saillie, leur cœur creusé à nouveau.
+  const layer = (radius: number, color: string, offset: boolean) => {
+    for (let j = 0; j <= 2; j++) {
+      for (let i = 0; i <= 2; i++) {
+        const x = i * cell + (offset ? cell / 2 : 0);
+        const y = j * cell + (offset ? cell / 2 : 0);
+        // Ombre portée en bas à droite, puis la forme, puis un filet de lumière en haut à gauche.
+        star(g, x + size / 200, y + size / 200, radius);
+        g.fillStyle = 'rgba(60, 45, 25, 0.55)';
+        g.fill();
+        star(g, x, y, radius);
+        g.fillStyle = color;
+        g.fill();
+        g.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        g.lineWidth = size / 400;
+        g.stroke();
+      }
+    }
+  };
+  layer(cell / 2.05, '#ece3d0', false);
+  layer(cell / 3.4, '#d6c9ae', false);
+  layer(cell / 6, '#f1e9d8', false);
+  layer(cell / 5, '#ece3d0', true);
+  g.globalAlpha = 1;
+  return tiling(c, quality);
+}
 
 /**
  * Parquet en chevrons (point de Hongrie) : des travées de lames coupées en biais, qui se

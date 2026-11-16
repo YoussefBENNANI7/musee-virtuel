@@ -6,8 +6,8 @@ export type WallId = 'north' | 'south' | 'east' | 'west';
 /** Style d'architecture du musée : voir styles.ts. */
 export type StyleId = 'contemporary' | 'classic';
 
-/** Revêtement de sol : béton ciré, parquet à lames droites, parquet en chevrons (point de Hongrie), dalles de pierre. */
-export type Flooring = 'concrete' | 'parquet' | 'chevron' | 'stone';
+/** Revêtement de sol : béton ciré, parquet à lames droites, parquet en chevrons (point de Hongrie), dalles de pierre, zellige. */
+export type Flooring = 'concrete' | 'parquet' | 'chevron' | 'stone' | 'zellige';
 /** Finition des murs : peinture unie, ou badigeon de chaux légèrement nuagé. */
 export type WallFinish = 'paint' | 'limewash';
 /** Bas des murs : plinthe rapportée, joint creux, ou rien. */
@@ -73,6 +73,10 @@ export interface PaintingConfig extends ArtworkBase {
    * `width` et `height` restent les dimensions de l'œuvre elle-même.
    */
   mat?: number;
+  /** Hauteur du centre de l'œuvre, en mètres. Par défaut 1,55 m ; à régler pour une porte ou un tapis. */
+  y?: number;
+  /** Vrai pour un objet accroché tel quel, sans cadre : porte, panneau de bois, tapis, tenture. */
+  frameless?: boolean;
 }
 
 export interface SculptureConfig extends ArtworkBase {
@@ -139,6 +143,10 @@ export interface DecorConfig {
   /** Brillance du sol : 0 = mat, 1 = miroir. Visible au niveau de qualité le plus élevé. */
   gloss?: number;
   baseboard?: Baseboard;
+  /** Hauteur, en mètres, d'un soubassement de zellige au bas des murs. */
+  dado?: number;
+  /** Hauteur, en mètres, d'une frise de plâtre sculpté en haut des murs. */
+  frieze?: number;
   /** Plafond proposé par le décor. Celui que la salle déclare elle-même (`ceiling`) l'emporte. */
   ceiling?: Exclude<CeilingConfig, { type: 'skylight' }>;
   frame?: Partial<FrameShape>;
@@ -175,6 +183,8 @@ export interface RoomConfig {
   light?: number;
   /** Bancs, posés au sol. */
   benches?: BenchConfig[];
+  /** Fontaine à bassin en étoile, posée au sol. Position depuis le centre de la salle : [x, z]. */
+  fountain?: { position: [number, number] };
   artworks: ArtworkConfig[];
 }
 
@@ -186,6 +196,8 @@ export interface DoorConfig {
   width: number;
   /** Hauteur en mètres, ou "full" pour une ouverture jusqu'au plafond. Par défaut : celle du style. */
   height?: number | 'full';
+  /** Porte en arc outrepassé (en fer à cheval), à la manière marocaine. */
+  arch?: 'horseshoe';
 }
 
 /** Parcours thématique : une suite d'œuvres à voir dans l'ordre. */

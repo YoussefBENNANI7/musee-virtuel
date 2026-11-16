@@ -556,7 +556,7 @@
           "id": "meules-fin-de-l-ete",
           "type": "painting",
           "wall": "north",
-          "offset": -0.85,
+          "offset": -2.25,
           "width": 1.015,
           "height": 0.6,
           "image": {
@@ -593,7 +593,7 @@
           "id": "meules-effet-de-neige",
           "type": "painting",
           "wall": "north",
-          "offset": 0.85,
+          "offset": 1.8,
           "width": 1.011,
           "height": 0.653,
           "image": {
@@ -707,7 +707,7 @@
           "id": "iris",
           "type": "painting",
           "wall": "north",
-          "offset": -3.2,
+          "offset": -3.75,
           "width": 0.929,
           "height": 0.737,
           "image": {
@@ -744,7 +744,7 @@
           "id": "nympheas",
           "type": "painting",
           "wall": "north",
-          "offset": 3.2,
+          "offset": 3.65,
           "width": 0.936,
           "height": 0.899,
           "image": {
@@ -1419,6 +1419,604 @@
           "link": "https://www.artic.edu/artworks/20684"
         }
       ]
+    },
+    {
+      "id": "riad",
+      "name": {
+        "fr": "Patio marocain",
+        "en": "Moroccan Courtyard"
+      },
+      "position": [
+        0,
+        -27.5
+      ],
+      "size": [
+        11,
+        6.5,
+        11
+      ],
+      "decor": "riad",
+      "ceiling": {
+        "type": "skylight",
+        "margin": 2.6
+      },
+      "fountain": {
+        "position": [
+          0,
+          0
+        ]
+      },
+      "artworks": [
+        {
+          "id": "paire-de-portes",
+          "type": "painting",
+          "wall": "north",
+          "offset": 0,
+          "width": 2.108,
+          "height": 3.733,
+          "y": 1.92,
+          "frameless": true,
+          "image": {
+            "src": "images/paire-de-portes.webp",
+            "width": 1003,
+            "height": 1776,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Paire de portes",
+            "en": "Pair of Doors"
+          },
+          "artist": {
+            "fr": "Maroc",
+            "en": "Morocco"
+          },
+          "year": {
+            "fr": "XIVe siècle, époque mérinide",
+            "en": "14th century, Marinid period"
+          },
+          "medium": {
+            "fr": "Bois sculpté, ferrures",
+            "en": "Carved wood with iron fittings"
+          },
+          "description": {
+            "fr": "Ces vantaux de près de quatre mètres fermaient l'entrée d'un édifice de l'époque mérinide, la dynastie qui fit de Fès sa capitale. La partie haute est couverte d'un décor sculpté ; en bas, chaque vantail est percé d'un guichet en arc outrepassé, qui laissait passer une personne sans ouvrir la grande porte.",
+            "en": "These leaves, almost four metres tall, closed the entrance of a building of the Marinid period, the dynasty that made Fez its capital. The upper part is covered with carved decoration; below, each leaf has a small horseshoe-arched wicket that let one person through without opening the great door."
+          },
+          "credit": {
+            "fr": "Art Institute of Chicago · image dans le domaine public",
+            "en": "Art Institute of Chicago · public domain image"
+          },
+          "link": "https://www.artic.edu/artworks/16830"
+        },
+        {
+          "id": "tapis",
+          "type": "painting",
+          "wall": "north",
+          "offset": -3.4,
+          "width": 2.412,
+          "height": 4.69,
+          "y": 2.75,
+          "frameless": true,
+          "image": {
+            "src": "images/tapis.webp",
+            "width": 787,
+            "height": 1530,
+            "variants": [
+              640,
+              1024,
+              1530
+            ]
+          },
+          "title": {
+            "fr": "Tapis",
+            "en": "Carpet"
+          },
+          "artist": {
+            "fr": "Maroc",
+            "en": "Morocco"
+          },
+          "year": "1875–1900",
+          "medium": {
+            "fr": "Laine",
+            "en": "Wool"
+          },
+          "description": {
+            "fr": "Un tapis citadin de la fin du XIXe siècle, long de près de cinq mètres. Son champ central, entouré de bordures multiples, rappelle les tapis d'Anatolie dont s'inspiraient les ateliers des villes marocaines. Il est présenté ici accroché, pour qu'on en lise tout le dessin.",
+            "en": "An urban carpet of the late nineteenth century, almost five metres long. Its central field, framed by multiple borders, recalls the Anatolian carpets that inspired the workshops of Moroccan towns. It is shown here hanging, so that the whole design can be read."
+          },
+          "credit": {
+            "fr": "Art Institute of Chicago · image dans le domaine public",
+            "en": "Art Institute of Chicago · public domain image"
+          },
+          "link": "https://www.artic.edu/artworks/6141"
+        },
+        {
+          "id": "panneau-de-soie",
+          "type": "painting",
+          "wall": "north",
+          "offset": 3.4,
+          "width": 0.934,
+          "height": 2.582,
+          "y": 2.3,
+          "frameless": true,
+          "image": {
+            "src": "images/panneau-de-soie.webp",
+            "width": 704,
+            "height": 1946,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Panneau de soie",
+            "en": "Silk Panel"
+          },
+          "artist": {
+            "fr": "Maroc",
+            "en": "Morocco"
+          },
+          "year": {
+            "fr": "XVIe–XVIIe siècle, probablement époque saadienne",
+            "en": "16th–17th century, probably Saadi period"
+          },
+          "medium": {
+            "fr": "Soie et filé métallique doré",
+            "en": "Silk and gilt-metal thread"
+          },
+          "description": {
+            "fr": "Ce long panneau de soie tissée est rayé de bandes de motifs géométriques, rehaussées de fil doré. Le musée le date probablement de l'époque saadienne, celle des sultans de Marrakech.",
+            "en": "This long panel of woven silk is striped with bands of geometric motifs, heightened with gilt thread. The museum dates it probably to the Saadi period, that of the sultans of Marrakesh."
+          },
+          "credit": {
+            "fr": "Art Institute of Chicago · image dans le domaine public",
+            "en": "Art Institute of Chicago · public domain image"
+          },
+          "link": "https://www.artic.edu/artworks/181173"
+        },
+        {
+          "id": "panneau-a-arcs",
+          "type": "painting",
+          "wall": "east",
+          "offset": 0,
+          "width": 3,
+          "height": 0.483,
+          "y": 2.75,
+          "frameless": true,
+          "image": {
+            "src": "images/panneau-a-arcs.webp",
+            "width": 3000,
+            "height": 483,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Panneau à arcs polylobés",
+            "en": "Panel with Cusped Arches"
+          },
+          "artist": {
+            "fr": "Maroc",
+            "en": "Morocco"
+          },
+          "year": {
+            "fr": "XIVe siècle",
+            "en": "14th century"
+          },
+          "medium": {
+            "fr": "Cèdre sculpté et peint",
+            "en": "Carved and painted cedar"
+          },
+          "description": {
+            "fr": "Cette longue frise de cèdre, large de plus de trois mètres, ornait le haut d'un mur ou d'une cour. Une suite d'arcs polylobés y abrite des motifs végétaux. Des restes de peinture montrent que le bois était autrefois coloré.",
+            "en": "This long cedar frieze, more than three metres wide, decorated the top of a wall or courtyard. A row of cusped arches shelters plant motifs. Traces of paint show that the wood was once coloured."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/453262"
+        },
+        {
+          "id": "moucharabieh",
+          "type": "painting",
+          "wall": "east",
+          "offset": -2.9,
+          "width": 0.753,
+          "height": 1.035,
+          "y": 1.85,
+          "frameless": true,
+          "image": {
+            "src": "images/moucharabieh.webp",
+            "width": 1945,
+            "height": 2673,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Claustra de fenêtre (moucharabieh)",
+            "en": "Window Screen (Mashrabiya)"
+          },
+          "artist": {
+            "fr": "Maroc",
+            "en": "Morocco"
+          },
+          "year": {
+            "fr": "XVIIe ou XVIIIe siècle",
+            "en": "17th or 18th century"
+          },
+          "medium": {
+            "fr": "Bois sculpté et tourné",
+            "en": "Carved and turned wood"
+          },
+          "description": {
+            "fr": "Placé devant une fenêtre, ce treillis de bois laisse passer l'air et la lumière, et permet de voir sans être vu. Il est fait de centaines de petites pièces assemblées sans clou.",
+            "en": "Set in front of a window, this wooden lattice lets air and light through, and allows one to see without being seen. It is made of hundreds of small pieces joined without nails."
+          },
+          "credit": {
+            "fr": "Art Institute of Chicago · image dans le domaine public",
+            "en": "Art Institute of Chicago · public domain image"
+          },
+          "link": "https://www.artic.edu/artworks/16825"
+        },
+        {
+          "id": "panneau-sculpte",
+          "type": "painting",
+          "wall": "east",
+          "offset": 2.9,
+          "width": 1.171,
+          "height": 0.203,
+          "y": 1.75,
+          "frameless": true,
+          "image": {
+            "src": "images/panneau-sculpte.webp",
+            "width": 2832,
+            "height": 491,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Panneau de bois sculpté",
+            "en": "Carved Wooden Panel"
+          },
+          "artist": {
+            "fr": "Maroc",
+            "en": "Morocco"
+          },
+          "year": {
+            "fr": "XIVe siècle, époque mérinide",
+            "en": "14th century, Marinid period"
+          },
+          "medium": {
+            "fr": "Bois sculpté et peint",
+            "en": "Carved and painted wood"
+          },
+          "description": {
+            "fr": "Un fragment de décor d'architecture de l'époque mérinide. Des palmes et des rinceaux s'y enroulent de part et d'autre d'un motif central, selon une symétrie stricte.",
+            "en": "A fragment of architectural decoration from the Marinid period. Palmettes and scrolls curl on either side of a central motif, in strict symmetry."
+          },
+          "credit": {
+            "fr": "Art Institute of Chicago · image dans le domaine public",
+            "en": "Art Institute of Chicago · public domain image"
+          },
+          "link": "https://www.artic.edu/artworks/16799"
+        },
+        {
+          "id": "tenture-msimsim",
+          "type": "painting",
+          "wall": "west",
+          "offset": 0,
+          "width": 3.189,
+          "height": 0.625,
+          "y": 2.75,
+          "frameless": true,
+          "image": {
+            "src": "images/tenture-msimsim.webp",
+            "width": 3000,
+            "height": 588,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Tenture murale (msimsim)",
+            "en": "Wall Hanging (msimsim)"
+          },
+          "artist": {
+            "fr": "Maroc, Tétouan",
+            "en": "Morocco, Tétouan"
+          },
+          "year": {
+            "fr": "XIXe siècle",
+            "en": "19th century"
+          },
+          "medium": {
+            "fr": "Soie",
+            "en": "Silk"
+          },
+          "description": {
+            "fr": "À Tétouan, ces longues bandes de soie se tendaient sur les murs des pièces de réception, les jours de fête. Leur petit motif répété, en damier, a donné son nom au tissu.",
+            "en": "In Tétouan, these long bands of silk were hung on the walls of reception rooms on feast days. Their small repeated chequered motif gave the fabric its name."
+          },
+          "credit": {
+            "fr": "Cleveland Museum of Art · image dans le domaine public",
+            "en": "Cleveland Museum of Art · public domain image"
+          },
+          "link": "https://clevelandart.org/art/2010.287"
+        },
+        {
+          "id": "coran",
+          "type": "painting",
+          "wall": "west",
+          "offset": -2.9,
+          "width": 0.379,
+          "height": 0.202,
+          "y": 1.6,
+          "mat": 0.1,
+          "image": {
+            "src": "images/coran.webp",
+            "width": 3000,
+            "height": 1601,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Section d'un manuscrit du Coran",
+            "en": "Section from a Qur'an Manuscript"
+          },
+          "artist": {
+            "fr": "Maroc ou sud de l'Espagne (attribué)",
+            "en": "Morocco or southern Spain (attributed)"
+          },
+          "year": {
+            "fr": "vers 1300",
+            "en": "c. 1300"
+          },
+          "medium": {
+            "fr": "Encre, or et gouache sur parchemin",
+            "en": "Ink, gold and opaque watercolour on parchment"
+          },
+          "description": {
+            "fr": "Le manuscrit est ouvert sur une double page d'ornement : deux carrés d'entrelacs géométriques, sans aucun texte. De telles pages marquaient le début ou la fin d'un volume.",
+            "en": "The manuscript lies open at a double page of ornament: two squares of geometric interlace, with no text at all. Such pages marked the beginning or end of a volume."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/454664"
+        },
+        {
+          "id": "dalail-al-khayrat",
+          "type": "painting",
+          "wall": "west",
+          "offset": 2.9,
+          "width": 0.315,
+          "height": 0.162,
+          "y": 1.6,
+          "mat": 0.1,
+          "image": {
+            "src": "images/dalail-al-khayrat.webp",
+            "width": 3000,
+            "height": 1542,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Double page des Dala'il al-Khayrat d'al-Jazuli",
+            "en": "Bifolium from al-Jazuli's Dala'il al-Khayrat"
+          },
+          "artist": {
+            "fr": "Afrique du Nord (attribué)",
+            "en": "North Africa (attributed)"
+          },
+          "year": {
+            "fr": "XVe–XVIe siècle",
+            "en": "15th–16th century"
+          },
+          "medium": {
+            "fr": "Encre et gouache sur papier",
+            "en": "Ink and opaque watercolour on paper"
+          },
+          "description": {
+            "fr": "Les Dala'il al-Khayrat sont un recueil de prières composé au XVe siècle par le savant marocain al-Jazuli. L'écriture arrondie de ces pages, dite maghribi, est propre à l'Afrique du Nord et à l'Espagne musulmane.",
+            "en": "The Dala'il al-Khayrat is a collection of prayers composed in the fifteenth century by the Moroccan scholar al-Jazuli. The rounded script of these pages, known as Maghribi, is particular to North Africa and Muslim Spain."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/451682"
+        },
+        {
+          "id": "carreaux-calligraphies",
+          "type": "painting",
+          "wall": "south",
+          "offset": -2.9,
+          "width": 0.538,
+          "height": 0.124,
+          "y": 1.6,
+          "mat": 0.08,
+          "image": {
+            "src": "images/carreaux-calligraphies.webp",
+            "width": 3000,
+            "height": 691,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Panneau de quatre carreaux calligraphiés",
+            "en": "Panel of Four Calligraphic Tiles"
+          },
+          "artist": {
+            "fr": "Maroc",
+            "en": "Morocco"
+          },
+          "year": {
+            "fr": "XIVe – début du XVe siècle",
+            "en": "14th–early 15th century"
+          },
+          "medium": {
+            "fr": "Céramique émaillée et excisée",
+            "en": "Glazed and carved ceramic"
+          },
+          "description": {
+            "fr": "L'inscription est obtenue en grattant l'émail noir autour des lettres, pour laisser paraître la terre claire. Cette technique est celle des frises qui couronnent les zelliges dans les médersas de Fès.",
+            "en": "The inscription is made by scraping away the black glaze around the letters, to reveal the pale clay beneath. This is the technique of the friezes that crown the tilework in the madrasas of Fez."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/453659"
+        },
+        {
+          "id": "carreau-zellige",
+          "type": "painting",
+          "wall": "south",
+          "offset": -4.2,
+          "width": 0.117,
+          "height": 0.117,
+          "y": 1.6,
+          "mat": 0.1,
+          "image": {
+            "src": "images/carreau-zellige.webp",
+            "width": 1751,
+            "height": 1744,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Carreau",
+            "en": "Square Tile"
+          },
+          "artist": {
+            "fr": "Maroc",
+            "en": "Morocco"
+          },
+          "year": {
+            "fr": "fin du XIXe siècle",
+            "en": "late 19th century"
+          },
+          "medium": {
+            "fr": "Terre cuite à décor polychrome",
+            "en": "Earthenware with polychrome decoration"
+          },
+          "description": {
+            "fr": "Un seul carreau, peint d'un entrelacs blanc sur fond bleu. Posé à côté de ses voisins, son motif se prolonge de carreau en carreau et couvre tout un mur.",
+            "en": "A single tile, painted with white interlace on a blue ground. Set beside its neighbours, its pattern carries on from tile to tile and covers a whole wall."
+          },
+          "credit": {
+            "fr": "Art Institute of Chicago · image dans le domaine public",
+            "en": "Art Institute of Chicago · public domain image"
+          },
+          "link": "https://www.artic.edu/artworks/16674"
+        },
+        {
+          "id": "cour-tetouan",
+          "type": "painting",
+          "wall": "south",
+          "offset": 2.9,
+          "width": 0.346,
+          "height": 0.26,
+          "y": 1.6,
+          "image": {
+            "src": "images/cour-tetouan.webp",
+            "width": 3000,
+            "height": 2252,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Cour, Tétouan, Maroc",
+            "en": "Courtyard, Tétouan, Morocco"
+          },
+          "artist": "John Singer Sargent",
+          "year": "1879–1880",
+          "medium": {
+            "fr": "Huile sur bois",
+            "en": "Oil on wood"
+          },
+          "description": {
+            "fr": "Sargent a vingt-trois ans quand il voyage en Espagne puis au Maroc, pendant l'hiver 1879–1880. Il peint sur de petits panneaux de bois, vite, sur le motif. Ici, tout le sujet est la lumière sur un mur blanchi à la chaux.",
+            "en": "Sargent was twenty-three when he travelled to Spain and then Morocco in the winter of 1879–80. He painted on small wooden panels, quickly, on the spot. Here the whole subject is light on a whitewashed wall."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/12065"
+        },
+        {
+          "id": "couple-marocain",
+          "type": "painting",
+          "wall": "south",
+          "offset": 4.2,
+          "width": 0.188,
+          "height": 0.137,
+          "y": 1.6,
+          "mat": 0.1,
+          "image": {
+            "src": "images/couple-marocain.webp",
+            "width": 1882,
+            "height": 1372,
+            "variants": [
+              640,
+              1024,
+              1600
+            ]
+          },
+          "title": {
+            "fr": "Couple marocain sur sa terrasse",
+            "en": "A Moroccan Couple on Their Terrace"
+          },
+          "artist": "Eugène Delacroix",
+          "year": "1832",
+          "medium": {
+            "fr": "Aquarelle sur traces de graphite",
+            "en": "Watercolour over traces of graphite"
+          },
+          "description": {
+            "fr": "En 1832, Delacroix accompagne une mission diplomatique française auprès du sultan du Maroc. Il en rapporte des carnets pleins de croquis et d'aquarelles, où il puisera toute sa vie.",
+            "en": "In 1832, Delacroix accompanied a French diplomatic mission to the sultan of Morocco. He brought back sketchbooks full of drawings and watercolours, on which he drew for the rest of his life."
+          },
+          "credit": {
+            "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
+            "en": "The Metropolitan Museum of Art, New York · public domain image"
+          },
+          "link": "https://www.metmuseum.org/art/collection/search/336043"
+        }
+      ]
     }
   ],
   "doors": [
@@ -1446,6 +2044,14 @@
       "wall": "north",
       "offset": 0,
       "width": 2.4
+    },
+    {
+      "room": "cabinet",
+      "wall": "north",
+      "offset": 0,
+      "width": 2.2,
+      "height": 3.3,
+      "arch": "horseshoe"
     }
   ],
   "tours": [
@@ -1486,6 +2092,25 @@
         "improvisation-no-30",
         "mahana-no-atua",
         "un-dimanche-a-la-grande-jatte"
+      ]
+    },
+    {
+      "id": "maroc",
+      "name": {
+        "fr": "Arts du Maroc",
+        "en": "Arts of Morocco"
+      },
+      "description": {
+        "fr": "Bois sculpté, zellige, textiles et manuscrits : six pièces du patio marocain.",
+        "en": "Carved wood, tilework, textiles and manuscripts: six pieces from the Moroccan courtyard."
+      },
+      "stops": [
+        "paire-de-portes",
+        "panneau-a-arcs",
+        "moucharabieh",
+        "carreaux-calligraphies",
+        "coran",
+        "tapis"
       ]
     }
   ]

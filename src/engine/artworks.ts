@@ -131,12 +131,16 @@ function spotFixture(offset: number, ceiling: number, fixtureMat: THREE.Material
 /** Accroche un tableau sur un mur, dans le repère de ce mur. */
 export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THREE.Group, frame: WallFrame, ctx: ArtworkContext): PlacedArtwork {
   const decor = ctx.decor(room.id);
-  const { width: fw, depth } = decor.frame;
+  // Un objet accroché tel quel (porte, tapis, panneau) n'a ni cadre ni passe-partout : seulement son épaisseur.
+  const bare = cfg.frameless === true;
+  const fw = bare ? 0 : decor.frame.width;
+  const depth = bare ? 0.03 : decor.frame.depth;
   // Sous passe-partout, pas de vide entre l'œuvre et le cadre : le carton va jusqu'au montant.
-  const mat = cfg.mat ?? 0;
-  const gap = mat > 0 ? 0 : decor.frame.gap;
+  const mat = bare ? 0 : (cfg.mat ?? 0);
+  const gap = bare || mat > 0 ? 0 : decor.frame.gap;
+  const centerY = cfg.y ?? ART_CENTER_Y;
   const art = new THREE.Group();
-  art.position.set(cfg.offset, ART_CENTER_Y, 0);
+  art.position.set(cfg.offset, centerY, 0);
   holder.add(art);
 
   // Sous une verrière, la lumière du jour suffit. Ailleurs, chaque œuvre a son projecteur :
@@ -152,7 +156,7 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
   const border = mat + gap + fw;
   const body = new THREE.Mesh(
     new THREE.BoxGeometry(cfg.width + border * 2, cfg.height + border * 2, depth),
-    new THREE.MeshStandardMaterial({ color: litColor(decor.colors.frame, decor), roughness: 0.5 }),
+    new THREE.MeshStandardMaterial({ color: litColor(bare ? '#2a2019' : decor.colors.frame, decor), roughness: 0.5 }),
   );
   body.position.z = depth / 2;
   art.add(body);
@@ -176,13 +180,14 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
   canvas.position.z = depth + 0.002;
 
   const card = label(decor);
-  card.position.set(cfg.width / 2 + border + 0.14 + LABEL_W / 2, -cfg.height / 2 + 0.12, 0.012);
+  // Le cartel reste à hauteur de lecture, même à côté d'une porte ou d'un tapis qui descend jusqu'au sol.
+  card.position.set(cfg.width / 2 + border + 0.14 + LABEL_W / 2, THREE.MathUtils.clamp(-cfg.height / 2 + 0.12, 1.15 - centerY, 1.5 - centerY), 0.012);
   art.add(canvas, card);
 
   const placed: PlacedArtwork = {
     config: cfg,
     room,
-    center: frame.center.clone().addScaledVector(frame.tangent, cfg.offset).setY(ART_CENTER_Y),
+    center: frame.center.clone().addScaledVector(frame.tangent, cfg.offset).setY(centerY),
     span: cfg.width,
     depth: 0,
     closest: closestView(Math.max(cfg.width, cfg.height)),

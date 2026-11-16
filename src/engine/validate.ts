@@ -1,5 +1,5 @@
 import { DECORS, coveOf, isDecorId, resolveDecor, type Decor } from './decors';
-import { benchFootprint } from './furniture';
+import { FOUNTAIN_RADIUS, benchFootprint } from './furniture';
 import { ART_CENTER_Y, MIN_DOOR_WIDTH, WALLS, buildLayout, inside, roomRect, wallFrame } from './layout';
 import { isStyleId, type Style } from './styles';
 import type { ArtworkConfig, L10n, MuseumConfig, RoomConfig } from './types';
@@ -18,7 +18,7 @@ export interface Issue {
 const PAINTING_GENERATORS = ['geometric', 'fields', 'lines', 'circles', 'mosaic', 'landscape'];
 const SCULPTURE_GENERATORS = ['knot', 'blob', 'rings', 'stack', 'ribbon'];
 const SCULPTURE_MATERIALS = ['bronze', 'marble', 'patina', 'lacquer'];
-const FLOORINGS = ['concrete', 'parquet', 'chevron', 'stone'];
+const FLOORINGS = ['concrete', 'parquet', 'chevron', 'stone', 'zellige'];
 const WALL_FINISHES = ['paint', 'limewash'];
 const BASEBOARDS = ['skirting', 'shadow-gap', 'none'];
 const CEILINGS = ['flat', 'skylight', 'cove'];
@@ -80,6 +80,11 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
         error(where, `banc n° ${i + 1} : posé hors de la salle ou trop près d'un mur`);
       }
     }
+    if (room.fountain) {
+      const [fx, fz] = room.fountain.position ?? [NaN, NaN];
+      const clear = half + FOUNTAIN_RADIUS + 0.9;
+      if (!(Math.abs(fx) <= w / 2 - clear && Math.abs(fz) <= d / 2 - clear)) error(where, 'fontaine : posée hors de la salle ou trop près d\'un mur');
+    }
     if (room.ceiling !== undefined && !CEILINGS.includes(room.ceiling?.type)) error(where, `plafond inconnu : "${room.ceiling?.type}"`);
     if (room.ceiling?.type === 'skylight') {
       const margin = room.ceiling.margin ?? 1.2;
@@ -119,6 +124,8 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
     const usable = wallFrame(room, door.wall, half).length;
     if (Math.abs(door.offset) + door.width / 2 > usable / 2) error(where, 'dépasse du mur');
     if (typeof door.height === 'number' && door.height < 2) error(where, 'trop basse (minimum 2 m)');
+    if (door.arch !== undefined && door.arch !== 'horseshoe') error(where, `arc inconnu : "${door.arch}"`);
+    if (door.arch === 'horseshoe' && door.width < 1.6) error(where, 'trop étroite pour un arc outrepassé (minimum 1,6 m)');
   }
   const layout = buildLayout({ ...museum, rooms, doors }, { wallThickness: style.wallThickness, doorHeight: style.doorHeight });
   for (const door of layout.deadEnds) {
@@ -196,6 +203,9 @@ function checkDecor(room: RoomConfig, style: Style, where: string, error: Report
   if (config.ceiling !== undefined && !['flat', 'cove'].includes(config.ceiling?.type)) {
     error(where, `décor : plafond inconnu : "${config.ceiling?.type}" (une verrière se déclare sur la salle)`);
   }
+  for (const key of ['dado', 'frieze'] as const) {
+    if (config[key] !== undefined && !(config[key]! >= 0 && config[key]! <= 3)) error(where, `décor : hauteur de ${key === 'dado' ? 'soubassement' : 'frise'} invalide (entre 0 et 3 m)`);
+  }
   if (config.gloss !== undefined && !(config.gloss >= 0 && config.gloss <= 1)) error(where, 'décor : brillance du sol invalide (entre 0 et 1)');
   if (config.labels !== undefined && !['light', 'dark'].includes(config.labels)) error(where, `décor : cartels inconnus : "${config.labels}"`);
   const light = config.light;
@@ -209,9 +219,10 @@ function checkDecor(room: RoomConfig, style: Style, where: string, error: Report
 }
 
 /** Marge occupée autour d'une œuvre par son passe-partout (ou le vide du cadre) et son cadre. */
-const frameMargin = (art: { mat?: number }, decor: Decor) => (art.mat ? art.mat : decor.frame.gap) + decor.frame.width;
+const frameMargin = (art: { mat?: number; frameless?: boolean }, decor: Decor) =>
+  art.frameless ? 0 : (art.mat ? art.mat : decor.frame.gap) + decor.frame.width;
 /** Demi-largeur occupée sur le mur par un tableau, son passe-partout et son cadre. */
-const framedHalfWidth = (art: { width: number; mat?: number }, decor: Decor) => art.width / 2 + frameMargin(art, decor);
+const framedHalfWidth = (art: { width: number; mat?: number; frameless?: boolean }, decor: Decor) => art.width / 2 + frameMargin(art, decor);
 
 function checkPainting(
   art: Extract<ArtworkConfig, { type: 'painting' }>,
@@ -232,8 +243,11 @@ function checkPainting(
     if (Math.abs(art.offset - gap.offset) < reach + gap.width / 2) error(where, 'accrochée en travers d\'une porte');
   }
   const margin = frameMargin(art, decor);
-  if (ART_CENTER_Y + art.height / 2 + margin > room.size[1] - 0.1) error(where, 'trop haute pour le plafond de la salle');
-  if (ART_CENTER_Y - art.height / 2 - margin < 0.2) error(where, 'trop haute : elle toucherait le sol');
+  const centerY = art.y ?? ART_CENTER_Y;
+  if (art.y !== undefined && !(art.y > 0)) error(where, 'hauteur d\'accrochage invalide');
+  if (centerY + art.height / 2 + margin > room.size[1] - 0.1) error(where, 'trop haute pour le plafond de la salle');
+  // Un objet sans cadre peut descendre presque jusqu'au sol, comme une porte ; un tableau, non.
+  if (centerY - art.height / 2 - margin < (art.frameless ? 0.03 : 0.2)) error(where, 'trop haute : elle toucherait le sol');
 
   const image = art.image as { src?: unknown; generator?: unknown } | undefined;
   if (typeof image?.src === 'string') {

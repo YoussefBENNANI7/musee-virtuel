@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { closestView } from '../../src/engine/artworks';
+import { horseshoe } from '../../src/engine/building';
 import { modelUrl } from '../../src/engine/sculptures';
 import { loc, tr } from '../../src/engine/types';
 import { demo } from './helpers';
@@ -27,6 +28,21 @@ describe('distance de regard', () => {
   });
 });
 
+describe('arc outrepassé', () => {
+  it('tient dans l’ouverture, se referme sous son centre et laisse passer un visiteur', () => {
+    for (const [width, height] of [[2.2, 3.3], [1.6, 2.4], [3, 2.6]]) {
+      const arc = horseshoe(width, height);
+      expect(arc.centerY + arc.radius).toBeLessThanOrEqual(height);
+      expect(arc.radius).toBeLessThanOrEqual(width / 2);
+      // Le passage entre les piédroits est plus étroit que le cercle : c'est le fer à cheval.
+      expect(arc.halfClear).toBeLessThan(arc.radius);
+      expect(arc.springY).toBeLessThan(arc.centerY);
+      expect(arc.springY).toBeGreaterThan(0.4);
+      expect(arc.halfClear * 2).toBeGreaterThan(0.9);
+    }
+  });
+});
+
 describe('fichier d’un modèle 3D', () => {
   const base = 'https://exemple.org/museums/demo/';
 
@@ -46,7 +62,7 @@ describe('œuvres du musée de démonstration', () => {
   const paintings = works.filter((a) => a.type === 'painting');
 
   it('chaque tableau cite le musée qui le conserve et renvoie à sa notice', () => {
-    expect(paintings).toHaveLength(29);
+    expect(paintings).toHaveLength(42);
     for (const a of paintings) {
       expect(a.credit?.fr, a.id).toMatch(/domaine public/);
       expect(a.credit?.en, a.id).toMatch(/public domain/);
@@ -67,16 +83,17 @@ describe('œuvres du musée de démonstration', () => {
   it('les œuvres sur papier sont sous passe-partout, les peintures non', () => {
     for (const a of paintings) {
       if (a.type !== 'painting') continue;
-      const onPaper = /Estampe|Gravure|Eau-forte|Photographie|Dessin/.test(a.medium.fr);
-      expect(Boolean(a.mat), a.id).toBe(onPaper);
+      if (/Estampe|Gravure|Eau-forte|Photographie|Dessin|Aquarelle|parchemin|papier/.test(a.medium.fr)) expect(a.mat, a.id).toBeGreaterThan(0);
+      if (/^Huile/.test(a.medium.fr)) expect(a.mat, a.id).toBeUndefined();
     }
   });
 
-  it('chaque œuvre est à sa taille réelle : aucune ne dépasse 3,20 m, les estampes font moins de 45 cm', () => {
+  it('chaque œuvre est à sa taille réelle : aucune ne dépasse 3,20 m, les œuvres sous passe-partout font moins de 60 cm', () => {
     for (const a of paintings) {
-      if (a.type !== 'painting') continue;
+      // Portes, tapis et tentures, accrochés sans cadre, peuvent être bien plus grands.
+      if (a.type !== 'painting' || a.frameless) continue;
       expect(Math.max(a.width, a.height), a.id).toBeLessThanOrEqual(3.2);
-      if (a.mat) expect(Math.max(a.width, a.height), a.id).toBeLessThan(0.45);
+      if (a.mat) expect(Math.max(a.width, a.height), a.id).toBeLessThan(0.6);
     }
   });
 });

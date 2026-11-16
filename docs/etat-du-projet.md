@@ -67,7 +67,7 @@ Le 15 novembre 2026, le porteur a donné son avis sur l'ambiance : la base lui p
 | 1. README | Installer, lancer et configurer le projet | Fait |
 | 2. Décor par salle | Chaque salle reçoit un décor : sol, murs, plafond, lumière, cadres, mobilier | Fait : les cinq salles ont leur décor, voir ci-dessous |
 | 3. Œuvres réelles | Recherche de vraies œuvres en accès libre, puis remplacement des œuvres fictives : tableaux, vrais modèles 3D (format GLB) avec de vraies ombres, nouveaux cartels, textes et parcours. Aussi : cadres variés, zoom haute définition | Sélection validée en entier par le porteur le 16 novembre 2026. **Les 29 tableaux, estampes, dessin et photographie sont intégrés, ainsi qu'une première sculpture numérisée.** Restent quatre sculptures, voir ci-dessous |
-| 3 bis. Salle marocaine | Nouvelle salle au plan, avec ses éléments d'architecture (arcs, zellige, plâtre sculpté, plafond de cèdre, fontaine) et ses objets traditionnels | À faire, après les œuvres réelles. Salle pilote à valider |
+| 3 bis. Salle marocaine | Nouvelle salle au plan, avec ses éléments d'architecture (arcs, zellige, plâtre sculpté, plafond de cèdre, fontaine) et ses objets traditionnels | **Salle pilote faite**, voir ci-dessous. Attend l'avis du porteur |
 | 4. Interface | Écran d'accueil du musée, nouvelle identité visuelle (typographie, icônes, commandes discrètes, fiches animées), clic au sol pour se déplacer, mini-plan permanent | À faire, après le décor pour s'accorder à l'ambiance définitive |
 | 5. Mise en ligne | Hébergement sur Vercel, puis vérification sur de vrais appareils | À faire, avec l'accord du porteur |
 | 6. Outil d'administration | L'éditeur de l'étape 2 du produit. Les réglages de décor y deviendront des options | À faire |
@@ -136,7 +136,31 @@ Ce que la recherche a montré :
 - Les estampes et gravures mesurent 25 à 40 cm : elles sont présentées sous passe-partout.
 - Les modèles 3D de Sketchfab se téléchargent avec un compte gratuit ; celui de la Smithsonian se télécharge directement. Plusieurs sont lourds et devront être allégés pour le téléphone.
 
+### Salle marocaine : la salle pilote
+
+Le « Patio marocain » est une nouvelle salle de 11 m sur 11, haute de 6,50 m, au bout de l'enfilade, après le Cabinet des Couleurs. On y entre par un arc outrepassé, visible depuis le Cabinet.
+
+Ce que le moteur a appris pour elle :
+
+- **Arc outrepassé** sur une porte (`"arch": "horseshoe"`).
+- **Zellige** : un motif d'étoiles à huit branches et de croix, en soubassement des murs (`dado` dans le décor) et au sol (`"floor": "zellige"`, version plus sobre).
+- **Frise de plâtre sculpté** en haut des murs (`frieze`).
+- **Fontaine** à bassin en étoile, que le visiteur contourne (`fountain` sur la salle).
+- **Objets accrochés sans cadre** (`frameless`) et à la hauteur voulue (`y`) : une porte posée presque au sol, un tapis de 4,70 m.
+- Le décor `riad` réunit le tout : chaux blanche, zellige, plâtre, plafond de cèdre, lumière chaude.
+
+Treize pièces y sont exposées, toutes en domaine public : la paire de portes mérinides, un tapis, un panneau de soie, deux panneaux de bois sculpté, un moucharabieh, une tenture de Tétouan, deux manuscrits, des carreaux, et deux vues du Maroc par Sargent et Delacroix. Un troisième parcours, « Arts du Maroc », les relie.
+
+Limites de cette salle pilote :
+
+- Le zellige, le plâtre et la fontaine sont dessinés par le code : ce sont des motifs justes mais simples, loin de la finesse d'une vraie médersa.
+- Le plafond est d'une seule teinte de cèdre, sans décor peint.
+- Les objets en volume de la sélection (plat, poignard, instruments, bijoux) ne sont pas exposés : ils n'existent qu'en photographie. Les modèles 3D d'artistes (lanterne, théière, tajine) attendent la clé Sketchfab.
+- La largeur du tapis vient de son image : elle dépasse celle que donne le musée (1,79 m).
+
 ## 4. En attente du porteur du projet
+
+- **Son avis sur le Patio marocain** : ambiance, couleurs du zellige, choix des pièces.
 
 - **Un compte Sketchfab gratuit**, pour intégrer les quatre sculptures restantes : le porteur le créera à un prochain jalon. Sa clé d'accès se saisira dans un formulaire sécurisé.
 - **Sa relecture des textes des œuvres** : ils sont rédigés par Claude et n'ont pas été confrontés un par un aux notices des musées.
@@ -191,8 +215,8 @@ src/engine/...              Contrôles, plan, mobilier, sculptures, textures, re
 scripts/images.mjs          Préparation des images d'un musée
 scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
-tests/unit/                 Tests unitaires (Vitest) : 102 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 42 tests
+tests/unit/                 Tests unitaires (Vitest) : 104 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 43 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration
@@ -214,7 +238,7 @@ vercel.json                 Configuration de l'hébergement (pas encore relié)
 
 - **Repère** : le nord est vers les `z` négatifs. Une position s'écrit `[x, z]` en mètres ; une taille de salle `[largeur, hauteur, profondeur]`.
 - **Salles** : nom, position, taille, décor (facultatif), plafond plat, verrière (`{"type": "skylight", "margin": 1.8}`) ou plafond flottant (`{"type": "cove"}`), bancs.
-- **Décor d'une salle** : le nom d'un décor de la bibliothèque (`"decor": "terre-cuite"` ; décors disponibles : `pierre-claire`, `argile-claire`, `terre-cuite`, `nuit`), ou ce décor corrigé réglage par réglage (`"decor": {"preset": "terre-cuite", "colors": {"wall": "#8e3f2c"}, "light": {"level": 0.9}}`). Réglages possibles : couleurs (`colors` : mur, sol, plafond, cadres, socles, bois, finitions, rails), sol (`floor` : `concrete`, `parquet`, `chevron`, `stone`), murs (`walls` : `paint`, `limewash`), brillance du sol (`gloss`), plafond, cadre, lumière (`light` : niveau, teinte, force des projecteurs), cartels (`labels`). Les anciens réglages `wall` (couleur des murs) et `light` (niveau d'éclairage) de la salle restent acceptés.
+- **Décor d'une salle** : le nom d'un décor de la bibliothèque (`"decor": "terre-cuite"` ; décors disponibles : `pierre-claire`, `argile-claire`, `terre-cuite`, `riad`, `nuit`), ou ce décor corrigé réglage par réglage (`"decor": {"preset": "terre-cuite", "colors": {"wall": "#8e3f2c"}, "light": {"level": 0.9}}`). Réglages possibles : couleurs (`colors` : mur, sol, plafond, cadres, socles, bois, finitions, rails), sol (`floor` : `concrete`, `parquet`, `chevron`, `stone`, `zellige`), soubassement de zellige (`dado`) et frise de plâtre (`frieze`), en mètres, murs (`walls` : `paint`, `limewash`), brillance du sol (`gloss`), plafond, cadre, lumière (`light` : niveau, teinte, force des projecteurs), cartels (`labels`). Les anciens réglages `wall` (couleur des murs) et `light` (niveau d'éclairage) de la salle restent acceptés.
 - **Portes** : déclarées une seule fois, sur le mur d'une salle (`room`, `wall`, `offset`, `width`, hauteur facultative). L'ouverture dans la salle voisine est déduite.
 - **Tableaux** : mur, décalage le long du mur (positif vers la droite quand on fait face au mur), largeur et hauteur en mètres, image (`{"src": "images/nom.webp"}`), titre, artiste, date, technique, texte. Facultatifs : passe-partout (`"mat": 0.12`, en mètres), mention du musée d'origine (`credit`, par langue), lien vers la notice (`link`), enregistrement audio. L'artiste et la date s'écrivent une fois, ou par langue (`{"fr": "vers 1830", "en": "c. 1830"}`).
 - **Sculptures** : position dans la salle, hauteur, hauteur du socle, et soit un modèle 3D numérisé (`"model": {"src": "models/nom.glb"}`, à préparer avec `npm run modeles`), soit une forme dessinée par le moteur avec son matériau (bronze, marbre, bronze patiné, bois laqué).
