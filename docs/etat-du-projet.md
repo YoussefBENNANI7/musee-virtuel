@@ -87,8 +87,10 @@ Le moteur lit déjà un enregistrement par œuvre et par langue quand on lui en 
 - **Clé** : enregistrée par le porteur comme secret réseau de l'environnement cloud (`generativelanguage.googleapis.com`, en-tête `x-goog-api-key`, sans préfixe). Elle fonctionne (16 novembre 2026).
 - **Quota gratuit constaté** : 10 extraits par jour pour `gemini-3.8-flash-tts`. Tout le musée demande 94 extraits (47 œuvres, 2 langues) : une dizaine de jours en restant gratuit, ou quelques minutes en activant le paiement à l'usage dans AI Studio (environ 0,40 $).
 - **Catalogue** : 48 voix féminines natives en français, 69 en anglais britannique, 104 en anglais américain (`npm run voix -- --catalogue fr-FR`).
-- **Trois voix proposées au porteur**, sur une page d'écoute (https://claude.ai/artifact/Jx5VYkFSDNBGQXornja2Zi), avec trois œuvres en français et en anglais : A `sulafat` (voix de studio, la même dans les deux langues) ; B `fr:fr-fr-tutor-4+en:en-gb-tutor-11` (voix natives chaleureuses, ton de radio) ; C `fr:fr-fr-tutor-2+en:en-gb-tutor-12` (voix natives graves et posées). Le volume est égalisé (EBU R128, -18 LUFS). Attend son choix.
-- **Étapes restantes** : choix de la voix par le porteur, puis production de tout le musée et vérification dans la visite.
+- **Trois voix proposées au porteur**, sur une page d'écoute (https://claude.ai/artifact/Jx5VYkFSDNBGQXornja2Zi) : A `sulafat` (voix de studio, la même dans les deux langues) ; B `fr:fr-fr-tutor-4+en:en-gb-tutor-11` (voix natives chaleureuses, ton de radio) ; C `fr:fr-fr-tutor-2+en:en-gb-tutor-12` (voix natives graves et posées).
+- **Choix du porteur (16 novembre 2026) : la voix B**, et le paiement à l'usage. La facturation est activée sur le projet Google : il passe au niveau « Tier 1 », limité à **100 extraits par jour**.
+- **Production** : 84 extraits sur 94 faits le 16 novembre 2026 (37 minutes d'audio, 14 Mo, environ 27 s par extrait). Le volume est égalisé (EBU R128, -18 LUFS). Il manque les deux langues de cinq pièces du patio : `dalail-al-khayrat`, `carreaux-calligraphies`, `carreau-zellige`, `cour-tetouan`, `couple-marocain`. Elles gardent la voix du navigateur en attendant ; une reprise est programmée le 17 novembre 2026 au matin, avec `npm run voix -- demo`.
+- **Contrôles** : aucun extrait de durée anormale ; un seul silence de plus d'une seconde, une pause naturelle d'1,3 s après le cartel des *Trois Arbres*. Les tests vérifient que chaque voix déclarée existe et correspond au texte actuel de l'œuvre ; un test de bout en bout vérifie que la démo joue bien le fichier enregistré, en français puis en anglais. Le test qui exige une voix pour chaque œuvre sera ajouté quand la production sera complète.
 - Claude ne peut pas écouter le résultat : la prononciation des noms propres se contrôle à l'oreille, par le porteur.
 
 Viendront aussi : salle immersive sombre au sud de l'atrium, ambiance sonore par salle, contenus enrichis (lien direct vers une œuvre, favoris, vidéos).
@@ -214,7 +216,7 @@ Ce mélange est maintenant l'interface du musée, appliquée partout : accueil, 
 - **Son avis sur le Patio marocain enrichi** : couleurs du zellige, choix des pièces, présentation des objets en volume.
 
 - **Un compte Sketchfab gratuit**, pour intégrer les quatre sculptures restantes : le porteur le créera à un prochain jalon. Sa clé d'accès se saisira dans un formulaire sécurisé.
-- **Son choix de la voix de l'audioguide** (page d'écoute : https://claude.ai/artifact/Jx5VYkFSDNBGQXornja2Zi), et sa décision de rester sur le quota gratuit (une dizaine de jours) ou d'activer le paiement à l'usage (environ 0,40 $).
+- **Son écoute de l'audioguide dans la visite** (voix B), en particulier la prononciation des noms propres.
 - **Des essais sur de vrais appareils** : téléphone (de préférence ancien), casque VR, lecteur d'écran (VoiceOver, TalkBack), voix de l'audioguide. Le casque exige une adresse HTTPS, donc l'hébergement.
 - **L'hébergement** : créer un compte Vercel et y relier le dépôt GitHub, le moment venu.
 
@@ -266,7 +268,7 @@ scripts/images.mjs          Préparation des images d'un musée
 scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
 tests/unit/                 Tests unitaires (Vitest) : 106 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 52 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 53 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration

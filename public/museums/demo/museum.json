@@ -75,7 +75,11 @@
             "en": "Smithsonian American Art Museum, Washington · public domain 3D model"
           },
           "link": "https://americanart.si.edu/collections/search/artwork/?id=20060",
-          "photo": "thumbs/l-esclave-grecque.jpg"
+          "photo": "thumbs/l-esclave-grecque.jpg",
+          "audio": {
+            "fr": "audio/l-esclave-grecque.fr.mp3",
+            "en": "audio/l-esclave-grecque.en.mp3"
+          }
         },
         {
           "id": "deux-soeurs",
@@ -113,7 +117,11 @@
             "en": "Art Institute of Chicago · public domain image"
           },
           "link": "https://www.artic.edu/artworks/14655",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/deux-soeurs.fr.mp3",
+            "en": "audio/deux-soeurs.en.mp3"
+          }
         },
         {
           "id": "la-classe-de-danse",
@@ -151,7 +159,11 @@
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
           "link": "https://www.metmuseum.org/art/collection/search/438817",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/la-classe-de-danse.fr.mp3",
+            "en": "audio/la-classe-de-danse.en.mp3"
+          }
         },
         {
           "id": "ia-orana-maria",
@@ -189,7 +201,11 @@
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
           "link": "https://www.metmuseum.org/art/collection/search/438821",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/ia-orana-maria.fr.mp3",
+            "en": "audio/ia-orana-maria.en.mp3"
+          }
         },
         {
           "id": "cypres",
@@ -227,7 +243,11 @@
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
           "link": "https://www.metmuseum.org/art/collection/search/437980",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/cypres.fr.mp3",
+            "en": "audio/cypres.en.mp3"
+          }
         }
       ]
     },
@@ -303,7 +323,11 @@
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
           "link": "https://www.metmuseum.org/art/collection/search/435809",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/les-moissonneurs.fr.mp3",
+            "en": "audio/les-moissonneurs.en.mp3"
+          }
         },
         {
           "id": "champ-de-ble-avec-cypres",
@@ -341,7 +365,11 @@
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
           "link": "https://www.metmuseum.org/art/collection/search/436535",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/champ-de-ble-avec-cypres.fr.mp3",
+            "en": "audio/champ-de-ble-avec-cypres.en.mp3"
+          }
         },
         {
           "id": "crepuscule-dans-la-nature-sauvage",
@@ -379,7 +407,11 @@
             "en": "Cleveland Museum of Art · public domain image"
           },
           "link": "https://clevelandart.org/art/1965.233",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/crepuscule-dans-la-nature-sauvage.fr.mp3",
+            "en": "audio/crepuscule-dans-la-nature-sauvage.en.mp3"
+          }
         },
         {
           "id": "la-montagne-sainte-victoire",
@@ -420,7 +452,11 @@
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
           "link": "https://www.metmuseum.org/art/collection/search/435878",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/la-montagne-sainte-victoire.fr.mp3",
+            "en": "audio/la-montagne-sainte-victoire.en.mp3"
+          }
         },
         {
           "id": "l-incendie-du-parlement",
@@ -458,7 +494,11 @@
             "en": "Cleveland Museum of Art · public domain image"
           },
           "link": "https://clevelandart.org/art/1942.647",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/l-incendie-du-parlement.fr.mp3",
+            "en": "audio/l-incendie-du-parlement.en.mp3"
+          }
         },
         {
           "id": "promenade-sur-la-falaise",
@@ -496,7 +536,11 @@
             "en": "Art Institute of Chicago · public domain image"
           },
           "link": "https://www.artic.edu/artworks/14620",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/promenade-sur-la-falaise.fr.mp3",
+            "en": "audio/promenade-sur-la-falaise.en.mp3"
+          }
         },
         {
           "id": "la-mer-calme",
@@ -534,7 +578,11 @@
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
           "link": "https://www.metmuseum.org/art/collection/search/436005",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/la-mer-calme.fr.mp3",
+            "en": "audio/la-mer-calme.en.mp3"
+          }
         }
       ]
     },
@@ -599,7 +647,11 @@
             "en": "Art Institute of Chicago · public domain image"
           },
           "link": "https://www.artic.edu/artworks/64818",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/meules-fin-de-l-ete.fr.mp3",
+            "en": "audio/meules-fin-de-l-ete.en.mp3"
+          }
         },
         {
           "id": "meules-effet-de-neige",
@@ -637,7 +689,11 @@
             "en": "Art Institute of Chicago · public domain image"
           },
           "link": "https://www.artic.edu/artworks/81545",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/meules-effet-de-neige.fr.mp3",
+            "en": "audio/meules-effet-de-neige.en.mp3"
+          }
         },
         {
           "id": "improvisation-no-30",
@@ -677,7 +733,11 @@
             "fr": "Art Institute of Chicago · image dans le domaine public",
             "en": "Art Institute of Chicago · public domain image"
           },
-          "link": "https://www.artic.edu/artworks/8991"
+          "link": "https://www.artic.edu/artworks/8991",
+          "audio": {
+            "fr": "audio/improvisation-no-30.fr.mp3",
+            "en": "audio/improvisation-no-30.en.mp3"
+          }
         },
         {
           "id": "mahana-no-atua",
@@ -715,7 +775,11 @@
             "en": "Art Institute of Chicago · public domain image"
           },
           "link": "https://www.artic.edu/artworks/27943",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/mahana-no-atua.fr.mp3",
+            "en": "audio/mahana-no-atua.en.mp3"
+          }
         },
         {
           "id": "iris",
@@ -753,7 +817,11 @@
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
           "link": "https://www.metmuseum.org/art/collection/search/436528",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/iris.fr.mp3",
+            "en": "audio/iris.en.mp3"
+          }
         },
         {
           "id": "nympheas",
@@ -791,7 +859,11 @@
             "en": "Art Institute of Chicago · public domain image"
           },
           "link": "https://www.artic.edu/artworks/16568",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/nympheas.fr.mp3",
+            "en": "audio/nympheas.en.mp3"
+          }
         },
         {
           "id": "la-chambre",
@@ -829,7 +901,11 @@
             "en": "Art Institute of Chicago · public domain image"
           },
           "link": "https://www.artic.edu/artworks/28560",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/la-chambre.fr.mp3",
+            "en": "audio/la-chambre.en.mp3"
+          }
         },
         {
           "id": "composition-rouge-jaune-bleu",
@@ -866,7 +942,11 @@
             "fr": "Cleveland Museum of Art · image dans le domaine public",
             "en": "Cleveland Museum of Art · public domain image"
           },
-          "link": "https://clevelandart.org/art/1967.215"
+          "link": "https://clevelandart.org/art/1967.215",
+          "audio": {
+            "fr": "audio/composition-rouge-jaune-bleu.fr.mp3",
+            "en": "audio/composition-rouge-jaune-bleu.en.mp3"
+          }
         }
       ]
     },
@@ -935,7 +1015,11 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/45434"
+          "link": "https://www.metmuseum.org/art/collection/search/45434",
+          "audio": {
+            "fr": "audio/la-grande-vague.fr.mp3",
+            "en": "audio/la-grande-vague.en.mp3"
+          }
         },
         {
           "id": "averse-soudaine",
@@ -973,7 +1057,11 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/36461"
+          "link": "https://www.metmuseum.org/art/collection/search/36461",
+          "audio": {
+            "fr": "audio/averse-soudaine.fr.mp3",
+            "en": "audio/averse-soudaine.en.mp3"
+          }
         },
         {
           "id": "la-grande-vague-sete",
@@ -1011,7 +1099,11 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/261941"
+          "link": "https://www.metmuseum.org/art/collection/search/261941",
+          "audio": {
+            "fr": "audio/la-grande-vague-sete.fr.mp3",
+            "en": "audio/la-grande-vague-sete.en.mp3"
+          }
         },
         {
           "id": "le-rhinoceros",
@@ -1049,7 +1141,11 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/356497"
+          "link": "https://www.metmuseum.org/art/collection/search/356497",
+          "audio": {
+            "fr": "audio/le-rhinoceros.fr.mp3",
+            "en": "audio/le-rhinoceros.en.mp3"
+          }
         },
         {
           "id": "les-trois-arbres",
@@ -1087,7 +1183,11 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/354633"
+          "link": "https://www.metmuseum.org/art/collection/search/354633",
+          "audio": {
+            "fr": "audio/les-trois-arbres.fr.mp3",
+            "en": "audio/les-trois-arbres.en.mp3"
+          }
         },
         {
           "id": "melencolia",
@@ -1125,7 +1225,11 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/336228"
+          "link": "https://www.metmuseum.org/art/collection/search/336228",
+          "audio": {
+            "fr": "audio/melencolia.fr.mp3",
+            "en": "audio/melencolia.en.mp3"
+          }
         },
         {
           "id": "le-fuji-rouge",
@@ -1166,7 +1270,11 @@
             "fr": "Cleveland Museum of Art · image dans le domaine public",
             "en": "Cleveland Museum of Art · public domain image"
           },
-          "link": "https://clevelandart.org/art/1930.189"
+          "link": "https://clevelandart.org/art/1930.189",
+          "audio": {
+            "fr": "audio/le-fuji-rouge.fr.mp3",
+            "en": "audio/le-fuji-rouge.en.mp3"
+          }
         },
         {
           "id": "rue-aux-saintes-maries",
@@ -1207,7 +1315,11 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/336318"
+          "link": "https://www.metmuseum.org/art/collection/search/336318",
+          "audio": {
+            "fr": "audio/rue-aux-saintes-maries.fr.mp3",
+            "en": "audio/rue-aux-saintes-maries.en.mp3"
+          }
         }
       ]
     },
@@ -1268,7 +1380,11 @@
             "fr": "Rahimi polit ses marbres à la main pendant des mois, jusqu'à ce que la pierre semble molle. Elle refuse toute arête vive.",
             "en": "Rahimi polishes her marbles by hand for months, until the stone looks soft. She rejects any sharp edge."
           },
-          "photo": "thumbs/galet-qui-respire.jpg"
+          "photo": "thumbs/galet-qui-respire.jpg",
+          "audio": {
+            "fr": "audio/galet-qui-respire.fr.mp3",
+            "en": "audio/galet-qui-respire.en.mp3"
+          }
         },
         {
           "id": "orbites",
@@ -1298,7 +1414,11 @@
             "fr": "Trois anneaux qui ne se touchent qu'en deux points. Morvan, ancien horloger, calculait ses équilibres au dixième de millimètre.",
             "en": "Three rings that touch at only two points. Morvan, a former watchmaker, calculated his balances to a tenth of a millimetre."
           },
-          "photo": "thumbs/orbites.jpg"
+          "photo": "thumbs/orbites.jpg",
+          "audio": {
+            "fr": "audio/orbites.fr.mp3",
+            "en": "audio/orbites.en.mp3"
+          }
         },
         {
           "id": "totem-rouge",
@@ -1329,7 +1449,11 @@
             "en": "Six stacked blocks, each turned slightly from the one below. It is Haddou's only sculpture, made from offcuts of the family workshop."
           },
           "color": "#7d1f19",
-          "photo": "thumbs/totem-rouge.jpg"
+          "photo": "thumbs/totem-rouge.jpg",
+          "audio": {
+            "fr": "audio/totem-rouge.fr.mp3",
+            "en": "audio/totem-rouge.en.mp3"
+          }
         },
         {
           "id": "ruban",
@@ -1359,7 +1483,11 @@
             "fr": "Une étude pour le Nœud sans fin, plus libre et plus nerveuse. Venier la gardait sur son bureau.",
             "en": "A study for the Endless Knot, freer and more restless. Venier kept it on his desk."
           },
-          "photo": "thumbs/ruban.jpg"
+          "photo": "thumbs/ruban.jpg",
+          "audio": {
+            "fr": "audio/ruban.fr.mp3",
+            "en": "audio/ruban.en.mp3"
+          }
         },
         {
           "id": "un-dimanche-a-la-grande-jatte",
@@ -1397,7 +1525,11 @@
             "en": "Art Institute of Chicago · public domain image"
           },
           "link": "https://www.artic.edu/artworks/27992",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/un-dimanche-a-la-grande-jatte.fr.mp3",
+            "en": "audio/un-dimanche-a-la-grande-jatte.en.mp3"
+          }
         },
         {
           "id": "rue-de-paris-temps-de-pluie",
@@ -1435,7 +1567,11 @@
             "en": "Art Institute of Chicago · public domain image"
           },
           "link": "https://www.artic.edu/artworks/20684",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/rue-de-paris-temps-de-pluie.fr.mp3",
+            "en": "audio/rue-de-paris-temps-de-pluie.en.mp3"
+          }
         }
       ]
     },
@@ -1509,7 +1645,11 @@
             "fr": "Art Institute of Chicago · image dans le domaine public",
             "en": "Art Institute of Chicago · public domain image"
           },
-          "link": "https://www.artic.edu/artworks/16830"
+          "link": "https://www.artic.edu/artworks/16830",
+          "audio": {
+            "fr": "audio/paire-de-portes.fr.mp3",
+            "en": "audio/paire-de-portes.en.mp3"
+          }
         },
         {
           "id": "tapis",
@@ -1551,7 +1691,11 @@
             "fr": "Art Institute of Chicago · image dans le domaine public",
             "en": "Art Institute of Chicago · public domain image"
           },
-          "link": "https://www.artic.edu/artworks/6141"
+          "link": "https://www.artic.edu/artworks/6141",
+          "audio": {
+            "fr": "audio/tapis.fr.mp3",
+            "en": "audio/tapis.en.mp3"
+          }
         },
         {
           "id": "panneau-de-soie",
@@ -1596,7 +1740,11 @@
             "fr": "Art Institute of Chicago · image dans le domaine public",
             "en": "Art Institute of Chicago · public domain image"
           },
-          "link": "https://www.artic.edu/artworks/181173"
+          "link": "https://www.artic.edu/artworks/181173",
+          "audio": {
+            "fr": "audio/panneau-de-soie.fr.mp3",
+            "en": "audio/panneau-de-soie.en.mp3"
+          }
         },
         {
           "id": "panneau-a-arcs",
@@ -1641,7 +1789,11 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/453262"
+          "link": "https://www.metmuseum.org/art/collection/search/453262",
+          "audio": {
+            "fr": "audio/panneau-a-arcs.fr.mp3",
+            "en": "audio/panneau-a-arcs.en.mp3"
+          }
         },
         {
           "id": "moucharabieh",
@@ -1686,7 +1838,11 @@
             "fr": "Art Institute of Chicago · image dans le domaine public",
             "en": "Art Institute of Chicago · public domain image"
           },
-          "link": "https://www.artic.edu/artworks/16825"
+          "link": "https://www.artic.edu/artworks/16825",
+          "audio": {
+            "fr": "audio/moucharabieh.fr.mp3",
+            "en": "audio/moucharabieh.en.mp3"
+          }
         },
         {
           "id": "panneau-sculpte",
@@ -1731,7 +1887,11 @@
             "fr": "Art Institute of Chicago · image dans le domaine public",
             "en": "Art Institute of Chicago · public domain image"
           },
-          "link": "https://www.artic.edu/artworks/16799"
+          "link": "https://www.artic.edu/artworks/16799",
+          "audio": {
+            "fr": "audio/panneau-sculpte.fr.mp3",
+            "en": "audio/panneau-sculpte.en.mp3"
+          }
         },
         {
           "id": "tenture-msimsim",
@@ -1776,7 +1936,11 @@
             "fr": "Cleveland Museum of Art · image dans le domaine public",
             "en": "Cleveland Museum of Art · public domain image"
           },
-          "link": "https://clevelandart.org/art/2010.287"
+          "link": "https://clevelandart.org/art/2010.287",
+          "audio": {
+            "fr": "audio/tenture-msimsim.fr.mp3",
+            "en": "audio/tenture-msimsim.en.mp3"
+          }
         },
         {
           "id": "coran",
@@ -1821,7 +1985,11 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/454664"
+          "link": "https://www.metmuseum.org/art/collection/search/454664",
+          "audio": {
+            "fr": "audio/coran.fr.mp3",
+            "en": "audio/coran.en.mp3"
+          }
         },
         {
           "id": "dalail-al-khayrat",

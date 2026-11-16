@@ -211,3 +211,33 @@ test('version publiée : la visite 3D et la vue simplifiée se chargent', async 
   await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
   expect(errors).toEqual([]);
 });
+
+test('démo : l’audioguide joue la voix enregistrée de l’œuvre, dans la langue choisie', async ({ page }) => {
+  // La voix du navigateur ne doit pas servir : chaque œuvre de la démo a sa voix enregistrée.
+  await page.addInitScript(() => {
+    (window as any).__spoken = [];
+    speechSynthesis.speak = (u: SpeechSynthesisUtterance) => (window as any).__spoken.push(u.text);
+  });
+  const played: string[] = [];
+  // Un fichier audio se charge par morceaux : réponse 200 ou 206, selon le navigateur.
+  page.on('response', (r) => r.url().includes('/audio/') && r.status() < 300 && played.push(new URL(r.url()).pathname.split('/').pop()!));
+  await page.goto('/?q=medium&accueil=non');
+  await page.waitForSelector('body.ready');
+  await page.evaluate(() => (window as any).__museum.standBefore('les-moissonneurs', 3));
+  await page.waitForTimeout(300);
+  const p = await page.evaluate(() => (window as any).__museum.screenOf('les-moissonneurs'));
+  await page.mouse.click(p.x, p.y);
+  await expect(page.locator('#p-title')).toHaveText('Les Moissonneurs');
+
+  const button = page.locator('#p-audio');
+  await button.click();
+  await expect(button).toHaveText('Arrêter la lecture');
+  await expect.poll(() => played).toContain('les-moissonneurs.fr.mp3');
+  await button.click();
+  await expect(button).toHaveText('Écouter le commentaire');
+
+  await page.locator('#lang').selectOption('en');
+  await button.click();
+  await expect.poll(() => played).toContain('les-moissonneurs.en.mp3');
+  expect(await page.evaluate(() => (window as any).__spoken)).toEqual([]);
+});
