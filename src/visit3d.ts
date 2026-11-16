@@ -7,6 +7,7 @@ import { buildMap } from './engine/map';
 import { buildFloorReflection } from './engine/reflection';
 import { loc, tr, type RoomConfig, type TourConfig } from './engine/types';
 import { buildWorld, type PlacedArtwork } from './engine/world';
+import { setupAmbiance } from './ambiance';
 import { setupCarnet } from './carnet';
 import { setupInspect } from './inspect';
 import { $, metaLine, renderCredit, type App, type View } from './ui';
@@ -106,6 +107,23 @@ export function startVisit(app: App): View {
   const first = world.spawn(museum.start.room);
   controls.teleport(first.x, first.z, first.yaw);
   const byId = new Map(world.artworks.map((a) => [a.config.id, a]));
+  // Ambiance sonore : l'eau des fontaines, plus forte à mesure qu'on s'en approche.
+  const ambiance = setupAmbiance(
+    museum.rooms.filter((r) => r.fountain).map((r) => ({ x: r.position[0] + r.fountain!.position[0], z: r.position[1] + r.fountain!.position[1], room: r.id })),
+    new URL('sons/fontaine.mp3', document.baseURI).href,
+  );
+  const hear = () => ambiance.update({ x: camera.position.x, z: camera.position.z, yaw: controls.yaw, room: world.roomAt(camera.position.x, camera.position.z)?.id ?? null });
+  const soundButton = $('sound');
+  soundButton.hidden = !museum.rooms.some((r) => r.fountain);
+  soundButton.setAttribute('aria-pressed', String(!ambiance.muted));
+  soundButton.addEventListener('click', () => soundButton.setAttribute('aria-pressed', String(!ambiance.toggle())));
+  // Le son ne peut commencer qu'après un geste du visiteur.
+  const startSound = () => {
+    ambiance.start();
+    hear();
+  };
+  window.addEventListener('pointerdown', startSound, { once: true });
+  window.addEventListener('keydown', startSound, { once: true });
   let intro = false;
   // Pas de mouvement d'ouverture pour qui a demandé moins d'animations, ni sur un appareil modeste.
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches || quality.tier === 'low';
@@ -161,6 +179,7 @@ export function startVisit(app: App): View {
   guide.onChange = () => {
     renderAudio();
     vr.refresh();
+    ambiance.duck(guide.playingId !== null);
     // Mode présentation : le commentaire terminé, on passe à l'œuvre suivante après une pause.
     if (presenting && awaiting && guide.playingId === null) {
       // Une lecture qui s'arrête à peine commencée a été refusée par le navigateur : on laisse le temps de regarder.
@@ -526,6 +545,7 @@ export function startVisit(app: App): View {
     for (const id of ['p-close', 'map-close', 'tours-close']) $(id).setAttribute('aria-label', ui().close);
     $('map-open').textContent = ui().map;
     $('minimap').setAttribute('aria-label', ui().mapTitle);
+    soundButton.setAttribute('aria-label', ui().sound);
     $('map-title').textContent = ui().mapTitle;
     $('map-hint').textContent = ui().mapHint;
     $('tours-open').textContent = ui().tours;
@@ -603,6 +623,7 @@ export function startVisit(app: App): View {
     if (moving) {
       invalidate(300);
       miniMap.update(p.x, p.z, controls.yaw);
+      hear();
     }
     // Arrivé au point cliqué (ou détourné en chemin) : le repère du sol s'efface.
     if (walking && !controls.gliding) {
@@ -671,7 +692,7 @@ export function startVisit(app: App): View {
       return { x: ((v.x + 1) / 2) * canvas.clientWidth, y: ((1 - v.y) / 2) * canvas.clientHeight };
     };
     Object.assign(window, {
-      __museum: { screenAt, marker, inspect, carnet, presenting: () => presenting, style: style.id, decors: Object.fromEntries([...world.decors].map(([id, d]) => [id, d.preset])), quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
+      __museum: { screenAt, marker, inspect, carnet, ambiance, presenting: () => presenting, style: style.id, decors: Object.fromEntries([...world.decors].map(([id, d]) => [id, d.preset])), quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
     });
   }
 

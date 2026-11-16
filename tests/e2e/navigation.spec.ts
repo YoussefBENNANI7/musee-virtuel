@@ -259,3 +259,9 @@ test('une sculpture s’examine seule, sous tous les angles, puis la visite repr
   expect(Math.hypot(after.x - before.x, after.z - before.z)).toBeLessThan(0.01);
   expect(errors).toEqual([]);
 });
+
+test('un musée sans fontaine n’a pas de bouton de son', async ({ page }) => {
+  await openMuseum(page);
+  await expect(page.locator('#sound')).toBeHidden();
+  await expect(page.locator('#carnet-open')).toBeVisible();
+});

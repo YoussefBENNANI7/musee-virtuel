@@ -241,3 +241,42 @@ test('démo : l’audioguide joue la voix enregistrée de l’œuvre, dans la la
   await expect.poll(() => played).toContain('les-moissonneurs.en.mp3');
   expect(await page.evaluate(() => (window as any).__spoken)).toEqual([]);
 });
+
+test('démo : l’eau de la fontaine s’entend plus fort de près, se coupe et se rétablit', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  page.on('pageerror', (e) => errors.push(String(e)));
+  const sounds: number[] = [];
+  page.on('response', (r) => r.url().endsWith('/sons/fontaine.mp3') && sounds.push(r.status()));
+  await page.goto('/?q=low&accueil=non');
+  await page.waitForSelector('body.ready');
+  const state = () => page.evaluate(() => ({ ...(window as any).__museum.ambiance.state }));
+  const button = page.locator('#sound');
+  await expect(button).toBeVisible();
+  await expect(button).toHaveAttribute('aria-pressed', 'true');
+  // Aucun son avant un geste du visiteur.
+  expect((await state()).started).toBe(false);
+  await page.mouse.click(640, 300);
+  await expect.poll(async () => (await state()).started).toBe(true);
+  await expect.poll(() => sounds).toEqual([200]);
+
+  // Dans l'atrium, loin du patio : la fontaine est presque inaudible.
+  const far = (await state()).level;
+  expect(far).toBeLessThan(0.02);
+  // Dans le patio, la fontaine est à droite du visiteur qui regarde vers le nord.
+  await page.evaluate(() => (window as any).__museum.controls.teleport(-2, -27.5, 0));
+  await expect.poll(async () => (await state()).level).toBeGreaterThan(0.5);
+  expect((await state()).pan).toBeGreaterThan(0.5);
+  // Dans la salle voisine, à la même distance, elle s'entendrait moins : ici, plus loin dans le patio, elle faiblit.
+  await page.evaluate(() => (window as any).__museum.controls.teleport(-4.5, -31.5, 0));
+  await expect.poll(async () => (await state()).level).toBeLessThan(0.2);
+
+  await button.click();
+  await expect(button).toHaveAttribute('aria-pressed', 'false');
+  expect((await state()).muted).toBe(true);
+  // Le choix se retrouve à la visite suivante.
+  await page.reload();
+  await page.waitForSelector('body.ready');
+  await expect(page.locator('#sound')).toHaveAttribute('aria-pressed', 'false');
+  expect(errors).toEqual([]);
+});
