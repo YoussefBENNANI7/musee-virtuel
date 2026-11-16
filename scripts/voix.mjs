@@ -1,11 +1,16 @@
 // Produit les voix de l'audioguide avec le service de voix de Google Gemini.
 //
 // Usage :
-//   npm run voix -- demo --voix Sulafat                Produit toutes les voix du musée avec cette voix
+//   npm run voix -- demo --voix sulafat                Produit toutes les voix du musée avec cette voix
+//   npm run voix -- demo --voix fr:fr-fr-tutor-4+en:en-gb-tutor-11
+//                                                      Une voix par langue (voix natives du catalogue)
 //   npm run voix -- demo                               Complète ou met à jour, avec la voix déjà choisie
 //   npm run voix -- demo --essai --voix Sulafat,Achernar --oeuvres les-moissonneurs,la-grande-vague
 //                                                      Extraits à écouter, rangés dans essais-voix/ (hors du musée)
 //   npm run voix -- --catalogue fr-FR                  Liste les voix féminines du catalogue pour une langue
+//
+// Une voix est un identifiant du catalogue de Google (sulafat, fr-fr-tutor-4…). En mode --essai,
+// plusieurs voix se séparent par des virgules.
 //
 // Options : --modele <id> (gemini-3.8-flash-tts par défaut), --style "<consigne>" (ton de lecture, en anglais).
 //
@@ -29,6 +34,7 @@ const API = 'https://generativelanguage.googleapis.com/v1beta';
 const DEFAULT_MODEL = 'gemini-3.8-flash-tts';
 const DEFAULT_STYLE = 'warm and gentle, unhurried, like a museum guide telling a story';
 const BITRATE = '48k';
+const LOUDNESS = 'loudnorm=I=-18:TP=-1.5:LRA=11';
 
 // --- Arguments ---------------------------------------------------------------
 const argv = process.argv.slice(2);
@@ -93,6 +99,14 @@ if (!essai && voices.length > 1) {
   console.error('Une seule voix pour tout le musée. Pour comparer plusieurs voix, ajoutez --essai.');
   process.exit(1);
 }
+/** « sulafat » sert à toutes les langues ; « fr:x+en:y » donne une voix par langue. */
+const voiceFor = (spec, lang) => {
+  if (!spec.includes(':')) return spec;
+  const pairs = Object.fromEntries(spec.split('+').map((p) => p.split(':')));
+  if (!pairs[lang]) throw new Error(`aucune voix indiquée pour la langue « ${lang} » dans ${spec}`);
+  return pairs[lang];
+};
+const label = (spec) => spec.replace(/[^a-z0-9-]+/gi, '_');
 const model = option('modele') ?? manifest.model ?? DEFAULT_MODEL;
 const style = option('style') ?? manifest.style ?? DEFAULT_STYLE;
 
@@ -112,6 +126,17 @@ try {
 // --- Production -----------------------------------------------------------------
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const fingerprint = (text, voice) => createHash('sha256').update(JSON.stringify([model, voice, style, text])).digest('hex').slice(0, 16);
+
+/** Vrai si le refus vient du quota du jour (et non du quota par minute, qui se libère vite). */
+function dailyQuota(body) {
+  if (/requests? per day/i.test(body ?? '')) return true;
+  try {
+    const details = JSON.parse(body).error?.details ?? [];
+    return details.some((d) => (d.violations ?? []).some((v) => /PerDay/i.test(v.quotaId ?? '')));
+  } catch {
+    return false;
+  }
+}
 
 /** Demande la voix d'un texte ; réessaie quand le service demande de patienter. */
 async function synthesize(text, voice) {
@@ -135,7 +160,7 @@ async function synthesize(text, voice) {
       return Buffer.from(audio.data, 'base64');
     } catch (error) {
       // Limite du jour atteinte : inutile d'insister, on reprendra demain.
-      if (error.status === 429 && /per.?day|PerDay|daily/i.test(error.body ?? '')) throw Object.assign(error, { daily: true });
+      if (error.status === 429 && dailyQuota(error.body)) throw Object.assign(error, { daily: true });
       const retriable = error.status === 429 || error.status >= 500 || error.status === 0;
       if (!retriable || attempt >= 6) throw error;
       const hinted = Number(/"retryDelay":\s*"(\d+)/.exec(error.body ?? '')?.[1]);
@@ -146,11 +171,14 @@ async function synthesize(text, voice) {
   }
 }
 
-/** Compresse un WAV en MP3 mono et renvoie sa durée en secondes. */
+/**
+ * Compresse un WAV en MP3 mono et renvoie sa durée en secondes. Le volume est égalisé
+ * (norme de radiodiffusion EBU R128, -18 LUFS) : toutes les œuvres sonnent aussi fort.
+ */
 function encode(wav, out) {
   const tmp = join(tmpdir(), `voix-${process.pid}.wav`);
   writeFileSync(tmp, wav);
-  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', tmp, '-ac', '1', '-c:a', 'libmp3lame', '-b:a', BITRATE, out]);
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', tmp, '-af', LOUDNESS, '-ar', '24000', '-ac', '1', '-c:a', 'libmp3lame', '-b:a', BITRATE, out]);
   rmSync(tmp);
   const duration = execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', out]).toString();
   return Number(duration);
@@ -175,20 +203,22 @@ outer: for (const voice of voices) {
     for (const lang of museum.langs) {
       const text = narrationText(art, lang);
       const name = `${art.id}.${lang}.mp3`;
-      const rel = essai ? join(voice, name) : `audio/${name}`;
-      const out = join(outDir, essai ? join(voice, name) : name);
-      const print = fingerprint(text, voice);
-      if (!essai && manifest.files[rel] === print && existsSync(out)) {
+      const rel = essai ? join(label(voice), name) : `audio/${name}`;
+      const out = join(outDir, essai ? join(label(voice), name) : name);
+      const speaker = voiceFor(voice, lang);
+      const print = fingerprint(text, speaker);
+      // Déjà fait : en essai, le fichier existe ; pour le musée, il correspond aussi au texte actuel.
+      if (existsSync(out) && (essai || manifest.files[rel] === print)) {
         kept++;
         continue;
       }
       try {
-        const wav = await synthesize(text, voice);
+        const wav = await synthesize(text, speaker);
         mkdirSync(join(out, '..'), { recursive: true });
         const duration = encode(wav, out);
         seconds += duration;
         made++;
-        console.log(`✓ ${essai ? `${voice} · ` : ''}${art.id} (${lang}) : ${duration.toFixed(1)} s`);
+        console.log(`✓ ${essai ? `${speaker} · ` : ''}${art.id} (${lang}) : ${duration.toFixed(1)} s`);
         if (!essai) {
           manifest.files[rel] = print;
           art.audio = { ...(art.audio ?? {}), [lang]: rel };
@@ -196,7 +226,7 @@ outer: for (const voice of voices) {
         }
       } catch (error) {
         stopped = error.daily
-          ? 'limite du jour atteinte : relancez la même commande demain, le travail reprendra là où il s’est arrêté.'
+          ? `limite du jour atteinte : relancez la même commande demain, le travail reprendra là où il s’est arrêté.\n${error.body?.slice(0, 600) ?? ''}`
           : `${art.id} (${lang}) : ${explain(error)}`;
         break outer;
       }

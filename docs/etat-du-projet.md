@@ -84,7 +84,11 @@ Le moteur lit déjà un enregistrement par œuvre et par langue quand on lui en 
 - **Volume mesuré** : 47 œuvres, 21 600 caractères de commentaires pour les deux langues (11 100 en français, 10 600 en anglais), le plus long faisant 346 caractères. Avec le titre, l'artiste et la date lus en tête, compter environ 27 000 caractères, soit une demi-heure d'audio.
 - **Texte lu** (`src/engine/narration.ts`) : le cartel (titre, artiste, date) puis le commentaire. Les siècles en chiffres romains, les intervalles de dates et « n° » sont réécrits en toutes lettres pour être bien prononcés. La voix du navigateur lit désormais le même texte.
 - **Commande `npm run voix`** (`scripts/voix.mjs`) : produit un MP3 par œuvre et par langue dans `audio/` (mono, 48 kb/s), renseigne le champ `audio` des œuvres, et retient dans `audio/voix.json` la voix, le ton et l'empreinte de chaque texte. Relancée, elle ne refait que les textes modifiés ; à la limite du jour, elle s'arrête et reprend le lendemain. `--essai` produit des extraits dans `essais-voix/`, hors du musée ; `--catalogue fr-FR` liste les voix féminines du catalogue. Elle demande ffmpeg (`brew install ffmpeg` sur Mac) et la clé dans la variable `GEMINI_API_KEY` (dans l'environnement cloud, le réseau l'ajoute).
-- **Étapes restantes** : 1. le porteur saisit sa clé dans les réglages de l'environnement cloud ; 2. trois extraits dans deux ou trois voix, sur une page d'écoute ; 3. choix de la voix par le porteur ; 4. production de tout le musée.
+- **Clé** : enregistrée par le porteur comme secret réseau de l'environnement cloud (`generativelanguage.googleapis.com`, en-tête `x-goog-api-key`, sans préfixe). Elle fonctionne (16 novembre 2026).
+- **Quota gratuit constaté** : 10 extraits par jour pour `gemini-3.8-flash-tts`. Tout le musée demande 94 extraits (47 œuvres, 2 langues) : une dizaine de jours en restant gratuit, ou quelques minutes en activant le paiement à l'usage dans AI Studio (environ 0,40 $).
+- **Catalogue** : 48 voix féminines natives en français, 69 en anglais britannique, 104 en anglais américain (`npm run voix -- --catalogue fr-FR`).
+- **Trois voix proposées au porteur**, sur une page d'écoute (https://claude.ai/artifact/Jx5VYkFSDNBGQXornja2Zi), avec trois œuvres en français et en anglais : A `sulafat` (voix de studio, la même dans les deux langues) ; B `fr:fr-fr-tutor-4+en:en-gb-tutor-11` (voix natives chaleureuses, ton de radio) ; C `fr:fr-fr-tutor-2+en:en-gb-tutor-12` (voix natives graves et posées). Le volume est égalisé (EBU R128, -18 LUFS). Attend son choix.
+- **Étapes restantes** : choix de la voix par le porteur, puis production de tout le musée et vérification dans la visite.
 - Claude ne peut pas écouter le résultat : la prononciation des noms propres se contrôle à l'oreille, par le porteur.
 
 Viendront aussi : salle immersive sombre au sud de l'atrium, ambiance sonore par salle, contenus enrichis (lien direct vers une œuvre, favoris, vidéos).
@@ -210,7 +214,7 @@ Ce mélange est maintenant l'interface du musée, appliquée partout : accueil, 
 - **Son avis sur le Patio marocain enrichi** : couleurs du zellige, choix des pièces, présentation des objets en volume.
 
 - **Un compte Sketchfab gratuit**, pour intégrer les quatre sculptures restantes : le porteur le créera à un prochain jalon. Sa clé d'accès se saisira dans un formulaire sécurisé.
-- **La saisie de sa clé Google AI Studio** dans les réglages de l'environnement cloud (secret réseau pour `generativelanguage.googleapis.com`, en-tête `x-goog-api-key`), pour produire les voix de l'audioguide. Jamais dans la conversation.
+- **Son choix de la voix de l'audioguide** (page d'écoute : https://claude.ai/artifact/Jx5VYkFSDNBGQXornja2Zi), et sa décision de rester sur le quota gratuit (une dizaine de jours) ou d'activer le paiement à l'usage (environ 0,40 $).
 - **Des essais sur de vrais appareils** : téléphone (de préférence ancien), casque VR, lecteur d'écran (VoiceOver, TalkBack), voix de l'audioguide. Le casque exige une adresse HTTPS, donc l'hébergement.
 - **L'hébergement** : créer un compte Vercel et y relier le dépôt GitHub, le moment venu.
 
