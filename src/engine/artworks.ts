@@ -9,6 +9,9 @@ import { artworkTexture, poolTexture } from './textures';
 import type { ArtworkConfig, PaintingConfig, RoomConfig, SculptureConfig } from './types';
 
 /** Une œuvre installée dans le musée. */
+/** Calque supplémentaire des sculptures : il permet de les montrer seules, sans la salle, pour les examiner. */
+export const ALONE_LAYER = 1;
+
 export interface PlacedArtwork {
   config: ArtworkConfig;
   room: RoomConfig;
@@ -27,6 +30,8 @@ export interface PlacedArtwork {
   ready: boolean;
   /** Pour une sculpture : rayon au sol que le visiteur doit contourner. */
   obstacle?: { x: number; z: number; r: number };
+  /** Pour une sculpture : sa forme, une fois chargée. */
+  shape?: THREE.Object3D;
 }
 
 export interface ArtworkContext {
@@ -295,7 +300,9 @@ export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: T
       shape.traverse((node) => {
         node.castShadow = true;
         node.receiveShadow = true;
+        node.layers.enable(ALONE_LAYER);
       });
+      placed.shape = shape;
       const box = new THREE.Box3().setFromObject(shape);
       const size = box.getSize(new THREE.Vector3());
       const scale = cfg.height / size.y;

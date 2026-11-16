@@ -897,3 +897,29 @@ html:has(body.simple) {
   color: rgba(255, 255, 255, 0.75);
   pointer-events: none;
 }
+
+/* Examen d'une sculpture : elle est seule à l'écran, le reste de l'interface s'efface. */
+.inspect {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  touch-action: none;
+  cursor: grab;
+  /* Un léger assombrissement des bords concentre le regard sur la sculpture. */
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, 0.45) 100%);
+}
+.inspect:active {
+  cursor: grabbing;
+}
+.inspecting .bar,
+.inspecting .help,
+.inspecting .joystick,
+.inspecting .minimap,
+.inspecting .panel,
+.inspecting .resume {
+  visibility: hidden;
+}
+.zoom-btn[aria-pressed='true'] {
+  background: #fff;
+  color: #141413;
+}

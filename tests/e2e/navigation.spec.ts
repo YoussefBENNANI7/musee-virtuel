@@ -221,3 +221,41 @@ test('le mini-plan suit le visiteur et ouvre le plan complet', async ({ page }) 
   await expect(page.locator('#map')).toBeVisible();
   await expect(page.locator('#map-title')).toHaveText('Plan du musée');
 });
+
+test('une sculpture s’examine seule, sous tous les angles, puis la visite reprend où elle en était', async ({ page }) => {
+  const errors = await openMuseum(page);
+  await clickArtwork(page, 'noeud-sans-fin', 3);
+  await expect(page.locator('#p-title')).toHaveText('Nœud sans fin');
+  const button = page.locator('#p-zoom');
+  await expect(button).toHaveText('Examiner');
+  const before = await settle(page);
+
+  await button.click();
+  const viewer = page.locator('#inspect');
+  await expect(viewer).toBeVisible();
+  await expect(panel(page)).toBeHidden();
+  const state = () => page.evaluate(() => ({ ...(window as any).__museum.inspect.state }));
+  const start = await state();
+
+  // Glisser fait tourner autour de la sculpture ; la molette approche.
+  await page.mouse.move(500, 400);
+  await page.mouse.down();
+  await page.mouse.move(650, 340, { steps: 5 });
+  await page.mouse.up();
+  const turned = await state();
+  expect(Math.abs(turned.yaw - start.yaw)).toBeGreaterThan(0.5);
+  expect(turned.pitch).not.toBeCloseTo(start.pitch, 2);
+  expect(turned.spinning).toBe(false);
+  await page.mouse.wheel(0, -400);
+  await expect.poll(async () => (await state()).distance).toBeLessThan(start.distance - 0.1);
+  // Le clavier aussi, sans déplacer le visiteur resté dans la salle.
+  await page.keyboard.press('ArrowLeft');
+  expect((await state()).yaw).not.toBeCloseTo(turned.yaw, 3);
+
+  await page.keyboard.press('Escape');
+  await expect(viewer).toBeHidden();
+  await expect(panel(page)).toBeVisible();
+  const after = await position(page);
+  expect(Math.hypot(after.x - before.x, after.z - before.z)).toBeLessThan(0.01);
+  expect(errors).toEqual([]);
+});

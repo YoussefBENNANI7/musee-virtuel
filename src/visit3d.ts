@@ -1,11 +1,13 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { Controls } from './engine/controls';
+import { ALONE_LAYER } from './engine/artworks';
 import { SUN_AZIMUTH } from './engine/lighting';
 import { buildMap } from './engine/map';
 import { buildFloorReflection } from './engine/reflection';
 import { loc, tr, type RoomConfig, type TourConfig } from './engine/types';
 import { buildWorld, type PlacedArtwork } from './engine/world';
+import { setupInspect } from './inspect';
 import { $, metaLine, renderCredit, type App, type View } from './ui';
 import { setupVR } from './vr';
 import { setupZoom } from './zoom';
@@ -36,8 +38,12 @@ export function startVisit(app: App): View {
   scene.background = new THREE.Color(style.palette.ceiling);
   // Le bâtiment porte son propre éclairage (voir engine/lighting.ts). Ces deux lampes
   // n'éclairent que les objets : sculptures, socles, cadres, mobilier.
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xe0dbd3, 2.0));
+  const sky = new THREE.HemisphereLight(0xffffff, 0xe0dbd3, 2.0);
+  scene.add(sky);
   const sun = new THREE.DirectionalLight(0xfff1dd, 1.2);
+  // Ces lampes éclairent aussi une sculpture montrée seule, pendant son examen.
+  sky.layers.enable(ALONE_LAYER);
+  sun.layers.enable(ALONE_LAYER);
   sun.position.copy(SUN_AZIMUTH).multiplyScalar(3).setY(7);
   scene.add(sun);
   // Reflets des sculptures : un environnement neutre, calculé une fois.
@@ -59,6 +65,8 @@ export function startVisit(app: App): View {
       // Une sculpture vient d'arriver : son ombre est à calculer.
       renderer.shadowMap.needsUpdate = true;
       invalidate();
+      // Si sa fiche est déjà ouverte, le bouton « Examiner » peut maintenant s'afficher.
+      renderPanel();
     },
   });
   scene.add(world.group);
@@ -109,6 +117,7 @@ export function startVisit(app: App): View {
     app,
     button: $('vr'),
     onStart() {
+      inspect.close();
       closePanel();
       marker.visible = false;
       camera.clearViewOffset();
@@ -140,9 +149,9 @@ export function startVisit(app: App): View {
     $('p-meta').textContent = metaLine(app, a);
     $('p-desc').textContent = tr(a.description, app.lang);
     renderCredit($('p-credit'), app, a);
-    // L'agrandissement montre l'image d'origine : il n'existe que pour une œuvre fournie en fichier.
-    $('p-zoom').hidden = !(a.type === 'painting' && 'src' in a.image);
-    $('p-zoom').textContent = ui().enlarge;
+    // Un tableau fourni en fichier s'agrandit ; une sculpture, une fois chargée, s'examine sous tous les angles.
+    $('p-zoom').hidden = a.type === 'painting' ? !('src' in a.image) : !current.shape;
+    $('p-zoom').textContent = a.type === 'painting' ? ui().enlarge : ui().examine;
     renderAudio();
   }
   guide.onChange = () => {
@@ -151,9 +160,26 @@ export function startVisit(app: App): View {
   };
   $('p-audio').addEventListener('click', () => current && guide.toggle(current.config, app.lang, app.base));
   const zoom = setupZoom(() => ui() as never);
+  const inspect = setupInspect({
+    camera,
+    scene,
+    labels: () => ui() as never,
+    onOpen() {
+      guide.stop();
+      showMarker(null);
+      camera.clearViewOffset();
+      $('inspect').setAttribute('aria-label', current ? `${tr(current.config.title, app.lang)}, ${loc(current.config.artist, app.lang)}` : '');
+    },
+    onClose() {
+      applyViewOffset();
+      invalidate();
+    },
+  });
   $('p-zoom').addEventListener('click', () => {
     const a = current?.config;
-    if (a?.type === 'painting' && 'src' in a.image) zoom.open(new URL(a.image.src, app.base).href, `${tr(a.title, app.lang)}, ${loc(a.artist, app.lang)}`);
+    if (!current || !a) return;
+    if (a.type === 'sculpture') inspect.open(current);
+    else if ('src' in a.image) zoom.open(new URL(a.image.src, app.base).href, `${tr(a.title, app.lang)}, ${loc(a.artist, app.lang)}`);
   });
 
   /**
@@ -384,6 +410,7 @@ export function startVisit(app: App): View {
   window.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     if (zoom.isOpen) zoom.close();
+    else if (inspect.isOpen) inspect.close();
     else if (!mapDialog.hidden) mapDialog.hidden = true;
     else if (!toursDialog.hidden) toursDialog.hidden = true;
     else closePanel();
@@ -446,6 +473,12 @@ export function startVisit(app: App): View {
     if (renderer.xr.isPresenting) {
       vr.update(dt);
       renderer.render(scene, camera);
+      return;
+    }
+    if (inspect.isOpen) {
+      // Examen d'une sculpture : la caméra tourne autour d'elle, la visite attend.
+      if (inspect.update(dt)) invalidate(200);
+      if (performance.now() <= renderUntil) renderer.render(scene, camera);
       return;
     }
     controls.update(dt);
@@ -533,7 +566,7 @@ export function startVisit(app: App): View {
       return { x: ((v.x + 1) / 2) * canvas.clientWidth, y: ((1 - v.y) / 2) * canvas.clientHeight };
     };
     Object.assign(window, {
-      __museum: { screenAt, marker, style: style.id, decors: Object.fromEntries([...world.decors].map(([id, d]) => [id, d.preset])), quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
+      __museum: { screenAt, marker, inspect, style: style.id, decors: Object.fromEntries([...world.decors].map(([id, d]) => [id, d.preset])), quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
     });
   }
 
