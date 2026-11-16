@@ -89,8 +89,8 @@ Le moteur lit déjà un enregistrement par œuvre et par langue quand on lui en 
 - **Catalogue** : 48 voix féminines natives en français, 69 en anglais britannique, 104 en anglais américain (`npm run voix -- --catalogue fr-FR`).
 - **Trois voix proposées au porteur**, sur une page d'écoute (https://claude.ai/artifact/Jx5VYkFSDNBGQXornja2Zi) : A `sulafat` (voix de studio, la même dans les deux langues) ; B `fr:fr-fr-tutor-4+en:en-gb-tutor-11` (voix natives chaleureuses, ton de radio) ; C `fr:fr-fr-tutor-2+en:en-gb-tutor-12` (voix natives graves et posées).
 - **Choix du porteur (16 novembre 2026) : la voix B**, et le paiement à l'usage. La facturation est activée sur le projet Google : il passe au niveau « Tier 1 », limité à **100 extraits par jour**.
-- **Production** : 88 extraits sur 94 faits le 16 novembre 2026 (environ 43 minutes d'audio, 27 à 42 s par extrait), y compris les quatre nouvelles sculptures de la Cour. Le volume est égalisé (EBU R128, -18 LUFS). Le quota de 100 extraits par jour glisse sur 24 heures : il se libère peu à peu. Il manque les deux langues de trois pièces du patio : `carreau-zellige`, `cour-tetouan`, `couple-marocain`. Elles gardent la voix du navigateur en attendant ; une reprise est programmée le 17 novembre 2026 au matin, avec `npm run voix -- demo`.
-- **Contrôles** : aucun extrait de durée anormale ; un seul silence de plus d'une seconde, une pause naturelle d'1,3 s après le cartel des *Trois Arbres*. Les tests vérifient que chaque voix déclarée existe et correspond au texte actuel de l'œuvre ; un test de bout en bout vérifie que la démo joue bien le fichier enregistré, en français puis en anglais. Le test qui exige une voix pour chaque œuvre sera ajouté quand la production sera complète.
+- **Production terminée le 16 novembre 2026** : les 47 œuvres ont leur voix en français et en anglais, soit 94 extraits et environ 45 minutes d'audio (18 à 42 s par extrait, 16 Mo). Le volume est égalisé (EBU R128, -18 LUFS). Le quota de 100 extraits par jour glisse sur 24 heures : il se libère peu à peu, ce qui a permis de finir le jour même.
+- **Contrôles** : aucun extrait de durée anormale ; un seul silence de plus d'une seconde, une pause naturelle d'1,3 s après le cartel des *Trois Arbres*. Les tests vérifient que chaque voix déclarée existe et correspond au texte actuel de l'œuvre ; un test de bout en bout vérifie que la démo joue bien le fichier enregistré, en français puis en anglais. Un test exige une voix pour chaque œuvre dans chaque langue, et refuse tout fichier resté d'une œuvre retirée : après une correction de texte ou l'ajout d'une œuvre, `npm run check` rappelle de relancer `npm run voix -- demo`.
 - Claude ne peut pas écouter le résultat : la prononciation des noms propres se contrôle à l'oreille, par le porteur.
 
 Viendront aussi : salle immersive sombre au sud de l'atrium, ambiance sonore par salle, contenus enrichis (lien direct vers une œuvre, favoris, vidéos).
@@ -304,8 +304,8 @@ src/engine/...              Contrôles, plan, mobilier, sculptures, textures, re
 scripts/images.mjs          Préparation des images d'un musée
 scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
-tests/unit/                 Tests unitaires (Vitest) : 113 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 64 tests
+tests/unit/                 Tests unitaires (Vitest) : 114 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 65 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration

@@ -195,7 +195,7 @@ export function startVisit(app: App): View {
     scene,
     labels: () => ui() as never,
     onOpen() {
-      guide.stop();
+      // Le commentaire continue : on l'écoute en tournant autour de la sculpture.
       showMarker(null);
       camera.clearViewOffset();
       $('inspect').setAttribute('aria-label', current ? `${tr(current.config.title, app.lang)}, ${loc(current.config.artist, app.lang)}` : '');

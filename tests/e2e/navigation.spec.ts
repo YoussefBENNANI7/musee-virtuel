@@ -269,6 +269,21 @@ test('une sculpture s’examine seule, sous tous les angles, puis la visite repr
   expect(errors).toEqual([]);
 });
 
+test('le commentaire continue pendant qu’on examine une sculpture', async ({ page }) => {
+  await openMuseum(page, { spySpeech: true });
+  await clickArtwork(page, 'noeud-sans-fin', 3);
+  await page.locator('#p-audio').click();
+  await expect(page.locator('#p-audio')).toHaveText('Arrêter la lecture');
+  const playing = () => page.evaluate(() => (window as any).__museum.world && document.querySelector('#p-audio')!.getAttribute('aria-pressed'));
+  await page.locator('#p-zoom').click();
+  await expect(page.locator('#inspect')).toBeVisible();
+  expect(await playing()).toBe('true');
+  // Refermer l'examen ne coupe pas non plus la lecture : le bouton d'arrêt est de nouveau sous la main.
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#inspect')).toBeHidden();
+  await expect(page.locator('#p-audio')).toHaveText('Arrêter la lecture');
+});
+
 test('un musée sans fontaine n’a pas de bouton de son', async ({ page }) => {
   await openMuseum(page);
   await expect(page.locator('#sound')).toBeHidden();

@@ -2508,7 +2508,11 @@
             "fr": "Art Institute of Chicago · image dans le domaine public",
             "en": "Art Institute of Chicago · public domain image"
           },
-          "link": "https://www.artic.edu/artworks/16674"
+          "link": "https://www.artic.edu/artworks/16674",
+          "audio": {
+            "fr": "audio/carreau-zellige.fr.mp3",
+            "en": "audio/carreau-zellige.en.mp3"
+          }
         },
         {
           "id": "cour-tetouan",
@@ -2547,7 +2551,11 @@
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
           "link": "https://www.metmuseum.org/art/collection/search/12065",
-          "frame": "gilt"
+          "frame": "gilt",
+          "audio": {
+            "fr": "audio/cour-tetouan.fr.mp3",
+            "en": "audio/cour-tetouan.en.mp3"
+          }
         },
         {
           "id": "couple-marocain",
@@ -2586,7 +2594,11 @@
             "fr": "The Metropolitan Museum of Art, New York · image dans le domaine public",
             "en": "The Metropolitan Museum of Art, New York · public domain image"
           },
-          "link": "https://www.metmuseum.org/art/collection/search/336043"
+          "link": "https://www.metmuseum.org/art/collection/search/336043",
+          "audio": {
+            "fr": "audio/couple-marocain.fr.mp3",
+            "en": "audio/couple-marocain.en.mp3"
+          }
         }
       ],
       "lanterns": [

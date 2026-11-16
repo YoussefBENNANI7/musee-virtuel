@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { centuryFr, narrationText, spoken } from '../../src/engine/narration';
 import type { MuseumConfig } from '../../src/engine/types';
@@ -69,21 +69,29 @@ describe.skipIf(!existsSync(new URL('audio/voix.json', demo)))('voix enregistré
     manifest: JSON.parse(readFileSync(new URL('audio/voix.json', root), 'utf8')),
   });
 
-  it('chaque voix déclarée porte le bon nom, et son fichier existe', () => {
+  it('chaque œuvre a sa voix dans chaque langue, et le fichier existe', () => {
     const { museum } = load();
     for (const art of museum.rooms.flatMap((r) => r.artworks)) {
-      for (const [lang, file] of Object.entries(art.audio ?? {})) {
-        expect(file, `${art.id} (${lang})`).toBe(`audio/${art.id}.${lang}.mp3`);
-        expect(existsSync(new URL(file, root)), file).toBe(true);
+      for (const lang of museum.langs) {
+        const file = art.audio?.[lang];
+        expect(file, `${art.id} (${lang}) : relancer npm run voix`).toBe(`audio/${art.id}.${lang}.mp3`);
+        expect(existsSync(new URL(file!, root)), file).toBe(true);
       }
     }
+  });
+
+  it('aucun fichier de voix n’est resté d’une œuvre retirée', () => {
+    const { museum, manifest } = load();
+    const expected = museum.rooms.flatMap((r) => r.artworks).flatMap((a) => museum.langs.map((lang) => `audio/${a.id}.${lang}.mp3`)).sort();
+    expect(Object.keys(manifest.files).sort()).toEqual(expected);
+    expect(readdirSync(new URL('audio/', root)).filter((f) => f.endsWith('.mp3')).map((f) => `audio/${f}`).sort()).toEqual(expected);
   });
 
   it('chaque voix correspond au texte actuel de l’œuvre', () => {
     // Un texte corrigé sans relancer « npm run voix » ferait entendre l'ancienne version.
     const { museum, manifest } = load();
     for (const art of museum.rooms.flatMap((r) => r.artworks)) {
-      for (const lang of Object.keys(art.audio ?? {})) {
+      for (const lang of museum.langs) {
         const voice = voiceOf(manifest.voice, lang);
         const print = createHash('sha256').update(JSON.stringify([manifest.model, voice, manifest.style, narrationText(art, lang)])).digest('hex').slice(0, 16);
         expect(manifest.files[`audio/${art.id}.${lang}.mp3`], `${art.id} (${lang}) : relancer npm run voix`).toBe(print);
