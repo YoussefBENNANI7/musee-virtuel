@@ -147,6 +147,8 @@ export interface DecorConfig {
   dado?: number;
   /** Hauteur, en mètres, d'une frise de plâtre sculpté en haut des murs. */
   frieze?: number;
+  /** Plafond de cèdre peint, à solives et caissons. */
+  cedar?: boolean;
   /** Plafond proposé par le décor. Celui que la salle déclare elle-même (`ceiling`) l'emporte. */
   ceiling?: Exclude<CeilingConfig, { type: 'skylight' }>;
   frame?: Partial<FrameShape>;
@@ -185,6 +187,8 @@ export interface RoomConfig {
   benches?: BenchConfig[];
   /** Fontaine à bassin en étoile, posée au sol. Position depuis le centre de la salle : [x, z]. */
   fountain?: { position: [number, number] };
+  /** Lanternes de laiton suspendues. Position de chacune depuis le centre de la salle : [x, z]. */
+  lanterns?: [number, number][];
   artworks: ArtworkConfig[];
 }
 

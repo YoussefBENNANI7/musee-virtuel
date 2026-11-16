@@ -427,39 +427,161 @@ export function zelligeTexture(colors: string[], quality: Quality = TIERS.high, 
 }
 
 /**
- * Plâtre sculpté : le même réseau d'étoiles, ton sur ton, creusé dans un enduit blanc cassé.
- * L'ombre et la lumière de chaque arête donnent le relief.
+ * Plâtre sculpté, sur trois registres comme dans une médersa : en bas une rangée de petits arcs
+ * festonnés, au milieu un réseau serré d'étoiles, en haut un bandeau de merlons.
+ * La texture couvre toute la hauteur de la frise ; elle se répète seulement en largeur.
  */
 export function plasterTexture(quality: Quality = TIERS.high): THREE.Texture {
   const size = quality.textureSize;
   const { c, g } = canvasOf(size, size);
-  const cell = size / 2;
-  g.fillStyle = '#cbbd9f';
+  const u = size / 1024;
+  const SHADOW = 'rgba(60, 45, 25, 0.6)';
+  const HIGH = '#f3ecdc';
+  const MID = '#e6dcc6';
+  const LOW = '#c9bb9c';
+  g.fillStyle = LOW;
   g.fillRect(0, 0, size, size);
-  // Trois plans de relief : le fond en creux, les grandes étoiles en saillie, leur cœur creusé à nouveau.
-  const layer = (radius: number, color: string, offset: boolean) => {
-    for (let j = 0; j <= 2; j++) {
-      for (let i = 0; i <= 2; i++) {
-        const x = i * cell + (offset ? cell / 2 : 0);
-        const y = j * cell + (offset ? cell / 2 : 0);
-        // Ombre portée en bas à droite, puis la forme, puis un filet de lumière en haut à gauche.
-        star(g, x + size / 200, y + size / 200, radius);
-        g.fillStyle = 'rgba(60, 45, 25, 0.55)';
-        g.fill();
-        star(g, x, y, radius);
-        g.fillStyle = color;
-        g.fill();
-        g.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-        g.lineWidth = size / 400;
-        g.stroke();
-      }
-    }
+  /** Forme en relief : son ombre portée, puis la forme, puis un filet de lumière. */
+  const raised = (path: () => void, color: string) => {
+    g.save();
+    g.translate(4 * u, 4 * u);
+    path();
+    g.fillStyle = SHADOW;
+    g.fill();
+    g.restore();
+    path();
+    g.fillStyle = color;
+    g.fill();
+    g.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+    g.lineWidth = 2 * u;
+    g.stroke();
   };
-  layer(cell / 2.05, '#ece3d0', false);
-  layer(cell / 3.4, '#d6c9ae', false);
-  layer(cell / 6, '#f1e9d8', false);
-  layer(cell / 5, '#ece3d0', true);
+  // Registre du milieu : étoiles à huit branches, quatre par répétition.
+  const top = size * 0.16;
+  const bottom = size * 0.74;
+  g.save();
+  g.beginPath();
+  g.rect(0, top, size, bottom - top);
+  g.clip();
+  const cell = size / 4;
+  for (let j = -1; j <= 4; j++) {
+    for (let i = 0; i <= 4; i++) {
+      const x = i * cell;
+      const y = top + cell / 2 + j * cell;
+      raised(() => star(g, x, y, cell / 2.06), HIGH);
+      raised(() => star(g, x, y, cell / 3.5), LOW);
+      raised(() => star(g, x, y, cell / 6.5), HIGH);
+      raised(() => star(g, x + cell / 2, y + cell / 2, cell / 5), MID);
+    }
+  }
+  g.restore();
+  // Registre du bas : quatre arcs festonnés, portés par de fines colonnettes.
+  const arch = size / 4;
+  for (let i = 0; i < 4; i++) {
+    const x = i * arch + arch / 2;
+    raised(() => {
+      g.beginPath();
+      g.moveTo(x - arch * 0.36, size);
+      g.lineTo(x - arch * 0.36, bottom + arch * 0.5);
+      for (let k = 0; k < 5; k++) {
+        const a0 = Math.PI - (k * Math.PI) / 5;
+        const a1 = Math.PI - ((k + 1) * Math.PI) / 5;
+        const mid = (a0 + a1) / 2;
+        g.quadraticCurveTo(x + Math.cos(mid) * arch * 0.5, bottom + arch * 0.5 - Math.sin(mid) * arch * 0.5, x + Math.cos(a1) * arch * 0.36, bottom + arch * 0.5 - Math.sin(a1) * arch * 0.36);
+      }
+      g.lineTo(x + arch * 0.36, size);
+      g.closePath();
+    }, MID);
+    raised(() => {
+      g.beginPath();
+      g.rect(i * arch - 6 * u, bottom + 8 * u, 12 * u, size - bottom);
+    }, HIGH);
+  }
+  // Bandeaux qui séparent les registres, et merlons du haut.
+  for (const y of [top - 10 * u, bottom]) {
+    raised(() => {
+      g.beginPath();
+      g.rect(-10, y, size + 20, 10 * u);
+    }, HIGH);
+  }
+  for (let i = 0; i < 8; i++) {
+    const x = (i + 0.5) * (size / 8);
+    raised(() => {
+      g.beginPath();
+      g.moveTo(x - 44 * u, top - 10 * u);
+      g.lineTo(x - 44 * u, 70 * u);
+      g.lineTo(x - 22 * u, 70 * u);
+      g.lineTo(x - 22 * u, 34 * u);
+      g.lineTo(x + 22 * u, 34 * u);
+      g.lineTo(x + 22 * u, 70 * u);
+      g.lineTo(x + 44 * u, 70 * u);
+      g.lineTo(x + 44 * u, top - 10 * u);
+      g.closePath();
+    }, MID);
+  }
+  return tiling(c, quality);
+}
+
+/**
+ * Plafond de cèdre peint : des solives sombres, et entre elles des caissons ornés d'une étoile
+ * rouge, verte ou or, à la manière des plafonds peints marocains.
+ */
+export const CEDAR_TILE = 1.2;
+export function cedarTexture(color: string, quality: Quality = TIERS.high): THREE.Texture {
+  const size = quality.textureSize;
+  const { c, g } = canvasOf(size, size);
+  const u = size / 1024;
+  const r = rng(131);
+  g.fillStyle = color;
+  g.fillRect(0, 0, size, size);
+  // Fil du bois.
+  for (let i = 0; i < 260; i++) {
+    g.fillStyle = r() > 0.5 ? '#000000' : '#ffd9a8';
+    g.globalAlpha = 0.03 + r() * 0.05;
+    g.fillRect(0, r() * size, size, 1 + r() * 3 * u);
+  }
   g.globalAlpha = 1;
+  const cell = size / 2;
+  const paints = ['#9c2f22', '#1f5a48', '#c79a3a', '#1f3f6e'];
+  for (let j = 0; j < 2; j++) {
+    for (let i = 0; i < 2; i++) {
+      const x = i * cell + cell / 2;
+      const y = j * cell + cell / 2;
+      // Caisson en creux, bordé d'un filet doré.
+      g.fillStyle = 'rgba(0, 0, 0, 0.28)';
+      g.fillRect(x - cell * 0.4, y - cell * 0.4, cell * 0.8, cell * 0.8);
+      g.strokeStyle = '#c79a3a';
+      g.lineWidth = 5 * u;
+      g.strokeRect(x - cell * 0.4, y - cell * 0.4, cell * 0.8, cell * 0.8);
+      star(g, x, y, cell * 0.33);
+      g.fillStyle = paints[(i + j * 2) % 4];
+      g.fill();
+      g.stroke();
+      star(g, x, y, cell * 0.17);
+      g.fillStyle = paints[(i + j * 2 + 2) % 4];
+      g.fill();
+      g.stroke();
+      star(g, x, y, cell * 0.07);
+      g.fillStyle = '#efe2c0';
+      g.fill();
+    }
+  }
+  // Solives : elles passent entre les caissons, avec leur ombre.
+  for (const at of [0, cell]) {
+    for (const horizontal of [true, false]) {
+      g.fillStyle = 'rgba(0, 0, 0, 0.45)';
+      if (horizontal) g.fillRect(0, at - 26 * u, size, 60 * u);
+      else g.fillRect(at - 26 * u, 0, 60 * u, size);
+      g.fillStyle = shade(color, -0.25);
+      if (horizontal) g.fillRect(0, at - 26 * u, size, 44 * u);
+      else g.fillRect(at - 26 * u, 0, 44 * u, size);
+    }
+  }
+  for (const [x, y] of [[0, size - 26 * u], [size - 26 * u, 0]]) {
+    g.fillStyle = shade(color, -0.25);
+    if (x === 0) g.fillRect(0, y, size, 26 * u);
+    else g.fillRect(x, 0, 26 * u, size);
+  }
   return tiling(c, quality);
 }
 

@@ -6,9 +6,10 @@ import type { Quality } from './quality';
 import type { Style } from './styles';
 import {
   FLOOR_TILE,
-  PLASTER_TILE,
+  CEDAR_TILE,
   WALL_TILE,
   ZELLIGE_TILE,
+  cedarTexture,
   chevronTexture,
   concreteTexture,
   limewashTexture,
@@ -177,7 +178,10 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
       material.polygonOffsetUnits = -1;
       return material;
     });
-  const ceilingMaterial = (decor: Decor) => once(`plafond:${decor.colors.ceiling}`, () => litMaterial(decor.colors.ceiling));
+  const ceilingMaterial = (decor: Decor) =>
+    once(`plafond:${decor.cedar}:${decor.colors.ceiling}`, () =>
+      decor.cedar ? litMaterial('#ffffff', cedarTexture(decor.colors.ceiling, quality)) : litMaterial(decor.colors.ceiling),
+    );
   const wallMaterial = (decor: Decor) =>
     once(`mur:${decor.walls}:${decor.colors.wall}`, () => litMaterial(decor.colors.wall, decor.walls === 'limewash' ? limewashTexture(quality) : undefined));
   /** Matière sombre et mate, dont la teinte ne dépend d'aucune lampe : elle ne brille jamais, même dans une salle obscure. */
@@ -242,7 +246,8 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
         const mid = (from + to) / 2;
         /** Bande de revêtement plaquée sur le pan, entre deux hauteurs. */
         const band = (material: THREE.Material, bottom: number, top: number, tile: number) => {
-          const mesh = lit(new THREE.Mesh(gridGeometry(to - from, top - bottom, { u0: mid, v0: (bottom + top) / 2, tile }), material), light);
+          // Le motif part du bas de la bande : un registre entier n'est jamais coupé.
+          const mesh = lit(new THREE.Mesh(gridGeometry(to - from, top - bottom, { u0: mid, v0: (top - bottom) / 2, tile }), material), light);
           mesh.position.set(mid, (bottom + top) / 2, 0.003);
           mesh.raycast = noRaycast;
           holder.add(mesh);
@@ -258,7 +263,7 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
           edge(Math.min(decor.dado, h) + 0.025);
         }
         if (decor.frieze > 0 && h - decor.frieze > decor.dado + 0.5) {
-          band(cladding('platre', () => plasterTexture(quality)), h - decor.frieze, h, PLASTER_TILE);
+          band(cladding('platre', () => plasterTexture(quality)), h - decor.frieze, h, decor.frieze);
           edge(h - decor.frieze - 0.025);
         }
         // Semelle sombre dans l'épaisseur du mur, au ras du sol. On ne la voit jamais directement :
@@ -329,10 +334,14 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
       passage.rooms.forEach((room, i) => {
         // Chaque face de l'arc a la matière et la lumière des murs de sa salle.
         const geometry = new THREE.ShapeGeometry(outline, 24);
+        const sideDecor = decors.get(room.id)!;
+        // Dans une salle à frise de plâtre, l'arc est encadré du même plâtre sculpté.
+        const carved = sideDecor.frieze > 0;
+        const tile = carved ? sideDecor.frieze : WALL_TILE;
         const uv = geometry.attributes.uv;
-        for (let k = 0; k < uv.count; k++) uv.setXY(k, uv.getX(k) / WALL_TILE, uv.getY(k) / WALL_TILE);
+        for (let k = 0; k < uv.count; k++) uv.setXY(k, uv.getX(k) / tile, uv.getY(k) / tile);
         geometry.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(uv.count * 3).fill(1), 3));
-        const face = lit(new THREE.Mesh(geometry, wallMaterial(decors.get(room.id)!)), lights.get(room.id)!);
+        const face = lit(new THREE.Mesh(geometry, carved ? cladding('platre', () => plasterTexture(quality)) : wallMaterial(sideDecor)), lights.get(room.id)!);
         // La salle où la porte est déclarée se trouve du côté des z positifs du passage.
         face.position.z = i === 0 ? half + 0.002 : -half - 0.002;
         if (i === 1) face.rotation.y = Math.PI;
@@ -378,7 +387,9 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
      * comptée depuis le plafond. Il reçoit l'éclairage de la salle, sauf s'il est lui-même lumineux (`glow`).
      */
     const panel = (width: number, depth: number, x: number, z: number, y = 0, glow?: THREE.Material) => {
-      const m = glow ? new THREE.Mesh(new THREE.PlaneGeometry(width, depth), glow) : lit(new THREE.Mesh(gridGeometry(width, depth), ceilingMat), light);
+      // Un plafond à motif garde sa taille réelle d'un panneau à l'autre.
+      const metric = decor.cedar ? { u0: x, v0: z, tile: CEDAR_TILE } : undefined;
+      const m = glow ? new THREE.Mesh(new THREE.PlaneGeometry(width, depth), glow) : lit(new THREE.Mesh(gridGeometry(width, depth, metric), ceilingMat), light);
       m.rotation.x = Math.PI / 2;
       m.position.set(x, y, z);
       ceiling.add(m);

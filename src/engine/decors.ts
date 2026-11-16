@@ -15,6 +15,7 @@ export interface Decor {
   gloss: number;
   dado: number;
   frieze: number;
+  cedar: boolean;
   baseboard: Baseboard;
   ceiling: Exclude<CeilingConfig, { type: 'skylight' }>;
   frame: FrameShape;
@@ -92,7 +93,8 @@ export const DECORS: Record<string, DecorPreset> = {
       walls: 'limewash',
       gloss: 0.22,
       dado: 1.2,
-      frieze: 0.75,
+      frieze: 1.05,
+      cedar: true,
       baseboard: 'none',
       light: { level: 1, tint: '#fff5e4', spots: 1 },
     },
@@ -125,7 +127,7 @@ function apply(base: Decor, over: Omit<DecorConfig, 'preset'> | undefined): Deco
   const defined = <T extends object>(o: T | undefined) => Object.fromEntries(Object.entries(o ?? {}).filter(([, v]) => v !== undefined && v !== null));
   return {
     ...base,
-    ...(defined({ floor: over.floor, walls: over.walls, gloss: over.gloss, dado: over.dado, frieze: over.frieze, baseboard: over.baseboard, ceiling: over.ceiling, labels: over.labels }) as Partial<Decor>),
+    ...(defined({ floor: over.floor, walls: over.walls, gloss: over.gloss, dado: over.dado, frieze: over.frieze, cedar: over.cedar, baseboard: over.baseboard, ceiling: over.ceiling, labels: over.labels }) as Partial<Decor>),
     colors: { ...base.colors, ...defined(over.colors) },
     frame: { ...base.frame, ...defined(over.frame) },
     light: { ...base.light, ...defined(over.light) },
@@ -143,6 +145,7 @@ export function resolveDecor(style: Style, room: Pick<RoomConfig, 'decor' | 'wal
     gloss: DEFAULT_GLOSS,
     dado: 0,
     frieze: 0,
+    cedar: false,
     baseboard: style.baseboard,
     ceiling: { type: 'flat' },
     frame: style.frame,

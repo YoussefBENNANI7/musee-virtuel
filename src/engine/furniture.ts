@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { objectLight, type Decor } from './decors';
-import { blobTexture } from './textures';
+import { blobTexture, poolTexture as blobTextureLight } from './textures';
 import type { BenchConfig, RoomConfig } from './types';
 
 export const BENCH = { length: 1.8, width: 0.46, height: 0.44 };
@@ -15,6 +15,36 @@ export function groundShadow(width: number, depth: number): THREE.Mesh {
   mesh.position.y = 0.003;
   mesh.raycast = () => {};
   return mesh;
+}
+
+let lanternGlow: THREE.Material | null = null;
+
+/**
+ * Lanterne de laiton ajouré, suspendue au plafond par une chaîne : un corps à huit pans
+ * éclairé de l'intérieur, sous un petit dôme. `top` : hauteur du plafond ; `y` : hauteur de la lanterne.
+ */
+export function buildLantern(position: [number, number], room: RoomConfig, top: number, y: number): THREE.Group {
+  const group = new THREE.Group();
+  group.position.set(room.position[0] + position[0], y, room.position[1] + position[1]);
+  const brass = new THREE.MeshStandardMaterial({ color: '#8a6a2c', roughness: 0.45, metalness: 0.8 });
+  const glass = new THREE.MeshBasicMaterial({ color: '#ffd9a0', toneMapped: false });
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.12, 0.42, 8, 1, true), glass);
+  // Montants et cercles de laiton par-dessus le verre éclairé.
+  const cage = new THREE.Mesh(new THREE.CylinderGeometry(0.175, 0.125, 0.42, 8, 3, true), new THREE.MeshStandardMaterial({ color: '#6b4f1e', roughness: 0.5, metalness: 0.8, wireframe: true }));
+  const dome = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.2, 8), brass);
+  dome.position.y = 0.31;
+  const foot = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.14, 8), brass);
+  foot.rotation.x = Math.PI;
+  foot.position.y = -0.28;
+  const chain = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, top - y - 0.4, 6), brass);
+  chain.position.y = 0.4 + (top - y - 0.4) / 2;
+  // Halo de lumière autour de la lanterne, toujours tourné vers le visiteur.
+  lanternGlow ??= new THREE.SpriteMaterial({ map: blobTextureLight(), color: '#ffc880', opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+  const halo = new THREE.Sprite(lanternGlow as THREE.SpriteMaterial);
+  halo.scale.set(1.5, 1.5, 1);
+  halo.raycast = () => {};
+  group.add(body, cage, dome, foot, chain, halo);
+  return group;
 }
 
 /** Rayon au sol de la fontaine, pointes de l'étoile comprises. */
