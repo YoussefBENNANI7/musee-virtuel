@@ -135,7 +135,8 @@ test('démo : une œuvre s’agrandit en haute définition, et Échap referme d�
   await page.waitForTimeout(300);
   const p = await page.evaluate(() => (window as any).__museum.screenOf('les-moissonneurs'));
   await page.mouse.click(p.x, p.y);
-  await expect(page.locator('#p-zoom')).toHaveText('Agrandir');
+  // Les Moissonneurs ont des détails commentés : le bouton d'agrandissement les annonce.
+  await expect(page.locator('#p-zoom')).toHaveText('Explorer les détails');
   // On laisse le visiteur finir de s'approcher de l'œuvre avant de noter où il se tient.
   const where = () => page.evaluate(() => (window as any).__museum.camera.position.toArray().map((v: number) => v.toFixed(3)).join(' '));
   let last = '';
@@ -149,7 +150,10 @@ test('démo : une œuvre s’agrandit en haute définition, et Échap referme d�
   await expect.poll(() => img.evaluate((i: HTMLImageElement) => i.naturalWidth), { timeout: 30_000 }).toBeGreaterThanOrEqual(2500);
   expect(await img.getAttribute('src')).toContain('/images/les-moissonneurs.webp');
   expect(await img.getAttribute('alt')).toBe('Les Moissonneurs, Pieter Bruegel l\'Ancien');
-  const scale = () => img.evaluate((i: HTMLImageElement) => Number(/scale\(([\d.]+)\)/.exec(i.style.transform)?.[1]));
+  // L'image et ses points numérotés sont portés par une même feuille : c'est elle qui grossit et se déplace.
+  const sheet = page.locator('#zoom-sheet');
+  await expect(page.locator('.zoom-dot')).toHaveCount(3);
+  const scale = () => sheet.evaluate((el: HTMLElement) => Number(/scale\(([\d.]+)\)/.exec(el.style.transform)?.[1]));
   expect(await scale()).toBe(1);
   await page.keyboard.press('+');
   await page.locator('#zoom-in').click();
@@ -157,24 +161,24 @@ test('démo : une œuvre s’agrandit en haute définition, et Échap referme d�
   // Les flèches déplacent l'image, pas le visiteur resté derrière.
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('ArrowUp');
-  expect(await img.evaluate((i: HTMLImageElement) => i.style.transform)).toMatch(/translate\(-60px, 60px\)/);
+  expect(await sheet.evaluate((el: HTMLElement) => el.style.transform)).toMatch(/translate\(-60px, 60px\)/);
   await page.locator('#zoom-out').click();
   await page.locator('#zoom-out').click();
   await page.locator('#zoom-out').click();
   expect(await scale()).toBe(1);
-  expect(await img.evaluate((i: HTMLImageElement) => i.style.transform)).toMatch(/translate\(0px, 0px\)/);
+  expect(await sheet.evaluate((el: HTMLElement) => el.style.transform)).toMatch(/translate\(0px, 0px\)/);
   await page.keyboard.press('Escape');
   await expect(zoom).toBeHidden();
   await expect(page.locator('#panel')).toBeVisible();
   expect(await where()).toBe(before);
-  // Une sculpture n'a pas d'image à agrandir.
+  // Une sculpture ne s'agrandit pas : elle s'examine en tournant autour.
   await page.keyboard.press('Escape');
   await page.evaluate(() => (window as any).__museum.standBefore('l-esclave-grecque', 3));
   await page.waitForTimeout(300);
   const s = await page.evaluate(() => (window as any).__museum.screenOf('l-esclave-grecque'));
   await page.mouse.click(s.x, s.y);
   await expect(page.locator('#p-title')).toHaveText("Modèle de L'Esclave grecque");
-  await expect(page.locator('#p-zoom')).toBeHidden();
+  await expect(page.locator('#p-zoom')).toHaveText('Examiner');
 });
 
 test('une œuvre sans mention ni lien n’affiche pas de ligne vide', async ({ page }) => {

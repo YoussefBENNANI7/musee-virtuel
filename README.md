@@ -44,6 +44,7 @@ Pour voir le musée sur un téléphone branché au même réseau wifi, utiliser 
 | `?q=high`, `?q=medium`, `?q=low` | Force un niveau de qualité du rendu |
 | `?vue=simple` | Ouvre la vue simplifiée, sans 3D |
 | `?accueil=non` | Ouvre la visite sans passer par l'écran d'accueil |
+| `?presentation=essentiels` | Lance un parcours en mode présentation : il se déroule seul, avec la voix |
 | `?debug` | Affiche le détail des erreurs de configuration |
 
 Plusieurs options se combinent avec `&`, par exemple `http://localhost:5173/?m=demo&q=low`.
@@ -81,6 +82,7 @@ public/museums/demo/
 - **Décor d'une salle** (`decor`) : le nom d'un décor de la bibliothèque, par exemple `"decor": "terre-cuite"`. Il règle d'un coup le sol, les murs, le plafond, la lumière et les cadres. Décors disponibles : `pierre-claire`, `argile-claire`, `terre-cuite`, `riad`, `nuit`. Sans décor, la salle suit le style du musée.
 - **Portes** (`doors`) : déclarées une seule fois, sur le mur d'une salle. L'ouverture dans la salle voisine est déduite.
 - **Tableaux** : mur, décalage le long du mur, taille en mètres, image, titre, artiste, date, technique, texte. On peut ajouter un passe-partout (`mat`), la mention du musée qui conserve l'œuvre (`credit`) et un lien vers sa notice (`link`). Un enregistrement audio par langue est facultatif : sans lui, le texte est lu par une voix de synthèse.
+- **Détails commentés** d'un tableau (`details`) : des points à regarder de près dans l'agrandissement, chacun avec sa position dans l'image (de 0 à 1, depuis la gauche puis depuis le haut), un titre et un texte.
 - **Sculptures** : position dans la salle, hauteur, socle, et un modèle 3D au format GLB (`"model": {"src": "models/nom.glb"}`) ou une forme dessinée par le moteur. Après avoir déposé un modèle dans `models/`, lancer `npm run modeles -- mon-musee`.
 - **Parcours** (`tours`) : nom, description et liste ordonnée d'œuvres.
 - **Langues** : chaque texte s'écrit dans toutes les langues du musée, par exemple `{ "fr": "Atrium", "en": "Atrium" }`.

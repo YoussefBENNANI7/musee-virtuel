@@ -209,9 +209,29 @@ Ce mélange est maintenant l'interface du musée, appliquée partout : accueil, 
 - Piège rencontré : sur téléphone, une fiche pleine largeur, défilante et sans aucune bordure fait disparaître la vue 3D dans Chrome. La fiche garde donc toujours un filet en haut.
 - Reste hors de ce lot : le panneau affiché dans le casque VR et l'agrandissement gardent leur habillage sombre d'origine ; les fiches ne sont pas animées.
 
+### Autour de l'œuvre, et pack présentation
+
+Lot demandé par le porteur le 16 novembre 2026, fait en autonomie, pour impressionner lors de la présentation à sa hiérarchie.
+
+**Autour de l'œuvre**
+
+- **Examiner une sculpture** (`src/inspect.ts`) : le bouton « Examiner » de la fiche montre la sculpture seule, sur un fond sombre. On tourne autour d'elle à la souris, au doigt ou au clavier, on s'approche et on recule ; une rotation lente la présente d'elle-même. La caméra de la visite sert à l'examen (un calque à part ne montre que la sculpture) et la position du visiteur est rendue à la fermeture. L'intérêt grandira avec de vrais modèles numérisés : il n'y en a qu'un aujourd'hui.
+- **Détails commentés** : dans l'agrandissement d'un tableau, des points numérotés ; un clic s'approche du détail (3 fois) et affiche son commentaire, avec « Précédent », « Suivant » et « Vue d'ensemble ». Ils s'écrivent dans `museum.json` (champ `details` du tableau : position de 0 à 1 dans l'image, titre, texte). Le bouton de la fiche devient « Explorer les détails ». La vue simplifiée les liste sous le commentaire. Sept œuvres de la démo en ont trois ou quatre : *Les Moissonneurs*, *La Grande Vague*, *La Grande Jatte*, *Champ de blé avec cyprès*, *La Classe de danse*, *Rue de Paris, temps de pluie*, la *Paire de portes*. **Ces textes sont rédigés par Claude, d'après ce que montrent les images : le porteur ne les a pas encore relus.** Ils ne sont pas lus par la voix.
+- **Carnet de visite** (`src/carnet.ts`) : chaque fiche ouverte compte une œuvre vue. Le bouton « Carnet » de la barre de commandes montre le compte ; sa fenêtre détaille l'avancée par salle (l'étoile marque une salle terminée) et conduit à une salle. Un message salue une salle terminée, puis le musée entier. Le carnet est gardé dans le navigateur, sur l'appareil.
+
+**Pack présentation**
+
+- **Écran de chargement** : l'étoile du musée, écrite dans `index.html` pour s'afficher avant tout le reste. Sur l'accueil, une ligne montre l'arrivée des œuvres, puis s'efface.
+- **Ouverture** : derrière l'accueil, le regard parcourt lentement la salle d'entrée, puis revient à sa direction de départ quand on entre. Immobile pour qui a demandé moins d'animations au système, et sur les appareils modestes.
+- **Mode présentation** : un parcours se déroule seul. À chaque étape, la visite attend l'arrivée devant l'œuvre, lance son commentaire, marque une pause, puis passe à la suivante ; à la fin, l'interface revient. L'écran se vide (barre de commandes, mini-plan, aide) : il reste le musée et la fiche. Le premier geste du visiteur lui rend la main. Il se lance par le bouton « Présentation » de la liste des parcours, par le lien du bas de la fiche pendant un parcours, ou par l'adresse : `?presentation=essentiels` (l'identifiant du parcours) le lance dès l'entrée.
+- **Ambiance sonore** (`src/ambiance.ts`) : l'eau de la fontaine du patio. Le son grandit quand on s'approche, vient du côté où se trouve la fontaine, s'étouffe depuis une autre salle, et baisse pendant un commentaire. Il ne démarre qu'au premier geste du visiteur. Un bouton de la barre de commandes le coupe, et le choix est retenu. Le son est un vrai enregistrement du domaine public (Wikimedia Commons, « Fountain in toulouse »), monté en boucle de 20 secondes : voir `public/sons/LISEZMOI.md`. **Claude ne peut pas l'écouter : son niveau et son agrément sont à juger par le porteur.**
+
+Pour la réunion : ouvrir le musée, cliquer « Entrer », puis Parcours → « Présentation » sur « Les essentiels ». Ou ouvrir directement `http://localhost:5173/?presentation=essentiels` et cliquer « Entrer ».
+
 ## 4. En attente du porteur du projet
 
-- **Son avis sur la nouvelle interface** : accueil, barre de commandes, fiche, clic au sol, mini-plan.
+- **Son avis sur le lot « autour de l'œuvre » et le pack présentation**, sa relecture des textes des détails commentés, et son écoute du son de la fontaine (niveau, agrément).
+- **Ses photos pour la salle des 120 ans du Groupe Attijariwafa bank** : œuvres bien de face, cartel de chaque œuvre (titre, artiste, date, technique, dimensions), 8 à 12 œuvres, quelques vues du lieu. À déposer dans un dossier Google Drive. Claude ne rédigera les textes qu'à partir des cartels et de ses indications ; les œuvres d'artistes récents demanderont l'accord de la Fondation avant toute diffusion publique.
 
 - **Son avis sur le Patio marocain enrichi** : couleurs du zellige, choix des pièces, présentation des objets en volume.
 
@@ -251,6 +271,9 @@ src/zoom.ts                 Agrandissement d'une œuvre en haute définition
 src/ui.ts                   Textes de l'interface (français, anglais)
 src/style.css               Styles de l'interface
 src/accueil.ts              Écran d'accueil de la visite 3D
+src/inspect.ts              Examen d'une sculpture, seule et sous tous les angles
+src/carnet.ts               Carnet de visite : œuvres vues, salle par salle
+src/ambiance.ts             Ambiance sonore : l'eau des fontaines
 
 src/engine/types.ts         Format de la configuration d'un musée
 src/engine/validate.ts      Contrôle de la configuration, erreurs lisibles
@@ -267,8 +290,8 @@ src/engine/...              Contrôles, plan, mobilier, sculptures, textures, re
 scripts/images.mjs          Préparation des images d'un musée
 scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
-tests/unit/                 Tests unitaires (Vitest) : 106 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 53 tests
+tests/unit/                 Tests unitaires (Vitest) : 113 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 64 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration
@@ -285,6 +308,7 @@ vercel.json                 Configuration de l'hébergement (pas encore relié)
 | `?q=high`, `?q=medium`, `?q=low` | Force un niveau de qualité |
 | `?vue=simple` | Ouvre la vue simplifiée |
 | `?accueil=non` | Ouvre la visite 3D sans passer par l'écran d'accueil |
+| `?presentation=essentiels` | Lance ce parcours en mode présentation dès l'entrée : il se déroule seul, avec la voix |
 | `?debug` | Affiche le détail des erreurs de configuration, même dans la version publiée |
 
 ### Configurer un musée (`museum.json`)
