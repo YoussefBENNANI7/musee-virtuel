@@ -31,9 +31,9 @@ export interface AdvanceOptions {
  * le long de chaque axe séparément, aussi loin que possible : il vient au ras de l'obstacle, puis glisse
  * le long au lieu de s'arrêter net. Parti d'un endroit praticable, il n'en sort jamais.
  *
- * Parti d'un endroit non praticable (déplacement en douceur interrompu en chemin, visiteur penché vers
- * un mur en casque), il fait le déplacement d'un bloc ou pas du tout, le long des deux axes puis de chacun :
- * un grand pas a ainsi plus de chances de le ramener en zone praticable.
+ * Parti d'un endroit non praticable (déplacement en douceur interrompu en chemin), il fait le déplacement
+ * d'un bloc ou pas du tout, le long des deux axes puis de chacun : un grand pas a ainsi plus de chances
+ * de le ramener en zone praticable.
  */
 export function advance(walkable: Walkable, x: number, z: number, dx: number, dz: number, options: AdvanceOptions = {}): { x: number; z: number } {
   const inside = walkable(x, z);
@@ -65,6 +65,31 @@ export function advance(walkable: Walkable, x: number, z: number, dx: number, dz
     if (x === fromX && z === fromZ) break;
   }
   return { x, z };
+}
+
+/**
+ * Point d'appui d'un visiteur en casque : l'endroit du musée où il est tenu pour debout.
+ *
+ * En casque, la tête va où le visiteur la porte. Il se penche pour regarder une œuvre de près, il fait
+ * un pas de côté : rien ne l'empêche de passer la limite de marche. Si la règle de marche partait de sa
+ * tête, le joystick ne répondrait plus dès qu'elle a passé cette limite. Elle part donc de son point
+ * d'appui, qui ne quitte jamais la zone praticable :
+ * - tant que la tête est en zone praticable, le point d'appui est la tête ;
+ * - quand elle en sort, il la suit à pied, selon la règle de marche : il s'arrête au ras de la limite
+ *   qu'elle a passée et la longe à mesure qu'elle se déplace, pour rester au plus près d'elle ;
+ * - quand elle revient en zone praticable, même ailleurs (le visiteur a traversé un mur en marchant
+ *   pour de bon), il la rejoint.
+ * Le joystick déplace le point d'appui avec `advance`, et le visiteur d'autant. Sa tête garde ainsi son
+ * écart au point d'appui : poussée vers l'obstacle, elle ne s'y enfonce pas davantage.
+ *
+ * (x, z) est le point d'appui à l'image précédente, (headX, headZ) l'endroit où se trouve la tête ;
+ * la fonction renvoie le nouveau point d'appui. Sans point d'appui praticable (visiteur entré en casque
+ * depuis un endroit qui ne l'est pas), elle renvoie la tête : la règle de marche part alors de la tête,
+ * comme hors du casque.
+ */
+export function follow(walkable: Walkable, x: number, z: number, headX: number, headZ: number): { x: number; z: number } {
+  if (walkable(headX, headZ) || !walkable(x, z)) return { x: headX, z: headZ };
+  return advance(walkable, x, z, headX - x, headZ - z);
 }
 
 /**

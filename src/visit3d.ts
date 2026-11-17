@@ -741,7 +741,7 @@ export function startVisit(app: App): View {
       return { x: ((v.x + 1) / 2) * canvas.clientWidth, y: ((1 - v.y) / 2) * canvas.clientHeight };
     };
     Object.assign(window, {
-      __museum: { screenAt, marker, inspect, carnet, ambiance, presenting: () => presenting, style: style.id, decors: Object.fromEntries([...world.decors].map(([id, d]) => [id, d.preset])), quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel },
+      __museum: { screenAt, marker, inspect, carnet, ambiance, presenting: () => presenting, style: style.id, decors: Object.fromEntries([...world.decors].map(([id, d]) => [id, d.preset])), quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel, vrUpdate: (dt: number) => vr.update(dt), vrSupport: () => vr.support() },
     });
   }
 

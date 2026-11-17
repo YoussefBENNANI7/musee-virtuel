@@ -231,10 +231,28 @@ Correction du 17 novembre 2026. Aperçu, avec les mesures avant et après et des
 - **Le défaut** : au clavier ou à la manette virtuelle, le pas d'une image (2,40 m par seconde, donc jusqu'à 24 cm quand les images sont lentes) était fait ou refusé en entier. Le visiteur s'arrêtait jusqu'à 24 cm avant un mur, un socle ou un banc, puis s'en approchait par à-coups.
 - **La règle de marche** (`advance`, dans `src/engine/marche.ts`) sert maintenant au clavier, à la manette et au casque. Le déplacement d'une image est découpé en petits pas de 5 cm au plus. Devant un obstacle, le visiteur avance le long de chaque axe aussi loin que possible, au millième de millimètre près (recherche par dichotomie). Il arrive donc au ras de l'obstacle dans l'image même, quelle que soit la cadence ; il glisse le long des murs comme avant, et contourne un socle rond en le serrant.
 - **Mesuré** dans le navigateur des tests, vers un mur : avec des images toutes lentes, arrêt à 20 cm avant la correction, au ras après ; à la cadence des tests, le mur est atteint en 0,9 s, alors qu'il ne l'était toujours pas après 8 s.
-- **En casque**, la même règle s'applique par petits pas, mais sans arrêt au ras (`flush: false` dans `src/vr.ts`) : voir « Limites connues ». En casque émulé, avec des images toutes lentes, l'arrêt passe de 16 cm à moins de 5 cm avant l'obstacle.
-- **Parti d'un endroit non praticable** (les deux derniers cas des « Limites connues »), le visiteur garde l'ancienne règle, à l'identique : le pas se fait d'un bloc ou pas du tout.
+- **En casque**, la même règle s'applique par petits pas, mais sans arrêt au ras (`flush: false` dans `src/vr.ts`) : voir « Limites connues ». En casque émulé, avec des images toutes lentes, l'arrêt passe de 16 cm à moins de 5 cm avant l'obstacle. La règle n'y part plus de la tête du visiteur, mais de son point d'appui : voir « Casque : le joystick répond toujours ».
+- **Parti d'un endroit non praticable** (un déplacement en douceur interrompu, voir « Limites connues », ou une entrée en casque depuis un tel endroit), le visiteur garde l'ancienne règle, à l'identique : le pas se fait d'un bloc ou pas du tout.
 - **Le clic au sol** n'est pas concerné : le visiteur s'y arrête jusqu'à 10 cm avant un obstacle, quelle que soit la cadence (`Controls.reach`).
 - **Tests** : `tests/unit/marche.test.ts` et `tests/unit/controls.test.ts` (24 tests). Dans un navigateur, deux tests ralentissent de vraies images (`slowFrames`, dans `tests/e2e/helpers.ts`), au clavier sur ordinateur et à la manette sur téléphone.
+
+### Casque : le joystick répond toujours
+
+Correction du 17 novembre 2026. **Elle n'a été vérifiée qu'en casque émulé : l'essai sur un vrai casque reste à faire** (voir « En attente du porteur du projet »).
+
+- **Le défaut** : en casque, le joystick déplace le visiteur, mais la règle de marche partait de sa tête : un pas n'était fait que s'il menait la tête à un endroit praticable. Or la tête va où le visiteur la porte. Dès qu'elle passait la limite de marche (il se penche vers une œuvre, ou sa tête bouge simplement au ras d'un mur), le joystick ne répondait plus, ni le long du mur ni vers l'arrière, sauf par un pas assez long pour ramener la tête d'un coup en zone praticable ; à 90 images par seconde, un pas ne fait que 2 cm.
+- **Le point d'appui** (`follow`, dans `src/engine/marche.ts`) : la règle de marche part maintenant de l'endroit où le visiteur est tenu pour debout. C'est sa tête tant qu'elle est en zone praticable. Quand elle en sort, le point d'appui la suit à pied, selon la règle de marche : il s'arrête au ras de la limite qu'elle a passée et la longe à mesure qu'elle se déplace, pour rester au plus près d'elle. Quand elle revient en zone praticable, il la rejoint. Le joystick déplace le point d'appui, et le visiteur d'autant : sa tête garde son écart, et n'est donc pas poussée plus loin en zone interdite.
+- **Mesuré en casque émulé**, tête penchée de 10 cm au-delà de la limite, à la cadence d'un casque (90 images par seconde) : le joystick ne déplaçait le visiteur dans aucune direction ; il le déplace maintenant de 1,80 m en une seconde le long du mur, dans les deux sens, et vers l'arrière, et toujours pas vers le mur.
+- **Tête qui bouge sans cesse**, comme sur un vrai casque (elle oscille de 2 cm, le visiteur regarde à droite et à gauche, il se penche de 10 cm), simulée à 90 images par seconde : le long d'un mur, le joystick restait sans effet 168 images sur 180 ; plus aucune maintenant.
+- **Cas particuliers**, vérifiés un par un :
+  - *Entrée en session* : le visiteur s'appuie là où il se tenait à l'écran, même si le casque le voit d'emblée au-delà d'un mur. Défaut corrigé au passage : à la première image, avant que le casque ait donné sa position, la tête était vue ailleurs dans le musée (1,40 m plus loin dans l'essai).
+  - *Téléportation à la gâchette* : le visiteur s'appuie au point visé.
+  - *Pivot par crans* : la tête ne change pas de place dans le musée, le point d'appui non plus.
+  - *Mur traversé en marchant pour de bon* : tant que la tête est dans l'épaisseur du mur, le joystick ne l'y enfonce pas, mais répond encore le long du mur et vers l'arrière. Dès qu'elle est en zone praticable de l'autre côté, le visiteur est dans la salle voisine, comme avant.
+  - *Sortie du casque* : le visiteur retrouve la visite à l'écran à son point d'appui. Avant, sorti du casque la tête au-delà de la limite, il restait coincé : au clavier, à 60 images par seconde, il ne bougeait dans aucune direction.
+  - *Entrée en casque depuis un endroit non praticable* (voir « Limites connues ») : rien ne dit où le visiteur pourrait s'appuyer ; il garde l'ancienne règle jusqu'à revenir en zone praticable.
+- **Tests** : 12 tests unitaires de plus dans `tests/unit/marche.test.ts` (la règle du point d'appui, puis un visiteur en casque simulé) et 3 tests en casque émulé de plus dans `tests/e2e/casque-vr.spec.ts` (le scénario du défaut, la tête qui bouge sans cesse, les cas particuliers). Ces tests font eux-mêmes avancer le temps, à la cadence d'un casque : les images lentes du navigateur des tests masquaient le défaut vers l'arrière, un pas de 18 cm ramenant la tête d'un coup en zone praticable. Contre-épreuve : si la règle repart de la tête, 9 de ces tests unitaires et les 3 tests en casque échouent.
+- **Arrêt au ras** : pas encore. Le visiteur s'arrête toujours jusqu'à 5 cm avant l'obstacle (`flush: false` dans `src/vr.ts`).
 
 ### Autour de l'œuvre, et pack présentation
 
@@ -325,8 +343,8 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 - Dans le casque VR, ni les parcours ni le plan ne sont disponibles.
 - La VR n'a été testée qu'en émulation (casque Meta Quest 3 émulé).
 - La voix de synthèse n'est pas garantie sur les navigateurs de casque : sans elle, le bouton d'écoute ne s'affiche pas.
-- En casque, le visiteur qui avance au joystick s'arrête jusqu'à 5 cm avant un mur ou un obstacle, au lieu de venir au ras comme au clavier. C'est voulu : sa tête bouge avec lui, et arrêté au ras il dépasserait la limite au moindre mouvement, ce qui l'empêcherait de longer le mur. À revoir après un essai sur un vrai casque.
-- En casque, si le visiteur se penche au-delà de la limite de marche (pour regarder une œuvre de près), le joystick ne lui permet plus de longer le mur tant qu'il ne s'est pas redressé ou reculé : un pas n'est fait que s'il mène à un endroit praticable (`src/vr.ts`). Constaté en casque émulé le 17 novembre 2026, à confirmer sur un vrai casque. Défaut ancien, non corrigé.
+- En casque, le visiteur qui avance au joystick s'arrête jusqu'à 5 cm avant un mur ou un obstacle, au lieu de venir au ras comme au clavier. Cette marge n'a plus de raison d'être depuis que le joystick répond quand la tête a passé la limite de marche : elle reste à retirer.
+- En casque, la marche au joystick quand la tête a passé la limite de marche (le point d'appui, voir « Casque : le joystick répond toujours ») n'a été vérifiée qu'en casque émulé. L'émulateur tient le casque immobile : les mouvements naturels de la tête ont été simulés, pas observés. À confirmer sur un vrai casque.
 - Un déplacement en douceur interrompu peut coincer le visiteur. Pour l'amener devant une œuvre, le musée le déplace en ligne droite, à travers les murs et les bancs (`Controls.glideTo`). S'il appuie sur une touche de déplacement ou fait glisser la vue à cet instant, il s'arrête où il est, parfois dans l'épaisseur d'un mur, d'où il ne sort plus à pied : il lui reste le plan, un parcours ou un clic sur une œuvre. Reproduit par le calcul le 17 novembre 2026. Défaut ancien, non corrigé.
 - L'éditeur ne s'utilise que sur ordinateur, sur la machine où tourne `npm run dev`, et il n'a pas encore été essayé sur un vrai Mac. Ses limites sont listées dans « Outil d'administration ».
 - Pendant que l'aperçu de l'éditeur se recharge, l'éditeur peut marquer un temps d'arrêt sur un ordinateur sans carte graphique. `editeur.html?apercu=low` allège l'aperçu.
@@ -376,15 +394,15 @@ src/engine/artworks.ts      Accrochage des tableaux, pose des sculptures
 src/engine/accrochage.ts    Accrochage automatique : répartition des œuvres sur les murs d'une salle
 src/engine/plans.ts         Plans proposés à la création d'un musée
 src/engine/world.ts         Assemblage du musée, règles de déplacement, points de vue
-src/engine/marche.ts        Règle de marche : petits pas, arrêt au ras des obstacles, glissement le long des murs (sans rendu, testée seule)
+src/engine/marche.ts        Règle de marche : petits pas, arrêt au ras des obstacles, glissement le long des murs, point d'appui du visiteur en casque (sans rendu, testée seule)
 src/engine/...              Contrôles, plan, mobilier, sculptures, textures, reflets, images
 
 scripts/images.mjs          Préparation des images d'un musée
 scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
 scripts/editeur-serveur.mjs Service d'écriture de l'éditeur, ajouté au serveur de développement
-tests/unit/                 Tests unitaires (Vitest) : 162 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 74 tests
+tests/unit/                 Tests unitaires (Vitest) : 174 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 77 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration

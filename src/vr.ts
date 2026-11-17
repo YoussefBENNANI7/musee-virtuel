@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { Controls } from './engine/controls';
-import { advance } from './engine/marche';
+import { EYE_HEIGHT } from './engine/layout';
+import { advance, follow } from './engine/marche';
 import { loc, tr } from './engine/types';
 import type { PlacedArtwork, World } from './engine/world';
 import { metaLine, type App } from './ui';
@@ -34,7 +35,7 @@ interface Options {
  */
 export function setupVR(o: Options) {
   const { renderer, scene, rig, camera, controls, world, app } = o;
-  const idle = { update(_dt: number) {}, refresh() {}, panel: new THREE.Object3D() };
+  const idle = { update(_dt: number) {}, refresh() {}, panel: new THREE.Object3D(), support: () => ({ x: camera.position.x, z: camera.position.z }) };
   const xr = navigator.xr;
   if (!xr) return idle;
 
@@ -51,15 +52,35 @@ export function setupVR(o: Options) {
 
   const head = new THREE.Vector3();
   const headPosition = () => camera.getWorldPosition(head);
+  /**
+   * Point d'appui du visiteur : l'endroit du musée où il est tenu pour debout, et d'où part la règle de marche.
+   * C'est sa tête tant qu'elle est en zone praticable. Quand elle passe la limite de marche (il se penche vers
+   * une œuvre, il fait un pas de côté), le point d'appui reste en zone praticable, au plus près d'elle.
+   * Voir `follow`, dans engine/marche.ts.
+   */
+  let support = { x: 0, z: 0 };
+  /** Le point d'appui suit la tête : à chaque image, et avant de s'en servir. */
+  const followHead = () => {
+    headPosition();
+    support = follow(world.walkable, support.x, support.z, head.x, head.z);
+  };
 
   renderer.xr.addEventListener('sessionstart', () => {
     // Le visiteur démarre en VR là où il se trouvait, tourné dans la même direction.
     rig.position.set(camera.position.x, 0, camera.position.z);
     rig.rotation.set(0, controls.yaw, 0);
     o.onStart();
+    // Tant que le casque n'a pas donné sa première position, la tête est à la verticale de cet endroit.
+    // Sans cela, la première image la verrait ailleurs dans le musée, et le point d'appui avec elle.
+    camera.position.set(0, EYE_HEIGHT, 0);
+    camera.rotation.set(0, 0, 0);
+    support = { x: rig.position.x, z: rig.position.z };
   });
   renderer.xr.addEventListener('sessionend', () => {
-    const p = headPosition().clone();
+    // Le visiteur retrouve la visite à l'écran à son point d'appui : là où était sa tête ou, si elle avait
+    // passé la limite de marche, là où il s'appuyait, en zone praticable. Il peut ainsi repartir à pied.
+    followHead();
+    const p = support;
     const yaw = rig.rotation.y;
     rig.position.set(0, 0, 0);
     rig.rotation.set(0, 0, 0);
@@ -196,6 +217,8 @@ export function setupVR(o: Options) {
       headPosition();
       rig.position.x += hit.point.x - head.x;
       rig.position.z += hit.point.z - head.z;
+      // Le visiteur s'appuie maintenant au point visé, qui est praticable.
+      support = { x: hit.point.x, z: hit.point.z };
     } else {
       hidePanel();
     }
@@ -222,6 +245,8 @@ export function setupVR(o: Options) {
   return {
     /** À appeler à chaque image pendant la session VR. */
     update(dt: number) {
+      // Joystick au repos compris : c'est ainsi que le point d'appui retient où la tête a quitté la zone praticable.
+      followHead();
       for (const { controller, line, reticle } of hands) {
         const hit = controller.visible ? cast(controller) : null;
         line.scale.z = hit ? hit.distance : 6;
@@ -239,17 +264,18 @@ export function setupVR(o: Options) {
           camera.getWorldDirection(forward).setY(0).normalize();
           const dx = (forward.x * -y + -forward.z * x) * MOVE_SPEED * dt;
           const dz = (forward.z * -y + forward.x * x) * MOVE_SPEED * dt;
-          headPosition();
-          // Même règle de marche qu'au clavier, par petits pas, mais sans venir au ras de l'obstacle :
-          // la tête bouge avec le visiteur, et un pas n'est fait que s'il mène à un endroit praticable.
-          // Arrêté au ras d'un mur, le moindre mouvement de tête lui ferait passer la limite,
-          // et il ne pourrait plus longer ce mur. On garde donc la marge d'un petit pas.
-          const to = advance(world.walkable, head.x, head.z, dx, dz, { flush: false });
-          rig.position.x += to.x - head.x;
-          rig.position.z += to.z - head.z;
+          // Même règle de marche qu'au clavier, mais elle part du point d'appui et non de la tête : le joystick
+          // répond encore quand la tête a passé la limite de marche. Le visiteur se déplace d'autant que son
+          // point d'appui ; sa tête garde donc son écart, sans s'enfoncer davantage vers l'obstacle.
+          // Pour l'instant, le point d'appui s'arrête jusqu'à un petit pas avant l'obstacle, sans venir au ras.
+          const to = advance(world.walkable, support.x, support.z, dx, dz, { flush: false });
+          rig.position.x += to.x - support.x;
+          rig.position.z += to.z - support.z;
+          support = to;
         } else if (source.handedness === 'right') {
           if (Math.abs(x) > 0.6 && !turned) {
-            // On pivote autour de la tête, pas autour du centre de la pièce réelle.
+            // On pivote autour de la tête, pas autour du centre de la pièce réelle. La tête ne change pas
+            // de place dans le musée : le point d'appui non plus.
             turned = true;
             const angle = -Math.sign(x) * SNAP_ANGLE;
             headPosition();
@@ -266,5 +292,7 @@ export function setupVR(o: Options) {
     refresh: drawPanel,
     /** La fiche flottante, exposée pour les tests. */
     panel: panel as THREE.Object3D,
+    /** Le point d'appui du visiteur, exposé pour les tests. */
+    support: () => ({ ...support }),
   };
 }

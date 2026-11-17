@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, MAX_STEP, PRECISION, type Walkable } from '../../src/engine/marche';
+import { advance, follow, MAX_STEP, PRECISION, type Walkable } from '../../src/engine/marche';
 import { fixture, layoutOf } from './helpers';
 
 /**
@@ -207,6 +207,308 @@ describe('sans arrêt au ras (visite en casque)', () => {
     }
     // Le tirage a bien couvert des pas gênés par un obstacle, pas seulement des pas libres.
     expect(blocked).toBeGreaterThan(1000);
+  });
+});
+
+/**
+ * Un visiteur en casque, sans casque. `rig` est l'endroit du musée où se trouve le centre de sa pièce réelle,
+ * `offset` l'écart de sa tête à ce centre : ses mouvements réels. Le joystick déplace le rig, et la tête avec lui.
+ * Chaque image se déroule comme dans src/vr.ts : le point d'appui suit la tête, puis la règle de marche part de lui.
+ */
+function headset(walkable: Walkable, x: number, z: number) {
+  const rig = { x, z };
+  const offset = { x: 0, z: 0 };
+  let support = { x, z };
+  const head = () => ({ x: rig.x + offset.x, z: rig.z + offset.z });
+  const visitor = {
+    head,
+    rig: () => ({ ...rig }),
+    support: () => support,
+    /** Le visiteur déplace réellement sa tête : il se penche, il fait un pas. Le joystick est au repos. */
+    move(dx: number, dz: number) {
+      offset.x += dx;
+      offset.z += dz;
+      visitor.frame(0, 0);
+    },
+    /** Une image, joystick poussé de (dx, dz) mètres. */
+    frame(dx: number, dz: number) {
+      const h = head();
+      support = follow(walkable, support.x, support.z, h.x, h.z);
+      if (!dx && !dz) return;
+      const to = advance(walkable, support.x, support.z, dx, dz, JOYSTICK);
+      rig.x += to.x - support.x;
+      rig.z += to.z - support.z;
+      support = to;
+    },
+    /** Joystick tenu pendant `frames` images. Renvoie le déplacement du visiteur. */
+    push(dx: number, dz: number, frames: number) {
+      const from = { ...rig };
+      for (let i = 0; i < frames; i++) visitor.frame(dx, dz);
+      return { x: rig.x - from.x, z: rig.z - from.z };
+    },
+    /** Gâchette vers le sol : la tête arrive au point visé. */
+    teleport(toX: number, toZ: number) {
+      const h = head();
+      rig.x += toX - h.x;
+      rig.z += toZ - h.z;
+      support = { x: toX, z: toZ };
+    },
+  };
+  return visitor;
+}
+/** Réglage du joystick en casque : pour l'instant, il n'amène pas le visiteur au ras de l'obstacle. */
+const JOYSTICK = { flush: false };
+/** Pas d'une image en casque (1,80 m par seconde) : image très lente, 90 images par seconde, 144 images par seconde. */
+const HEADSET_STRIDES = [0.18, 0.02, 0.0125];
+/** Le cabinet, au nord du hall : le visiteur peut s'y tenir à partir de z = -5,10. */
+const CABINET_LIMIT = -5.1;
+
+describe('point d’appui (visite en casque)', () => {
+  it('est la tête tant qu’elle est en zone praticable, où que soit l’ancien point d’appui', () => {
+    for (const from of [{ x: 1, z: 1 }, { x: 0, z: NORTH_LIMIT }, { x: 10, z: 0 }, { x: 0, z: -4.5 }]) {
+      expect(follow(hall, from.x, from.z, -2, 3)).toEqual({ x: -2, z: 3 });
+    }
+  });
+
+  it('reste au ras de la limite quand la tête passe un mur, et la suit le long de ce mur', () => {
+    let support = { x: 0, z: -3.5 };
+    // La tête passe la limite nord, s'enfonce, se déplace le long du mur dans les deux sens.
+    for (const head of [{ x: 0, z: -3.95 }, { x: 0.3, z: -4 }, { x: 0.31, z: -4.3 }, { x: -1, z: -4.4 }, { x: -2.5, z: -3.91 }]) {
+      support = follow(hall, support.x, support.z, head.x, head.z);
+      expect(support.x).toBeCloseTo(head.x, 9);
+      expect(support.z).toBeGreaterThanOrEqual(NORTH_LIMIT);
+      expect(support.z).toBeLessThan(NORTH_LIMIT + 2 * PRECISION);
+    }
+    // Dans l'angle nord-ouest, la tête au-delà des deux murs : il reste dans l'angle.
+    support = follow(hall, support.x, support.z, -6, -4.2);
+    expect(support.x).toBeGreaterThanOrEqual(WEST_LIMIT);
+    expect(support.x).toBeLessThan(WEST_LIMIT + 2 * PRECISION);
+    expect(support.z).toBeGreaterThanOrEqual(NORTH_LIMIT);
+    expect(support.z).toBeLessThan(NORTH_LIMIT + 2 * PRECISION);
+  });
+
+  it('serre un banc et un socle rond sans y entrer', () => {
+    // La tête se penche au-dessus du banc, depuis l'ouest (sa zone commence en x = 0,80), puis glisse le long.
+    let support = { x: 0.5, z: 2 };
+    for (const head of [{ x: 0.9, z: 2 }, { x: 1, z: 2.3 }, { x: 1.5, z: 1.7 }]) {
+      support = follow(furnished, support.x, support.z, head.x, head.z);
+      expect(support.x).toBeLessThanOrEqual(BENCH.x - BENCH.hx);
+      expect(support.x).toBeGreaterThan(BENCH.x - BENCH.hx - 2 * PRECISION);
+      expect(support.z).toBeCloseTo(head.z, 9);
+    }
+    // La tête entre dans la zone du socle par l'est, puis s'y déplace : il reste au bord, du même côté.
+    support = { x: PEDESTAL.x + 1.2, z: 0.1 };
+    for (const head of [{ x: PEDESTAL.x + 0.6, z: 0.1 }, { x: PEDESTAL.x + 0.5, z: 0.4 }, { x: PEDESTAL.x + 0.2, z: 0.5 }]) {
+      support = follow(furnished, support.x, support.z, head.x, head.z);
+      const gap = Math.hypot(support.x - PEDESTAL.x, support.z - PEDESTAL.z) - PEDESTAL.r;
+      expect(gap).toBeGreaterThanOrEqual(0);
+      expect(gap).toBeLessThan(2 * PRECISION);
+      expect(support.z).toBeCloseTo(head.z, 9);
+      expect(support.x).toBeGreaterThan(PEDESTAL.x);
+    }
+  });
+
+  it('sans point d’appui praticable, est la tête, même hors zone', () => {
+    // Visiteur entré en casque dans l'épaisseur d'un mur : rien ne dit où il pourrait s'appuyer.
+    expect(follow(hall, 0, -4.5, 0.2, -4.4)).toEqual({ x: 0.2, z: -4.4 });
+  });
+
+  it('tête penchée au-delà du mur, le joystick répond : il longe le mur et recule, sans pousser la tête plus loin', () => {
+    for (const stride of HEADSET_STRIDES) {
+      // Joystick vers le mur nord jusqu'à l'arrêt, puis le visiteur se penche de 10 cm : sa tête passe la limite de marche.
+      const v = headset(hall, 0, -1.4);
+      v.push(0, -stride, Math.ceil(3 / stride));
+      v.move(0, -0.1);
+      const leaning = v.head();
+      expect(hall(leaning.x, leaning.z), `pas de ${stride} m`).toBe(false);
+      // L'ancienne règle partait de la tête : aucun pas le long du mur ne passait, quelle que soit sa longueur.
+      expect(allOrNothing(hall, leaning.x, leaning.z, stride, 0)).toEqual(leaning);
+      expect(allOrNothing(hall, leaning.x, leaning.z, -stride, 0)).toEqual(leaning);
+
+      // Le long du mur, vers l'ouest puis vers l'est (du côté sans porte) : à pleine allure, et sans changer de profondeur.
+      const frames = Math.round(1.8 / stride);
+      const west = v.push(-stride, 0, frames);
+      expect(west.x, `pas de ${stride} m`).toBeCloseTo(-1.8, 9);
+      expect(west.z, `pas de ${stride} m`).toBe(0);
+      const east = v.push(stride, 0, frames);
+      expect(east.x, `pas de ${stride} m`).toBeCloseTo(1.8, 9);
+      expect(east.z, `pas de ${stride} m`).toBe(0);
+      // Vers le mur : il ne bouge pas. En biais vers le mur : il le longe, sans s'en approcher.
+      expect(v.push(0, -stride, frames), `pas de ${stride} m`).toEqual({ x: 0, z: 0 });
+      const slide = v.push(-stride * Math.SQRT1_2, -stride * Math.SQRT1_2, frames);
+      expect(slide.x, `pas de ${stride} m`).toBeCloseTo(-1.8 * Math.SQRT1_2, 9);
+      expect(slide.z, `pas de ${stride} m`).toBe(0);
+      expect(v.head().z, `pas de ${stride} m`).toBe(leaning.z);
+      // Vers l'arrière : il recule dès la première image, à pleine allure.
+      const back = v.push(0, stride, 3);
+      expect(back.x, `pas de ${stride} m`).toBe(0);
+      expect(back.z, `pas de ${stride} m`).toBeCloseTo(3 * stride, 9);
+    }
+  });
+
+  it('la tête bouge sans cesse, comme sur un vrai casque : le visiteur longe quand même le mur à pleine allure', () => {
+    const FRAMES = 90;
+    const stride = 1.8 / FRAMES;
+    /** La tête oscille de 2 cm autour de sa place, dans les deux directions. */
+    const sway = (frame: number) => ({ x: 0.02 * Math.sin((2 * Math.PI * 0.4 * frame) / FRAMES), z: 0.02 * Math.sin((2 * Math.PI * 0.55 * frame) / FRAMES + 1) });
+    const v = headset(hall, 0, -1.4);
+    let old = { x: 0, z: -1.4 }; // le même visiteur avec l'ancienne règle, qui partait de la tête
+    let last = { x: 0, z: 0 };
+    let frame = 0;
+    /** Joue des images, joystick poussé, et compte celles où il est resté sans effet : avec le point d'appui, puis avec l'ancienne règle. */
+    const play = (dx: number, dz: number, seconds: number) => {
+      const idle = { now: 0, before: 0 };
+      for (let i = 0; i < seconds * FRAMES; i++) {
+        const now = sway(++frame);
+        v.move(now.x - last.x, now.z - last.z);
+        last = now;
+        const step = v.push(dx, dz, 1);
+        if (!step.x && !step.z) idle.now++;
+        const to = allOrNothing(hall, old.x + now.x, old.z + now.z, dx, dz);
+        if (to.x === old.x + now.x && to.z === old.z + now.z) idle.before++;
+        old = { x: to.x - now.x, z: to.z - now.z };
+      }
+      return idle;
+    };
+    // Trois secondes vers le mur nord, puis deux secondes le long du mur, vers l'ouest (du côté sans porte).
+    play(0, -stride, 3);
+    const from = v.rig().x;
+    const idle = play(-stride, 0, 2);
+    expect(idle.now).toBe(0);
+    expect(v.rig().x - from).toBeCloseTo(-3.6, 9);
+    // Avec l'ancienne règle, la tête repassait la limite à chaque oscillation : le joystick restait sans effet une image sur deux au moins.
+    expect(idle.before).toBeGreaterThan(FRAMES);
+  });
+
+  it('penché, le visiteur fait un vrai pas de côté : le point d’appui suit, et le joystick ne lui fait pas passer le mur voisin', () => {
+    for (const stride of HEADSET_STRIDES) {
+      const v = headset(hall, -3, -3.5);
+      v.push(0, -stride, Math.ceil(1 / stride));
+      v.move(0, -0.1);
+      // Un mètre de vrais pas vers l'ouest, toujours penché au-delà du mur nord.
+      for (let i = 0; i < 50; i++) v.move(-0.02, 0);
+      expect(v.support().x, `pas de ${stride} m`).toBeCloseTo(v.head().x, 9);
+      // Joystick vers l'ouest jusqu'à l'arrêt : c'est sa tête qui s'arrête devant le mur ouest, pas un point resté un mètre derrière elle.
+      v.push(-stride, 0, Math.ceil(3 / stride));
+      expect(v.head().x, `pas de ${stride} m`).toBeGreaterThanOrEqual(WEST_LIMIT);
+      expect(v.head().x, `pas de ${stride} m`).toBeLessThan(WEST_LIMIT + MAX_STEP);
+    }
+  });
+
+  it('entré en casque la tête déjà au-delà d’un mur, le visiteur s’appuie là où il se tenait', () => {
+    // Il se tenait au ras du mur nord ; le casque le voit 30 cm plus loin, dans la zone interdite.
+    const v = headset(hall, -3, NORTH_LIMIT);
+    v.move(0.1, -0.3);
+    expect(v.support().x).toBeCloseTo(-2.9, 9);
+    expect(v.support().z).toBe(NORTH_LIMIT);
+    expect(v.push(0.02, 0, 10).x).toBeCloseTo(0.2, 9);
+    expect(v.push(0, -0.02, 10)).toEqual({ x: 0, z: 0 });
+  });
+
+  it('après une téléportation, le visiteur s’appuie au point visé', () => {
+    const v = headset(hall, 0, -3.5);
+    v.push(0, -0.02, 60);
+    v.move(0, -0.3);
+    // Tête au-delà du mur nord, il vise le sol au milieu du hall.
+    v.teleport(2, 1);
+    expect(v.support()).toEqual({ x: 2, z: 1 });
+    v.frame(0, 0);
+    expect(v.head().x).toBeCloseTo(2, 9);
+    expect(v.head().z).toBeCloseTo(1, 9);
+    expect(v.support()).toEqual(v.head());
+    expect(v.push(0, 0.02, 10).z).toBeCloseTo(0.2, 9);
+  });
+
+  it('un mur traversé en marchant pour de bon : le joystick n’y pousse pas, puis le visiteur est dans la salle voisine', () => {
+    const v = headset(hall, 0, -3.52);
+    // De vrais pas vers le nord, loin de la porte : la tête passe la limite du hall, puis toute l'épaisseur du mur.
+    let inWall = 0;
+    for (;;) {
+      v.move(0, -0.05);
+      const head = v.head();
+      if (hall(head.x, head.z)) {
+        if (head.z < NORTH_LIMIT) break;
+        continue;
+      }
+      inWall++;
+      expect(v.support().z, `tête en z = ${head.z}`).toBeGreaterThanOrEqual(NORTH_LIMIT);
+      expect(v.support().z, `tête en z = ${head.z}`).toBeLessThan(NORTH_LIMIT + 2 * PRECISION);
+      // Dans le mur, le joystick ne l'enfonce pas vers le cabinet, mais répond encore le long du mur.
+      expect(v.push(0, -0.02, 5), `tête en z = ${head.z}`).toEqual({ x: 0, z: 0 });
+      expect(v.push(0.02, 0, 5).x, `tête en z = ${head.z}`).toBeCloseTo(0.1, 9);
+    }
+    // Entre les deux salles, 1,20 m ne sont pas praticables : l'épaisseur du mur et la marge gardée de chaque côté.
+    expect(inWall).toBe(24);
+    // Sa tête est maintenant dans le cabinet. Il s'y appuie, et le joystick l'y promène.
+    expect(layout.roomAt(v.head().x, v.head().z)!.id).toBe('cabinet');
+    expect(v.head().z).toBeLessThanOrEqual(CABINET_LIMIT);
+    expect(v.support()).toEqual(v.head());
+    expect(v.push(0, -0.02, 50).z).toBeCloseTo(-1, 9);
+    // De retour vers le hall au joystick, c'est le mur du cabinet qui l'arrête.
+    v.push(0, 0.02, 200);
+    expect(v.head().z).toBeLessThanOrEqual(CABINET_LIMIT);
+    expect(v.head().z).toBeGreaterThan(CABINET_LIMIT - MAX_STEP);
+  });
+
+  it('entré en casque depuis un endroit non praticable, le visiteur garde l’ancienne règle jusqu’à en sortir', () => {
+    // Dans l'épaisseur du mur nord, à 30 cm de la limite du hall.
+    const v = headset(hall, 0, -4.2);
+    v.frame(0, 0);
+    expect(v.support()).toEqual({ x: 0, z: -4.2 });
+    // À petits pas, rien ne bouge ; un grand pas le ramène dans le hall.
+    expect(v.push(0, 0.02, 20)).toEqual({ x: 0, z: 0 });
+    expect(v.push(0.02, 0, 20)).toEqual({ x: 0, z: 0 });
+    expect(v.push(0, 0.4, 1).z).toBeCloseTo(0.4, 9);
+    // Il a maintenant un point d'appui : s'il se penche de nouveau au-delà du mur, le joystick répond.
+    v.move(0, -0.2);
+    expect(hall(v.head().x, v.head().z)).toBe(false);
+    expect(v.push(0.02, 0, 10).x).toBeCloseTo(0.2, 9);
+  });
+
+  it('ne quitte jamais la zone praticable, quoi que fassent la tête et le joystick', () => {
+    const next = random(5);
+    const v = headset(furnished, 0, 2.5);
+    let offset = { x: 0, z: 0 };
+    let outside = 0;
+    let moved = 0;
+    const visited = new Set<string>();
+    for (let i = 0; i < 30000; i++) {
+      // La tête : de petits mouvements, et de temps en temps un grand pas réel, à travers un mur ou un meuble s'il le faut.
+      // Elle reste à moins de 1,50 m du centre de la pièce réelle.
+      const reach = next() < 0.02 ? 1.5 : 0.04;
+      const to = { x: Math.max(-1.5, Math.min(1.5, offset.x + (next() - 0.5) * reach)), z: Math.max(-1.5, Math.min(1.5, offset.z + (next() - 0.5) * reach)) };
+      const before = v.support();
+      v.move(to.x - offset.x, to.z - offset.z);
+      offset = to;
+      const head = v.head();
+      const support = v.support();
+      expect(furnished(support.x, support.z), `image ${i}, appui en (${support.x} ; ${support.z})`).toBe(true);
+      if (furnished(head.x, head.z)) {
+        expect(support).toEqual(head);
+      } else {
+        outside++;
+        // Le long de chaque axe, le point d'appui s'est rapproché de la tête, sans la dépasser.
+        expect((support.x - before.x) * Math.sign(head.x - before.x)).toBeGreaterThanOrEqual(0);
+        expect((support.z - before.z) * Math.sign(head.z - before.z)).toBeGreaterThanOrEqual(0);
+        expect(Math.abs(support.x - before.x)).toBeLessThanOrEqual(Math.abs(head.x - before.x) + 1e-12);
+        expect(Math.abs(support.z - before.z)).toBeLessThanOrEqual(Math.abs(head.z - before.z) + 1e-12);
+      }
+      // Le joystick : une direction qui tourne peu à peu, des images de toutes durées.
+      const angle = i / 700 + next();
+      const length = [0.18, 0.05, 0.02, 0.0125][Math.floor(next() * 4)];
+      const step = v.push(Math.cos(angle) * length, Math.sin(angle) * length, 1);
+      const after = v.support();
+      expect(furnished(after.x, after.z), `image ${i}, appui en (${after.x} ; ${after.z})`).toBe(true);
+      // La tête s'est déplacée d'autant que le point d'appui : elle a gardé son écart.
+      expect(v.head().x - after.x).toBeCloseTo(head.x - support.x, 9);
+      expect(v.head().z - after.z).toBeCloseTo(head.z - support.z, 9);
+      if (step.x || step.z) moved++;
+      visited.add(layout.roomAt(after.x, after.z)!.id);
+    }
+    // La promenade a bien éprouvé la règle : des milliers d'images la tête hors zone, et les quatre salles visitées.
+    expect(outside).toBeGreaterThan(3000);
+    expect(moved).toBeGreaterThan(10000);
+    expect([...visited].sort()).toEqual(['cabinet', 'galerie', 'hall', 'rotonde']);
   });
 });
 
