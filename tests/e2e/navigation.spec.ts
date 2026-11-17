@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { clickArtwork, holdUntil, openMuseum, panel, position, roomName, slowFrames, teleport, walkUntilBlocked } from './helpers';
+import { clickArtwork, holdClock, holdUntil, onWalkableGround, openMuseum, panel, position, roomName, slowFrames, teleport, walkUntilBlocked } from './helpers';
 
 const WEST = Math.PI / 2; // regard vers l'ouest
 const NORTH = 0;
@@ -218,6 +218,96 @@ test('avec une fiche ouverte, un clic au sol la referme sans déplacer le visite
   await page.waitForTimeout(600);
   const after = await position(page);
   expect(Math.hypot(after.x - before.x, after.z - before.z)).toBeLessThan(0.01);
+});
+
+/** Clique sur une œuvre telle qu'on la voit de là où l'on est, sans se placer devant. */
+async function clickSeen(page: import('@playwright/test').Page, id: string) {
+  const p = await page.evaluate((id) => (window as any).__museum.screenOf(id), id);
+  await page.mouse.click(p.x, p.y);
+}
+
+test('interrompu dans l’épaisseur d’un mur par un glissement de la vue, le visiteur en sort de lui-même et peut marcher', async ({ page }) => {
+  const errors = await openMuseum(page);
+  // Dans le hall, à gauche de la porte du cabinet. Par elle, on voit « Zellige imaginaire », accroché au mur est du cabinet.
+  await teleport(page, -0.5, 2, Math.atan2(-5.35, 10.5));
+  await page.waitForTimeout(300);
+  const clock = await holdClock(page);
+  await clickSeen(page, 'zellige-imaginaire');
+  await expect(page.locator('#p-title')).toHaveText('Zellige imaginaire');
+
+  // Le visiteur est emmené devant l'œuvre en ligne droite : il passe par le mur, à côté de la porte.
+  await clock.untilOutside();
+  expect(await onWalkableGround(page)).toBe(false);
+  const inWall = await position(page);
+  expect(inWall.z).toBeLessThan(-3.9);
+  expect(inWall.z).toBeGreaterThan(-5.1);
+
+  // À cet instant, il fait glisser la vue, à gauche de la fiche.
+  const before = await yaw(page);
+  await page.mouse.move(300, 300);
+  await page.mouse.down();
+  await page.mouse.move(380, 300, { steps: 4 });
+  await page.mouse.up();
+  // Le regard a tourné aussitôt ; les pieds finissent de traverser, en un quart de seconde au plus.
+  expect(await yaw(page)).toBeGreaterThan(before + 0.1);
+  expect(await gliding(page)).toBe(true);
+  expect(await clock.untilArrived()).toBeLessThanOrEqual(0.25 + 1 / 60);
+  // Il s'arrête au premier endroit praticable de son trajet : la limite de marche du cabinet (z = -5,10).
+  expect(await onWalkableGround(page)).toBe(true);
+  const stop = await position(page);
+  expect(stop.z).toBeLessThanOrEqual(-5.1);
+  expect(stop.z).toBeGreaterThan(-5.1 - 0.00001);
+
+  // Et il peut marcher. Avant la correction, il restait dans le mur, et aucune touche ne l'en sortait.
+  await clock.release();
+  await holdUntil(page, 'KeyW', async () => {
+    const now = await position(page);
+    return Math.hypot(now.x - stop.x, now.z - stop.z) > 1;
+  });
+  expect(await onWalkableGround(page)).toBe(true);
+  await expect(roomName(page)).toHaveText('Cabinet des Couleurs');
+  expect(errors).toEqual([]);
+});
+
+test('interrompu dans la zone d’un socle par une touche, le visiteur en sort de lui-même et peut marcher', async ({ page }) => {
+  await openMuseum(page);
+  // Dans le salon, le « Nocturne » est accroché au mur ouest. Vu d'ici, le chemin qui y mène en ligne droite
+  // passe par la zone réservée autour du socle central, posé en (-10,5 ; 0).
+  await teleport(page, -7.5, 1.5, Math.atan2(7.35, 1.5));
+  await page.waitForTimeout(300);
+  const clock = await holdClock(page);
+  await clickSeen(page, 'nocturne-en-quatre-temps');
+  await expect(page.locator('#p-title')).toHaveText('Nocturne en quatre temps');
+  // Fiche refermée, le clavier revient à la visite ; le déplacement continue.
+  await page.keyboard.press('Escape');
+  await expect(panel(page)).toBeHidden();
+  const fromCentre = async () => {
+    const p = await position(page);
+    return Math.hypot(p.x + 10.5, p.z);
+  };
+  const radius = await page.evaluate(() => (window as any).__museum.world.artworks.find((a: any) => a.config.id === 'noeud-sans-fin').obstacle.r as number);
+
+  await clock.untilOutside();
+  expect(await onWalkableGround(page)).toBe(false);
+  expect(await fromCentre()).toBeLessThan(radius);
+
+  // À cet instant, il appuie sur la touche « avancer ».
+  await page.keyboard.down('KeyW');
+  try {
+    expect(await clock.untilArrived()).toBeLessThanOrEqual(0.25 + 1 / 60);
+    // Il s'arrête au ras de la zone du socle, de l'autre côté.
+    expect(await onWalkableGround(page)).toBe(true);
+    expect(await fromCentre()).toBeGreaterThanOrEqual(radius);
+    expect(await fromCentre()).toBeLessThan(radius + 0.00001);
+    const stop = await position(page);
+    expect(stop.x).toBeLessThan(-10.5);
+    // La touche toujours enfoncée, il marche.
+    await clock.release();
+    await expect.poll(async () => Math.hypot((await position(page)).x - stop.x, (await position(page)).z - stop.z)).toBeGreaterThan(0.5);
+  } finally {
+    await page.keyboard.up('KeyW');
+  }
+  expect(await onWalkableGround(page)).toBe(true);
 });
 
 test('le mini-plan suit le visiteur et ouvre le plan complet', async ({ page }) => {

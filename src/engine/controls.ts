@@ -1,12 +1,29 @@
 import * as THREE from 'three';
 import { EYE_HEIGHT } from './layout';
-import { advance, type Walkable } from './marche';
+import { advance, firstWalkable, type Walkable } from './marche';
 
 const SPEED = 2.4; // m/s
 const TURN_SPEED = 1.6; // rad/s, rotation au clavier
 const LOOK = 0.0032; // rad par pixel de glissement
 const WALK_SPEED = 4.5; // m/s au plus, quand le visiteur a cliqué au sol
 const STEP = 0.1; // m, pas de contrôle d'un trajet
+const EASE = 4; // par seconde : un déplacement en douceur ralentit à mesure qu'il approche de son but
+
+/** Un déplacement en douceur : il emmène le visiteur en ligne droite, à travers les murs et le mobilier. */
+interface Glide {
+  /** Destination, et direction du regard à l'arrivée. */
+  pos: THREE.Vector3;
+  yaw: number;
+  pitch: number;
+  maxSpeed: number;
+  /** Point de départ : le trajet en vient, et le visiteur y retourne si rien n'est praticable devant lui. */
+  from: THREE.Vector3;
+  /**
+   * Quand le visiteur a repris la main hors de la zone de marche : l'endroit praticable où le déplacement
+   * s'achève, et l'allure à laquelle il y va.
+   */
+  exit?: { pos: THREE.Vector3; speed: number };
+}
 
 /**
  * Déplacement libre à la première personne.
@@ -26,7 +43,7 @@ export class Controls {
   private keys = new Set<string>();
   private stick = new THREE.Vector2();
   private drag: { id: number; x: number; y: number; moved: number } | null = null;
-  private glide: { pos: THREE.Vector3; yaw: number; pitch: number; maxSpeed: number } | null = null;
+  private glide: Glide | null = null;
 
   constructor(
     private camera: THREE.PerspectiveCamera,
@@ -60,7 +77,7 @@ export class Controls {
       this.drag.y = e.clientY;
       this.drag.moved += Math.abs(dx) + Math.abs(dy);
       if (this.drag.moved > 6) {
-        this.glide = null;
+        this.interrupt();
         this.yaw += dx * LOOK;
         this.pitch = THREE.MathUtils.clamp(this.pitch + dy * LOOK, -1.1, 1.1);
       }
@@ -100,7 +117,7 @@ export class Controls {
     el.addEventListener('pointerdown', (e) => {
       id = e.pointerId;
       el.setPointerCapture(id);
-      this.glide = null;
+      this.interrupt();
       set(e);
     });
     el.addEventListener('pointermove', (e) => e.pointerId === id && set(e));
@@ -127,7 +144,7 @@ export class Controls {
   glideTo(pos: THREE.Vector3, yaw: number, pitch = 0) {
     // Tourne par le plus court chemin.
     const delta = Math.atan2(Math.sin(yaw - this.yaw), Math.cos(yaw - this.yaw));
-    this.glide = { pos: pos.clone().setY(EYE_HEIGHT), yaw: this.yaw + delta, pitch, maxSpeed: Infinity };
+    this.glide = { pos: pos.clone().setY(EYE_HEIGHT), yaw: this.yaw + delta, pitch, maxSpeed: Infinity, from: this.camera.position.clone() };
   }
 
   /**
@@ -156,13 +173,56 @@ export class Controls {
     const end = this.reach(x, z);
     const p = this.camera.position;
     if (Math.hypot(end.x - p.x, end.z - p.z) < 0.3) return null;
-    this.glide = { pos: new THREE.Vector3(end.x, EYE_HEIGHT, end.z), yaw: this.yaw, pitch: this.pitch, maxSpeed: WALK_SPEED };
+    this.glide = { pos: new THREE.Vector3(end.x, EYE_HEIGHT, end.z), yaw: this.yaw, pitch: this.pitch, maxSpeed: WALK_SPEED, from: p.clone() };
     return end;
   }
 
-  /** Vrai tant qu'un déplacement en douceur est en cours. */
+  /** Vrai tant qu'un déplacement en douceur est en cours, y compris quand il s'achève après une interruption. */
   get gliding() {
     return this.glide !== null;
+  }
+
+  /**
+   * Achève d'un coup le déplacement en douceur en cours : le visiteur est posé là où il allait.
+   * Pour qui prend le relais de ces contrôles en plein déplacement, comme le casque VR à son démarrage.
+   */
+  finishGlide() {
+    const glide = this.glide;
+    if (!glide) return;
+    this.camera.position.copy(glide.exit?.pos ?? glide.pos);
+    if (!glide.exit) {
+      this.yaw = glide.yaw;
+      this.pitch = glide.pitch;
+    }
+    this.glide = null;
+  }
+
+  /**
+   * Le visiteur reprend la main pendant un déplacement en douceur : touche, glissement de la vue ou manette.
+   * Là où il peut se tenir, il s'arrête sur place. Mais arrêté dans l'épaisseur d'un mur ou dans la zone
+   * d'un banc ou d'un socle, il ne pourrait plus faire un pas : la règle de marche ne le laisse avancer
+   * que vers un endroit praticable. Le déplacement se poursuit alors jusqu'au premier endroit praticable
+   * de sa trajectoire ; s'il n'y en a aucun devant lui, le visiteur revient au dernier qu'il a traversé.
+   */
+  private interrupt() {
+    const glide = this.glide;
+    // Rien à interrompre, ou déplacement déjà en train de s'achever.
+    if (!glide || glide.exit) return;
+    const p = this.camera.position;
+    if (this.walkable(p.x, p.z)) {
+      this.glide = null;
+      return;
+    }
+    const ahead = firstWalkable(this.walkable, p.x, p.z, glide.pos.x, glide.pos.z);
+    const out = ahead ?? firstWalkable(this.walkable, p.x, p.z, glide.from.x, glide.from.z);
+    if (!out) {
+      // Aucun endroit praticable sur tout le trajet : le visiteur n'était déjà pas en zone de marche au départ.
+      this.glide = null;
+      return;
+    }
+    // Devant lui, il continue sur sa lancée, sans descendre sous l'allure de la marche. En arrière, il marche.
+    const speed = ahead ? Math.max(SPEED, Math.min(p.distanceTo(glide.pos) * EASE, glide.maxSpeed)) : SPEED;
+    glide.exit = { pos: new THREE.Vector3(out.x, EYE_HEIGHT, out.z), speed };
   }
 
   update(dt: number) {
@@ -174,19 +234,38 @@ export class Controls {
     forward -= this.stick.y;
     strafe += this.stick.x;
 
-    if (forward || strafe || turn) this.glide = null;
+    if (forward || strafe || turn) this.interrupt();
 
-    if (this.glide) {
-      let t = 1 - Math.exp(-dt * 4);
+    const glide = this.glide;
+    const p = this.camera.position;
+    if (glide?.exit) {
+      // Le visiteur a repris la main hors de la zone de marche : son regard lui obéit déjà,
+      // et le déplacement s'achève au premier endroit praticable, où il pourra marcher.
+      this.yaw += turn * TURN_SPEED * dt;
+      const left = p.distanceTo(glide.exit.pos);
+      const step = glide.exit.speed * dt;
+      if (step < left) {
+        p.lerp(glide.exit.pos, step / left);
+      } else {
+        p.copy(glide.exit.pos);
+        this.glide = null;
+      }
+    } else if (glide) {
+      let t = 1 - Math.exp(-dt * EASE);
       // Une marche vers un point du sol garde une allure de promenade, même de loin.
-      const left = this.camera.position.distanceTo(this.glide.pos);
-      if (left * t > this.glide.maxSpeed * dt) t = (this.glide.maxSpeed * dt) / left;
-      this.camera.position.lerp(this.glide.pos, t);
-      this.yaw += (this.glide.yaw - this.yaw) * t;
-      this.pitch += (this.glide.pitch - this.pitch) * t;
+      const left = p.distanceTo(glide.pos);
+      if (left * t > glide.maxSpeed * dt) t = (glide.maxSpeed * dt) / left;
+      p.lerp(glide.pos, t);
+      this.yaw += (glide.yaw - this.yaw) * t;
+      this.pitch += (glide.pitch - this.pitch) * t;
       // Arrivé quand le visiteur est en place et que son regard a fini de tourner.
-      const turned = Math.abs(this.glide.yaw - this.yaw) < 0.003 && Math.abs(this.glide.pitch - this.pitch) < 0.003;
-      if (turned && this.camera.position.distanceTo(this.glide.pos) < 0.01) this.glide = null;
+      const turned = Math.abs(glide.yaw - this.yaw) < 0.003 && Math.abs(glide.pitch - this.pitch) < 0.003;
+      if (turned && p.distanceTo(glide.pos) < 0.01) {
+        // Le dernier centimètre n'est pas parcouru : s'il sépare le visiteur de la zone de marche,
+        // il est posé sur sa destination.
+        if (!this.walkable(p.x, p.z) && this.walkable(glide.pos.x, glide.pos.z)) p.copy(glide.pos);
+        this.glide = null;
+      }
     } else {
       this.yaw += turn * TURN_SPEED * dt;
       const len = Math.hypot(forward, strafe);
@@ -194,7 +273,6 @@ export class Controls {
         const scale = (SPEED * dt) / Math.max(1, len);
         const sin = Math.sin(this.yaw);
         const cos = Math.cos(this.yaw);
-        const p = this.camera.position;
         // Devant un obstacle, le visiteur vient au ras, puis glisse le long plutôt que de s'arrêter net.
         const to = advance(this.walkable, p.x, p.z, (-sin * forward + cos * strafe) * scale, (-cos * forward - sin * strafe) * scale);
         p.x = to.x;

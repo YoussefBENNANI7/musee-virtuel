@@ -53,6 +53,9 @@ export function setupVR(o: Options) {
   const headPosition = () => camera.getWorldPosition(head);
 
   renderer.xr.addEventListener('sessionstart', () => {
+    // Un déplacement en douceur encore en cours s'achève d'un coup : il traverse les murs et le mobilier,
+    // et le visiteur pris en chemin démarrerait à un endroit d'où le joystick ne le sortirait pas.
+    controls.finishGlide();
     // Le visiteur démarre en VR là où il se trouvait, tourné dans la même direction.
     rig.position.set(camera.position.x, 0, camera.position.z);
     rig.rotation.set(0, controls.yaw, 0);

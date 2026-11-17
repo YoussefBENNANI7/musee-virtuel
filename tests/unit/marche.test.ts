@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, MAX_STEP, PRECISION, type Walkable } from '../../src/engine/marche';
+import { advance, firstWalkable, MAX_STEP, PRECISION, type Walkable } from '../../src/engine/marche';
 import { fixture, layoutOf } from './helpers';
 
 /**
@@ -276,5 +276,100 @@ describe('robustesse', () => {
     // Le tirage a couvert des milliers de départs hors zone, dont une part ramenée en zone praticable.
     expect(tried).toBeGreaterThan(10000);
     expect(rescued).toBeGreaterThan(300);
+  });
+});
+
+describe('premier endroit praticable d’un trajet', () => {
+  // Trois trajets qui partent d'un endroit non praticable, là où un déplacement en douceur peut être interrompu :
+  // l'épaisseur du mur nord du hall (entre z = -3,90 et z = -5,10), la zone du banc et celle du socle.
+  const INSIDE_WALL = { x: 0, z: -4.64 };
+  const INSIDE_BENCH = { x: 1.5, z: 2 };
+  const INSIDE_PEDESTAL = { x: PEDESTAL.x + 0.3, z: 0.1 };
+
+  it('est le départ lui-même quand le visiteur peut s’y tenir', () => {
+    expect(firstWalkable(furnished, 0, 0, 0, -8)).toEqual({ x: 0, z: 0 });
+    expect(firstWalkable(furnished, 0, 0, 0, 0)).toEqual({ x: 0, z: 0 });
+  });
+
+  it('sort de l’épaisseur d’un mur, au ras, du côté où va le trajet', () => {
+    // Vers le cabinet, au nord : sa zone de marche commence en z = -5,10.
+    const north = firstWalkable(furnished, INSIDE_WALL.x, INSIDE_WALL.z, 0, -8)!;
+    expect(north.x).toBe(0);
+    expect(north.z).toBeLessThanOrEqual(-5.1);
+    expect(north.z).toBeGreaterThan(-5.1 - 2 * PRECISION);
+    // Vers le hall, au sud : sa zone de marche s'arrête en z = -3,90.
+    const south = firstWalkable(furnished, INSIDE_WALL.x, INSIDE_WALL.z, 0, 0)!;
+    expect(south.z).toBeGreaterThanOrEqual(NORTH_LIMIT);
+    expect(south.z).toBeLessThan(NORTH_LIMIT + 2 * PRECISION);
+    for (const spot of [north, south]) expect(furnished(spot.x, spot.z)).toBe(true);
+  });
+
+  it('sort de la zone d’un banc et de celle d’un socle rond, au ras', () => {
+    // Le long du banc, vers l'est : sa zone s'arrête en x = 3,20.
+    const bench = firstWalkable(furnished, INSIDE_BENCH.x, INSIDE_BENCH.z, 4.5, 2)!;
+    expect(furnished(bench.x, bench.z)).toBe(true);
+    expect(bench.x).toBeGreaterThanOrEqual(BENCH.x + BENCH.hx);
+    expect(bench.x).toBeLessThan(BENCH.x + BENCH.hx + 2 * PRECISION);
+    expect(bench.z).toBe(2);
+    // En biais à travers la zone du socle.
+    const round = firstWalkable(furnished, INSIDE_PEDESTAL.x, INSIDE_PEDESTAL.z, -8, 1)!;
+    expect(furnished(round.x, round.z)).toBe(true);
+    const gap = Math.hypot(round.x - PEDESTAL.x, round.z - PEDESTAL.z) - PEDESTAL.r;
+    expect(gap).toBeGreaterThanOrEqual(0);
+    expect(gap).toBeLessThan(2 * PRECISION);
+  });
+
+  it('prend l’arrivée telle quelle, sans la recalculer', () => {
+    // Un seul point praticable : l'arrivée, au nombre près. Recalculée à partir du départ,
+    // elle tomberait parfois un cheveu à côté, et le trajet passerait pour impraticable d'un bout à l'autre.
+    const next = random(5);
+    for (let i = 0; i < 2000; i++) {
+      const [x, z, toX, toZ] = [next() * 20 - 10, next() * 20 - 10, next() * 20 - 10, next() * 20 - 10];
+      const only: Walkable = (px, pz) => px === toX && pz === toZ;
+      expect(firstWalkable(only, x, z, toX, toZ)).toEqual({ x: toX, z: toZ });
+    }
+    // Une destination posée exactement sur la limite de la zone de marche du cabinet.
+    expect(firstWalkable(furnished, INSIDE_WALL.x, INSIDE_WALL.z, 0, -5.1)).toEqual({ x: 0, z: -5.1 });
+  });
+
+  it('ne trouve rien quand tout le trajet est impraticable', () => {
+    // D'un point à un autre de l'épaisseur du mur, puis sur place, puis du mur vers l'extérieur du bâtiment.
+    expect(firstWalkable(furnished, INSIDE_WALL.x, INSIDE_WALL.z, -2, -4.3)).toBeNull();
+    expect(firstWalkable(furnished, INSIDE_WALL.x, INSIDE_WALL.z, INSIDE_WALL.x, INSIDE_WALL.z)).toBeNull();
+    expect(firstWalkable(furnished, 5.7, 4.2, 5.7, 30)).toBeNull();
+  });
+
+  it('renvoie toujours un endroit praticable du trajet, au ras de ce qui le précède', () => {
+    // Trajets au hasard dans tout le musée de test, murs et meubles compris.
+    const next = random(6);
+    let found = 0;
+    let none = 0;
+    for (let i = 0; i < 6000; i++) {
+      const [x, z, toX, toZ] = [-16 + 31 * next(), -13 + 20 * next(), -16 + 31 * next(), -13 + 20 * next()];
+      if (furnished(x, z)) continue;
+      const length = Math.hypot(toX - x, toZ - z);
+      const spot = firstWalkable(furnished, x, z, toX, toZ);
+      if (!spot) {
+        // Rien de praticable à l'arrivée, ni tous les deux centimètres en chemin.
+        expect(furnished(toX, toZ)).toBe(false);
+        for (let d = 0; d < length; d += 0.02) expect(furnished(x + ((toX - x) * d) / length, z + ((toZ - z) * d) / length)).toBe(false);
+        none++;
+        continue;
+      }
+      found++;
+      expect(furnished(spot.x, spot.z)).toBe(true);
+      // Sur le trajet, entre le départ et l'arrivée...
+      const along = ((spot.x - x) * (toX - x) + (spot.z - z) * (toZ - z)) / length;
+      const aside = ((spot.x - x) * (toZ - z) - (spot.z - z) * (toX - x)) / length;
+      expect(along).toBeGreaterThan(0);
+      expect(along).toBeLessThanOrEqual(length + 1e-9);
+      expect(Math.abs(aside)).toBeLessThan(1e-9);
+      // ... et au ras : deux millièmes de millimètre plus tôt, le visiteur ne pourrait pas se tenir.
+      const before = along - 2 * PRECISION;
+      expect(furnished(x + ((toX - x) * before) / length, z + ((toZ - z) * before) / length)).toBe(false);
+    }
+    // Le tirage a bien couvert les deux issues.
+    expect(found).toBeGreaterThan(1000);
+    expect(none).toBeGreaterThan(100);
   });
 });

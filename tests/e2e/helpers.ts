@@ -173,5 +173,48 @@ export async function slowFrames(page: Page) {
   };
 }
 
+/**
+ * Tient l'horloge de la visite : les images continuent d'être dessinées, mais le visiteur ne bouge plus
+ * que lorsque le test fait avancer le temps. Un vrai geste (souris, clavier, doigt) arrive ainsi à l'instant
+ * voulu d'un déplacement en douceur, quelle que soit la vitesse de l'ordinateur : laissé à lui-même,
+ * un tel déplacement ne passe que quelques centièmes de seconde dans l'épaisseur d'un mur.
+ */
+export async function holdClock(page: Page) {
+  await page.evaluate(() => {
+    const w = window as any;
+    const controls = w.__museum.controls;
+    w.__clock = controls.update.bind(controls);
+    // La visite appelle cette fonction à chaque image : tant que l'horloge est tenue, elle ne fait plus rien.
+    controls.update = () => {};
+  });
+  /** Fait passer des images d'un soixantième de seconde tant que le déplacement en douceur dure, et renvoie le temps écoulé. */
+  const pass = (whileWalkable: boolean) =>
+    page.evaluate((whileWalkable) => {
+      const w = window as any;
+      const { controls, camera, world } = w.__museum;
+      let frames = 0;
+      while (controls.gliding && frames < 6000 && !(whileWalkable && !world.walkable(camera.position.x, camera.position.z))) {
+        w.__clock(1 / 60);
+        frames++;
+      }
+      return frames / 60;
+    }, whileWalkable);
+  return {
+    /** Avance jusqu'à la première image où le visiteur, emmené en douceur, n'est plus à un endroit praticable. */
+    untilOutside: () => pass(true),
+    /** Avance jusqu'à la fin du déplacement en douceur, et renvoie sa durée en secondes. */
+    untilArrived: () => pass(false),
+    /** Rend l'horloge à la visite : le visiteur bouge de nouveau à chaque image. */
+    release: () => page.evaluate(() => delete (window as any).__museum.controls.update),
+  };
+}
+
+/** Le visiteur est-il à un endroit où il peut se tenir (ni mur, ni banc, ni socle) ? */
+export const onWalkableGround = (page: Page) =>
+  page.evaluate(() => {
+    const { world, camera } = (window as any).__museum;
+    return world.walkable(camera.position.x, camera.position.z) as boolean;
+  });
+
 export const roomName = (page: Page) => page.locator('#room-name');
 export const panel = (page: Page) => page.locator('#panel');

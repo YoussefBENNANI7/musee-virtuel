@@ -1,5 +1,5 @@
 import { devices, expect, test } from '@playwright/test';
-import { clickArtwork, openMuseum, panel, slowFrames } from './helpers';
+import { clickArtwork, holdClock, onWalkableGround, openMuseum, panel, position, slowFrames } from './helpers';
 
 // Un téléphone, émulé dans le même navigateur que les autres tests.
 const { defaultBrowserType: _ignored, ...iphone } = devices['iPhone 13'];
@@ -117,4 +117,52 @@ test('sur téléphone, toucher le sol y amène le visiteur', async ({ page }) =>
   await expect
     .poll(() => page.evaluate(() => (window as any).__museum.camera.position.z as number), { timeout: 15_000 })
     .toBeLessThan(-1.9);
+});
+
+test.describe('sur une tablette tenue couchée', () => {
+  // La fiche s'ouvre sur le côté et laisse la manette accessible ; sur un téléphone tenu droit, elle la recouvre.
+  test.use({ viewport: { width: 1080, height: 810 }, deviceScaleFactor: 1 });
+
+  test('interrompu dans la zone d’un banc par un doigt posé sur la manette, le visiteur en sort de lui-même et peut marcher', async ({ page }) => {
+    const errors = await openMuseum(page);
+    // Dans la galerie, à l'ouest du banc posé en (10 ; 3,6), face à « Ronds dans l'eau », accroché au mur est derrière lui.
+    await page.evaluate(() => (window as any).__museum.controls.teleport(7.5, 3.8, -Math.PI / 2));
+    await page.waitForTimeout(300);
+    const clock = await holdClock(page);
+    const p = await page.evaluate(() => (window as any).__museum.screenOf('ronds-dans-l-eau'));
+    await page.touchscreen.tap(p.x, p.y);
+    await expect(page.locator('#p-title')).toHaveText("Ronds dans l'eau");
+
+    // Le visiteur est emmené devant le tableau en ligne droite : il passe par la zone réservée autour du banc.
+    await clock.untilOutside();
+    expect(await onWalkableGround(page)).toBe(false);
+    const inZone = await position(page);
+    expect(Math.abs(inZone.x - 10)).toBeLessThan(0.53);
+
+    // À cet instant, il pose le doigt sur la manette, puis le relève.
+    const stick = (await page.locator('#joystick').boundingBox())!;
+    const cx = stick.x + stick.width / 2;
+    const cy = stick.y + stick.height / 2;
+    await page.touchscreen.tap(cx, cy);
+    expect(await clock.untilArrived()).toBeLessThanOrEqual(0.25 + 1 / 60);
+    // Il s'arrête au ras de la zone du banc, du côté du tableau : elle va jusqu'à x = 10,53.
+    expect(await onWalkableGround(page)).toBe(true);
+    const stop = await position(page);
+    expect(stop.x).toBeGreaterThan(10.53 - 1e-9);
+    expect(stop.x).toBeLessThan(10.53 + 0.00001);
+    expect(stop.z).toBeCloseTo(3.8, 6);
+
+    expect(errors).toEqual([]);
+
+    // Et la manette, poussée vers le haut, le fait marcher. (Un doigt simulé, comme dans les essais plus haut :
+    // le navigateur refuse de le « capturer », d'où une erreur sans conséquence, que l'on ne relève pas.)
+    await clock.release();
+    const finger = (type: string, dy: number) =>
+      page.locator('#joystick').dispatchEvent(type, { pointerId: 7, clientX: cx, clientY: cy + dy, pointerType: 'touch', isPrimary: true });
+    await finger('pointerdown', 0);
+    await finger('pointermove', -50);
+    await expect.poll(async () => (await position(page)).x, { timeout: 15_000 }).toBeGreaterThan(stop.x + 0.3);
+    await finger('pointerup', -50);
+    expect(await onWalkableGround(page)).toBe(true);
+  });
 });
