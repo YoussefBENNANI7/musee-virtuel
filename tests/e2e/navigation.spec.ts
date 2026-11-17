@@ -137,26 +137,25 @@ test('à l’arrêt, le musée ne redessine pas l’image', async ({ page }) => 
   expect((await frames()) - before).toBe(0);
 });
 
-/** Clique sur un point du sol, donné par ses coordonnées dans le musée. */
+/** Vrai tant qu'un déplacement en douceur est en cours : marche vers un point du sol ou approche d'une œuvre. */
+const gliding = (page: import('@playwright/test').Page) => page.evaluate(() => (window as any).__museum.controls.gliding as boolean);
+/**
+ * Clique sur un point du sol, donné par ses coordonnées dans le musée, et vérifie que le clic a lancé la marche.
+ * Le visiteur ne bouge qu'à l'image suivante, qui peut tarder quand l'ordinateur est très chargé.
+ */
 async function clickFloor(page: import('@playwright/test').Page, x: number, z: number) {
   const p = await page.evaluate(([x, z]) => (window as any).__museum.screenAt(x, z), [x, z]);
   await page.mouse.click(p.x, p.y);
+  await expect.poll(() => gliding(page), { message: 'le clic au sol aurait dû lancer la marche' }).toBe(true);
 }
-/** Attend que le visiteur ne bouge plus, et renvoie sa position. */
+/**
+ * Attend que le déplacement en cours soit terminé, et renvoie la position d'arrivée.
+ * On attend que le moteur l'annonce fini, et non deux positions identiques de suite : quand une image tarde,
+ * deux relevés rapprochés sont identiques avant même que le visiteur ait commencé à bouger.
+ */
 async function settle(page: import('@playwright/test').Page) {
-  let last = await position(page);
-  await expect
-    .poll(
-      async () => {
-        const now = await position(page);
-        const moved = Math.hypot(now.x - last.x, now.z - last.z);
-        last = now;
-        return moved;
-      },
-      { timeout: 20_000, intervals: [300] },
-    )
-    .toBeLessThan(0.002);
-  return last;
+  await expect.poll(() => gliding(page), { timeout: 20_000, message: 'le visiteur aurait dû arriver' }).toBe(false);
+  return position(page);
 }
 const yaw = (page: import('@playwright/test').Page) => page.evaluate(() => (window as any).__museum.controls.yaw as number);
 const markerVisible = (page: import('@playwright/test').Page) => page.evaluate(() => (window as any).__museum.marker.visible as boolean);
@@ -201,6 +200,7 @@ test('avec une fiche ouverte, un clic au sol la referme sans déplacer le visite
   // En bas à gauche de l'écran : le sol, loin de la fiche.
   await page.mouse.click(200, 660);
   await expect(panel(page)).toBeHidden();
+  expect(await gliding(page), 'le clic n’aurait dû lancer aucune marche').toBe(false);
   await page.waitForTimeout(600);
   const after = await position(page);
   expect(Math.hypot(after.x - before.x, after.z - before.z)).toBeLessThan(0.01);
