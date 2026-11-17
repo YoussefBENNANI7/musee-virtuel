@@ -313,6 +313,7 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 - Dans le casque VR, ni les parcours ni le plan ne sont disponibles.
 - La VR n'a été testée qu'en émulation (casque Meta Quest 3 émulé).
 - La voix de synthèse n'est pas garantie sur les navigateurs de casque : sans elle, le bouton d'écoute ne s'affiche pas.
+- Quand les images sont lentes, le visiteur qui marche vers un mur ou un obstacle s'arrête un peu avant (jusqu'à 24 cm), puis s'en approche par à-coups : le moteur accepte ou refuse chaque pas en entier (`update` dans `src/engine/controls.ts`). Mesuré dans les tests, où le rendu est calculé par le processeur (environ 4 images par seconde) ; pas encore observé sur un vrai appareil.
 - L'éditeur ne s'utilise que sur ordinateur, sur la machine où tourne `npm run dev`, et il n'a pas encore été essayé sur un vrai Mac. Ses limites sont listées dans « Outil d'administration ».
 - Pendant que l'aperçu de l'éditeur se recharge, l'éditeur peut marquer un temps d'arrêt sur un ordinateur sans carte graphique. `editeur.html?apercu=low` allège l'aperçu.
 
@@ -420,7 +421,7 @@ npm run vignettes -- demo         # photographie les sculptures (le musée doit 
 - **Tout en français** : interface, commentaires du code, messages de commit, documentation. Les textes du musée existent en français et en anglais.
 - **Le porteur du projet n'est pas développeur** : commandes exactes à copier, explications simples, sur Mac.
 - **Avant et après chaque modification du moteur** : les tests doivent passer, puis le rendu est vérifié par des captures sur ordinateur et sur téléphone.
-- **Tests dans un navigateur** : attendre une condition que le moteur expose (par exemple `controls.gliding`, vrai tant qu'un déplacement en douceur est en cours), jamais un délai fixe ni « deux positions identiques de suite ». Le rendu des tests est calculé par le processeur : une image prend 100 ms ou plus, et sous charge celle qui suit un clic peut tarder, si bien que deux relevés rapprochés sont identiques avant même que le visiteur ait bougé.
+- **Tests dans un navigateur** : attendre une condition que le moteur expose (par exemple `controls.gliding`, vrai tant qu'un déplacement en douceur est en cours), jamais un délai fixe ni « deux positions identiques de suite ». Le rendu des tests est calculé par le processeur : une image prend 100 ms ou plus, et sous charge celle qui suit un clic peut tarder, si bien que deux relevés rapprochés sont identiques avant même que le visiteur ait bougé. Pour savoir où un obstacle arrête le visiteur, l'aide `walkUntilBlocked` fait elle-même avancer le temps, par pas réguliers, au lieu d'attendre les images.
 - **Un aperçu à la fin de chaque lot**, et pas de lot touchant à l'identité visuelle sans l'avis du porteur.
 - **Œuvres** : Claude cherche de vraies œuvres en accès libre et vérifie la licence de chacune à la source ; le porteur valide la sélection avant toute intégration.
 - **Accès aux collections des musées** : les sessions dans le cloud passent par l'environnement « musee-virtuel », qui autorise les sites du Metropolitan Museum, de l'Art Institute of Chicago, du musée de Cleveland, de Wikimedia Commons, de la Smithsonian et de Sketchfab.

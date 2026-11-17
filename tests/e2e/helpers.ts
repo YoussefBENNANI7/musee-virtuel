@@ -80,20 +80,49 @@ export async function holdUntil(page: Page, key: string, done: () => Promise<boo
   }
 }
 
-/** Maintient une touche jusqu'à ce que le visiteur ne bouge plus : il est arrêté par un obstacle. */
+/**
+ * Maintient une touche jusqu'à ce qu'un obstacle arrête le visiteur, et renvoie l'endroit où il s'arrête.
+ *
+ * Une fois le visiteur en marche, le test fait lui-même avancer le temps au lieu d'attendre les images :
+ * d'abord à grands pas (un dixième de seconde, le plus long que la visite accorde à une image, comme sur un
+ * appareil très lent), puis à tout petits pas pour trouver l'endroit exact.
+ * Attendre « quelques relevés sans mouvement » ne suffit pas. Quand les images sont lentes, le visiteur
+ * s'arrête jusqu'à 24 cm avant l'obstacle, puis ne s'en approche que par à-coups, espacés d'une demi-seconde
+ * ou davantage : entre deux à-coups, il passerait pour arrêté.
+ */
 export async function walkUntilBlocked(page: Page, key = 'KeyW') {
+  const start = await position(page);
   await page.keyboard.down(key);
-  let last = await position(page);
-  let still = 0;
-  for (let i = 0; i < 150 && still < 4; i++) {
-    await page.waitForTimeout(250);
-    const now = await position(page);
-    still = Math.hypot(now.x - last.x, now.z - last.z) < 0.005 ? still + 1 : 0;
-    last = now;
+  try {
+    // La touche est bien prise en compte : une image a déjà déplacé le visiteur.
+    await expect
+      .poll(async () => {
+        const now = await position(page);
+        return Math.hypot(now.x - start.x, now.z - start.z);
+      }, { message: 'la touche maintenue aurait dû mettre le visiteur en marche' })
+      .toBeGreaterThan(0);
+    const blocked = await page.evaluate(() => {
+      const { controls, camera } = (window as any).__museum;
+      // En dessous de 2 cm par seconde, le visiteur est tenu pour arrêté (il marche à 2,4 m par seconde).
+      const STILL = 0.02;
+      /** Avance par pas de `dt` secondes, jusqu'au premier pas qui ne déplace plus le visiteur. */
+      const walk = (dt: number) => {
+        for (let i = 0; i < 1000; i++) {
+          const { x, z } = camera.position;
+          controls.update(dt);
+          if (Math.hypot(camera.position.x - x, camera.position.z - z) < STILL * dt) return true;
+        }
+        return false;
+      };
+      return walk(0.1) && walk(0.001);
+    });
+    expect(blocked, 'le visiteur aurait dû finir par être arrêté').toBe(true);
+  } finally {
+    await page.keyboard.up(key);
   }
-  await page.keyboard.up(key);
-  expect(still, 'le visiteur aurait dû finir par être arrêté').toBeGreaterThanOrEqual(4);
-  return last;
+  // Une image passe : le nom de la salle et le mini-plan sont à jour.
+  await page.evaluate(() => new Promise<void>((done) => requestAnimationFrame(() => requestAnimationFrame(() => done()))));
+  return position(page);
 }
 
 export const roomName = (page: Page) => page.locator('#room-name');
