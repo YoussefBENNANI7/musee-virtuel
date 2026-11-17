@@ -78,7 +78,12 @@ test('la présentation se lance depuis l’adresse et se termine d’elle-même'
   await expect(page.locator('#tour-status')).toContainText(`Étape ${steps} sur ${steps}`);
   expect(await presenting(page)).toBe(true);
   // Dernier commentaire terminé : la présentation s'achève et l'interface revient.
-  await expect.poll(() => page.evaluate(() => (window as any).__spoken.length as number), { timeout: 15_000 }).toBeGreaterThan(0);
+  // On attend le commentaire de la dernière œuvre du parcours, « Nœud sans fin », et pas n'importe lequel :
+  // quand l'ordinateur est très chargé, les clics sur « Suivant » peuvent être assez lents pour qu'une étape
+  // intermédiaire ait commencé le sien.
+  const lastSpoken = () => page.evaluate(() => ((window as any).__spoken.at(-1)?.text as string | undefined) ?? '');
+  await expect.poll(lastSpoken, { timeout: 15_000 }).toContain('Nœud sans fin');
+  // Un commentaire qui s'arrête moins de 2 s après son début passerait pour une lecture refusée par le navigateur.
   await page.waitForTimeout(2200);
   await endSpeech(page);
   await expect(page.locator('#toast')).toHaveText('La présentation est terminée.', { timeout: 15_000 });
