@@ -264,11 +264,10 @@ export function setupVR(o: Options) {
           camera.getWorldDirection(forward).setY(0).normalize();
           const dx = (forward.x * -y + -forward.z * x) * MOVE_SPEED * dt;
           const dz = (forward.z * -y + forward.x * x) * MOVE_SPEED * dt;
-          // Même règle de marche qu'au clavier, mais elle part du point d'appui et non de la tête : le joystick
-          // répond encore quand la tête a passé la limite de marche. Le visiteur se déplace d'autant que son
-          // point d'appui ; sa tête garde donc son écart, sans s'enfoncer davantage vers l'obstacle.
-          // Pour l'instant, le point d'appui s'arrête jusqu'à un petit pas avant l'obstacle, sans venir au ras.
-          const to = advance(world.walkable, support.x, support.z, dx, dz, { flush: false });
+          // Même règle de marche qu'au clavier, arrêt au ras des obstacles compris, mais elle part du point d'appui
+          // et non de la tête : le joystick répond encore quand la tête a passé la limite de marche. Le visiteur se
+          // déplace d'autant que son point d'appui ; sa tête garde donc son écart, sans s'enfoncer davantage.
+          const to = advance(world.walkable, support.x, support.z, dx, dz);
           rig.position.x += to.x - support.x;
           rig.position.z += to.z - support.z;
           support = to;

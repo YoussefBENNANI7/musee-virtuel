@@ -167,10 +167,10 @@ test('visite en casque VR : fiche, téléportation, marche, pivot et sortie', as
   }
   await stick(page, 'left', 0, 0);
   expect(last).toBeLessThan(teleported.head.z - 0.3);
-  // Le visiteur s'arrête à moins d'un petit pas (5 cm) de la limite, alors que les images de ce test sont lentes
-  // (un pas entier y fait jusqu'à 18 cm). En casque, il n'est pas amené au ras : voir src/vr.ts.
+  // Le visiteur s'arrête au ras de la limite, comme au clavier, alors que les images de ce test sont lentes
+  // (un pas entier y fait jusqu'à 18 cm).
   expect(last).toBeGreaterThan(-3.9 - 1e-9);
-  expect(last).toBeLessThan(-3.85);
+  expect(last).toBeLessThan(-3.9 + 1e-5);
 
   // Joystick droit : pivot d'un cran de 30°, autour de la tête.
   const beforeTurn = await state(page);
@@ -199,13 +199,19 @@ test('en casque, le joystick répond encore quand la tête a passé la limite de
   const errors = await openMuseum(page);
   await enterVR(page, 0, -1.4, 0);
 
-  // Joystick vers l'avant jusqu'à l'arrêt devant le mur nord (limite de marche en z = -3,90), à grands pas.
+  // Joystick vers l'avant jusqu'à l'arrêt devant le mur nord (limite de marche en z = -3,90), à grands pas :
+  // le visiteur vient au ras de la limite. À petits pas, il n'avance plus du tout.
   await push(page, 0, -1, SLOW, 40);
   const stopped = await state(page);
   expect(stopped.walkable).toBe(true);
   expect(stopped.head.z).toBeGreaterThan(-3.9 - 1e-9);
-  expect(stopped.head.z).toBeLessThan(-3.85);
+  expect(stopped.head.z).toBeLessThan(-3.9 + 1e-5);
   expect(stopped.support.z).toBeCloseTo(stopped.head.z, 9);
+  expect(await push(page, 0, -1, HEADSET, ONE_SECOND)).toEqual({ dx: 0, dz: 0 });
+  // Reparti d'un mètre en arrière, à la cadence d'un casque cette fois, il s'arrête au même endroit.
+  await push(page, 0, 1, HEADSET, 50);
+  await push(page, 0, -1, HEADSET, ONE_SECOND);
+  expect((await state(page)).head.z).toBeCloseTo(stopped.head.z, 5);
 
   // Le visiteur se penche de 10 cm pour regarder le mur de près : sa tête passe la limite de marche.
   await moveHead(page, 0, -0.1);
@@ -380,11 +386,11 @@ test('en casque, le visiteur garde un point d’appui praticable : entrée, pivo
   expect(crossed.walkable).toBe(true);
   expect(crossed.support.x).toBeCloseTo(crossed.head.x, 9);
   expect(crossed.support.z).toBeCloseTo(crossed.head.z, 9);
-  // Joystick vers la droite (vers le hall, de biais) : c'est maintenant le mur de la rotonde qui l'arrête.
+  // Joystick vers la droite (vers le hall, de biais) : c'est maintenant le mur de la rotonde qui l'arrête, au ras.
   await push(page, 1, 0, SLOW, 20);
   const rotonde = await state(page);
-  expect(rotonde.head.x).toBeLessThanOrEqual(-6.6);
-  expect(rotonde.head.x).toBeGreaterThan(-6.65);
+  expect(rotonde.head.x).toBeLessThan(-6.6 + 1e-9);
+  expect(rotonde.head.x).toBeGreaterThan(-6.6 - 1e-5);
 
   // Téléportation, la tête hors zone : il se penche vers le hall, par-dessus la limite, puis vise le sol devant lui.
   await moveHead(page, 0.2, 0);

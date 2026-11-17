@@ -15,14 +15,6 @@ export const MAX_STEP = 0.05;
 /** Précision de l'arrêt au ras d'un obstacle, en mètres : un millième de millimètre. */
 export const PRECISION = 1e-6;
 
-export interface AdvanceOptions {
-  /**
-   * Vrai (par défaut) : le visiteur vient au ras de l'obstacle.
-   * Faux : chaque petit pas est fait ou refusé en entier, et le visiteur s'arrête jusqu'à un petit pas avant.
-   */
-  flush?: boolean;
-}
-
 /**
  * Avance le visiteur de (dx, dz) depuis (x, z) et renvoie l'endroit où il arrive.
  *
@@ -35,9 +27,9 @@ export interface AdvanceOptions {
  * d'un bloc ou pas du tout, le long des deux axes puis de chacun : un grand pas a ainsi plus de chances
  * de le ramener en zone praticable.
  */
-export function advance(walkable: Walkable, x: number, z: number, dx: number, dz: number, options: AdvanceOptions = {}): { x: number; z: number } {
+export function advance(walkable: Walkable, x: number, z: number, dx: number, dz: number): { x: number; z: number } {
   const inside = walkable(x, z);
-  const precision = inside && (options.flush ?? true) ? PRECISION : Infinity;
+  const precision = inside ? PRECISION : Infinity;
   const steps = inside ? Math.ceil(Math.hypot(dx, dz) / MAX_STEP) : 1;
   const sx = dx / steps;
   const sz = dz / steps;

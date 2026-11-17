@@ -24,12 +24,12 @@ const STRIDES = [0.24, 0.04, 0.0024];
  * Marche tout droit sur `distance` mètres, par pas de `stride`, et renvoie la position après chaque pas.
  * Les distances des tests sont des multiples de 24 cm : le même trajet se fait en un nombre entier de pas, quel que soit le pas.
  */
-function walk(walkable: Walkable, from: { x: number; z: number }, dirX: number, dirZ: number, distance: number, stride: number, options = {}) {
+function walk(walkable: Walkable, from: { x: number; z: number }, dirX: number, dirZ: number, distance: number, stride: number) {
   const norm = Math.hypot(dirX, dirZ);
   const trace = [from];
   for (let i = Math.round(distance / stride); i > 0; i--) {
     const p = trace[trace.length - 1];
-    trace.push(advance(walkable, p.x, p.z, (dirX / norm) * stride, (dirZ / norm) * stride, options));
+    trace.push(advance(walkable, p.x, p.z, (dirX / norm) * stride, (dirZ / norm) * stride));
   }
   return trace;
 }
@@ -178,38 +178,6 @@ describe('glissement', () => {
   });
 });
 
-describe('sans arrêt au ras (visite en casque)', () => {
-  const steps = { flush: false };
-
-  it('s’arrête à moins d’un petit pas de l’obstacle, quelle que soit la longueur du pas', () => {
-    // Pas d'une image très lente en casque (18 cm), d'une image à 90 par seconde (2 cm), et d'un seul coup.
-    const stops = [advance(hall, 0, -1.4, 0, -3, steps), ...[0.18, 0.02].map((stride) => last(walk(hall, { x: 0, z: -1.4 }, 0, -1, 3.6, stride, steps)))];
-    for (const stop of stops) {
-      expect(stop.z).toBeGreaterThanOrEqual(NORTH_LIMIT);
-      expect(stop.z).toBeLessThan(NORTH_LIMIT + MAX_STEP);
-    }
-  });
-
-  it('pour un pas d’un seul petit pas, applique exactement l’ancienne règle', () => {
-    // Départs au hasard dans tout le musée de test, murs et meubles compris ; pas de 5 cm au plus.
-    const next = random(1);
-    let blocked = 0;
-    for (let i = 0; i < 20000; i++) {
-      const x = -16 + 31 * next();
-      const z = -13 + 20 * next();
-      const angle = 2 * Math.PI * next();
-      const length = 0.0499 * next();
-      const dx = Math.cos(angle) * length;
-      const dz = Math.sin(angle) * length;
-      const expected = allOrNothing(furnished, x, z, dx, dz);
-      expect(advance(furnished, x, z, dx, dz, steps)).toEqual(expected);
-      if (expected.x !== x + dx || expected.z !== z + dz) blocked++;
-    }
-    // Le tirage a bien couvert des pas gênés par un obstacle, pas seulement des pas libres.
-    expect(blocked).toBeGreaterThan(1000);
-  });
-});
-
 /**
  * Un visiteur en casque, sans casque. `rig` est l'endroit du musée où se trouve le centre de sa pièce réelle,
  * `offset` l'écart de sa tête à ce centre : ses mouvements réels. Le joystick déplace le rig, et la tête avec lui.
@@ -235,7 +203,7 @@ function headset(walkable: Walkable, x: number, z: number) {
       const h = head();
       support = follow(walkable, support.x, support.z, h.x, h.z);
       if (!dx && !dz) return;
-      const to = advance(walkable, support.x, support.z, dx, dz, JOYSTICK);
+      const to = advance(walkable, support.x, support.z, dx, dz);
       rig.x += to.x - support.x;
       rig.z += to.z - support.z;
       support = to;
@@ -256,8 +224,6 @@ function headset(walkable: Walkable, x: number, z: number) {
   };
   return visitor;
 }
-/** Réglage du joystick en casque : pour l'instant, il n'amène pas le visiteur au ras de l'obstacle. */
-const JOYSTICK = { flush: false };
 /** Pas d'une image en casque (1,80 m par seconde) : image très lente, 90 images par seconde, 144 images par seconde. */
 const HEADSET_STRIDES = [0.18, 0.02, 0.0125];
 /** Le cabinet, au nord du hall : le visiteur peut s'y tenir à partir de z = -5,10. */
@@ -321,6 +287,7 @@ describe('point d’appui (visite en casque)', () => {
       v.move(0, -0.1);
       const leaning = v.head();
       expect(hall(leaning.x, leaning.z), `pas de ${stride} m`).toBe(false);
+      expect(leaning.z, `pas de ${stride} m`).toBeCloseTo(NORTH_LIMIT - 0.1, 5);
       // L'ancienne règle partait de la tête : aucun pas le long du mur ne passait, quelle que soit sa longueur.
       expect(allOrNothing(hall, leaning.x, leaning.z, stride, 0)).toEqual(leaning);
       expect(allOrNothing(hall, leaning.x, leaning.z, -stride, 0)).toEqual(leaning);
@@ -344,6 +311,30 @@ describe('point d’appui (visite en casque)', () => {
       expect(back.x, `pas de ${stride} m`).toBe(0);
       expect(back.z, `pas de ${stride} m`).toBeCloseTo(3 * stride, 9);
     }
+  });
+
+  it('au joystick, le visiteur vient au ras de l’obstacle, quelle que soit la cadence, et n’en bouge plus', () => {
+    const stops = HEADSET_STRIDES.map((stride) => {
+      // Vers le mur nord, puis vers le banc depuis l'ouest, puis droit sur le socle rond depuis l'est.
+      const wall = headset(furnished, 0, -1.4);
+      wall.push(0, -stride, Math.ceil(3 / stride));
+      const bench = headset(furnished, -1, 2);
+      bench.push(stride, 0, Math.ceil(3 / stride));
+      const round = headset(furnished, -8, 0);
+      round.push(-stride, 0, Math.ceil(3 / stride));
+      expect(wall.head().z, `pas de ${stride} m`).toBeGreaterThanOrEqual(NORTH_LIMIT);
+      expect(wall.head().z, `pas de ${stride} m`).toBeLessThan(NORTH_LIMIT + 2 * PRECISION);
+      expect(bench.head().x, `pas de ${stride} m`).toBeLessThanOrEqual(BENCH.x - BENCH.hx);
+      expect(bench.head().x, `pas de ${stride} m`).toBeGreaterThan(BENCH.x - BENCH.hx - 2 * PRECISION);
+      const gap = Math.hypot(round.head().x - PEDESTAL.x, round.head().z - PEDESTAL.z) - PEDESTAL.r;
+      expect(gap, `pas de ${stride} m`).toBeGreaterThanOrEqual(0);
+      expect(gap, `pas de ${stride} m`).toBeLessThan(2 * PRECISION);
+      // Une fois au ras, des pas de toutes longueurs ne le déplacent plus du tout.
+      for (const again of [0.18, 0.0125, 0.02, 0.001]) expect(wall.push(0, -again, 20), `pas de ${stride} m, puis de ${again} m`).toEqual({ x: 0, z: 0 });
+      return wall.head();
+    });
+    // Même endroit à toutes les cadences, au micron près.
+    for (const stop of stops) expect(Math.abs(stop.z - stops[0].z)).toBeLessThan(2 * PRECISION);
   });
 
   it('la tête bouge sans cesse, comme sur un vrai casque : le visiteur longe quand même le mur à pleine allure', () => {
@@ -391,7 +382,7 @@ describe('point d’appui (visite en casque)', () => {
       // Joystick vers l'ouest jusqu'à l'arrêt : c'est sa tête qui s'arrête devant le mur ouest, pas un point resté un mètre derrière elle.
       v.push(-stride, 0, Math.ceil(3 / stride));
       expect(v.head().x, `pas de ${stride} m`).toBeGreaterThanOrEqual(WEST_LIMIT);
-      expect(v.head().x, `pas de ${stride} m`).toBeLessThan(WEST_LIMIT + MAX_STEP);
+      expect(v.head().x, `pas de ${stride} m`).toBeLessThan(WEST_LIMIT + 2 * PRECISION);
     }
   });
 
@@ -447,7 +438,7 @@ describe('point d’appui (visite en casque)', () => {
     // De retour vers le hall au joystick, c'est le mur du cabinet qui l'arrête.
     v.push(0, 0.02, 200);
     expect(v.head().z).toBeLessThanOrEqual(CABINET_LIMIT);
-    expect(v.head().z).toBeGreaterThan(CABINET_LIMIT - MAX_STEP);
+    expect(v.head().z).toBeGreaterThan(CABINET_LIMIT - 2 * PRECISION);
   });
 
   it('entré en casque depuis un endroit non praticable, le visiteur garde l’ancienne règle jusqu’à en sortir', () => {
@@ -493,6 +484,14 @@ describe('point d’appui (visite en casque)', () => {
         expect(Math.abs(support.x - before.x)).toBeLessThanOrEqual(Math.abs(head.x - before.x) + 1e-12);
         expect(Math.abs(support.z - before.z)).toBeLessThanOrEqual(Math.abs(head.z - before.z) + 1e-12);
       }
+      // Devant un angle, le point d'appui peut mettre une image de plus à se poser : on la lui laisse.
+      let settled = v.support();
+      for (let rest = 0; rest < 5; rest++) {
+        v.frame(0, 0);
+        if (v.support().x === settled.x && v.support().z === settled.z) break;
+        settled = v.support();
+      }
+      expect(v.support(), `image ${i}`).toEqual(settled);
       // Le joystick : une direction qui tourne peu à peu, des images de toutes durées.
       const angle = i / 700 + next();
       const length = [0.18, 0.05, 0.02, 0.0125][Math.floor(next() * 4)];
@@ -500,8 +499,8 @@ describe('point d’appui (visite en casque)', () => {
       const after = v.support();
       expect(furnished(after.x, after.z), `image ${i}, appui en (${after.x} ; ${after.z})`).toBe(true);
       // La tête s'est déplacée d'autant que le point d'appui : elle a gardé son écart.
-      expect(v.head().x - after.x).toBeCloseTo(head.x - support.x, 9);
-      expect(v.head().z - after.z).toBeCloseTo(head.z - support.z, 9);
+      expect(v.head().x - after.x).toBeCloseTo(head.x - settled.x, 9);
+      expect(v.head().z - after.z).toBeCloseTo(head.z - settled.z, 9);
       if (step.x || step.z) moved++;
       visited.add(layout.roomAt(after.x, after.z)!.id);
     }
@@ -514,47 +513,42 @@ describe('point d’appui (visite en casque)', () => {
 
 describe('robustesse', () => {
   it('ne quitte jamais la zone de marche, ne recule jamais et ne dépasse jamais le déplacement demandé', () => {
-    for (const flush of [true, false]) {
-      const next = random(flush ? 2 : 3);
-      let p = { x: 0, z: 2.5 };
-      let angle = 0;
-      let hindered = 0;
-      const visited = new Set<string>();
-      for (let i = 0; i < 30000; i++) {
-        // Le visiteur tourne un peu à chaque image, et la durée des images varie beaucoup.
-        angle += (next() - 0.5) * 0.8;
-        const length = [0.24, 0.1, 0.04, 0.0024][Math.floor(next() * 4)] * (0.5 + next());
-        const dx = Math.cos(angle) * length;
-        const dz = Math.sin(angle) * length;
-        const to = advance(furnished, p.x, p.z, dx, dz, { flush });
-        expect(furnished(to.x, to.z), `image ${i}, en (${to.x} ; ${to.z})`).toBe(true);
-        // Le long de chaque axe : dans le sens demandé, et pas plus loin que demandé.
-        expect((to.x - p.x) * Math.sign(dx)).toBeGreaterThanOrEqual(0);
-        expect((to.z - p.z) * Math.sign(dz)).toBeGreaterThanOrEqual(0);
-        expect(Math.abs(to.x - p.x)).toBeLessThanOrEqual(Math.abs(dx) + 1e-12);
-        expect(Math.abs(to.z - p.z)).toBeLessThanOrEqual(Math.abs(dz) + 1e-12);
-        if (Math.abs(to.x - p.x - dx) > 1e-12 || Math.abs(to.z - p.z - dz) > 1e-12) hindered++;
-        p = to;
-        visited.add(layout.roomAt(p.x, p.z)!.id);
-      }
-      // La promenade a bien éprouvé la règle : des milliers de pas gênés, et les quatre salles visitées par leurs portes.
-      const mode = flush ? 'au ras' : 'par petits pas';
-      expect(hindered, mode).toBeGreaterThan(5000);
-      expect([...visited].sort(), mode).toEqual(['cabinet', 'galerie', 'hall', 'rotonde']);
+    const next = random(2);
+    let p = { x: 0, z: 2.5 };
+    let angle = 0;
+    let hindered = 0;
+    const visited = new Set<string>();
+    for (let i = 0; i < 30000; i++) {
+      // Le visiteur tourne un peu à chaque image, et la durée des images varie beaucoup.
+      angle += (next() - 0.5) * 0.8;
+      const length = [0.24, 0.1, 0.04, 0.0024][Math.floor(next() * 4)] * (0.5 + next());
+      const dx = Math.cos(angle) * length;
+      const dz = Math.sin(angle) * length;
+      const to = advance(furnished, p.x, p.z, dx, dz);
+      expect(furnished(to.x, to.z), `image ${i}, en (${to.x} ; ${to.z})`).toBe(true);
+      // Le long de chaque axe : dans le sens demandé, et pas plus loin que demandé.
+      expect((to.x - p.x) * Math.sign(dx)).toBeGreaterThanOrEqual(0);
+      expect((to.z - p.z) * Math.sign(dz)).toBeGreaterThanOrEqual(0);
+      expect(Math.abs(to.x - p.x)).toBeLessThanOrEqual(Math.abs(dx) + 1e-12);
+      expect(Math.abs(to.z - p.z)).toBeLessThanOrEqual(Math.abs(dz) + 1e-12);
+      if (Math.abs(to.x - p.x - dx) > 1e-12 || Math.abs(to.z - p.z - dz) > 1e-12) hindered++;
+      p = to;
+      visited.add(layout.roomAt(p.x, p.z)!.id);
     }
+    // La promenade a bien éprouvé la règle : des milliers de pas gênés, et les quatre salles visitées par leurs portes.
+    expect(hindered).toBeGreaterThan(5000);
+    expect([...visited].sort()).toEqual(['cabinet', 'galerie', 'hall', 'rotonde']);
   });
 
   it('parti d’un endroit non praticable, le visiteur n’avance que vers un endroit praticable', () => {
-    // Deux centimètres au-delà de la limite ouest (en casque, le visiteur s'est penché vers le mur).
+    // Deux centimètres au-delà de la limite ouest (un déplacement en douceur a été interrompu là).
     const x = WEST_LIMIT - 0.02;
-    for (const flush of [true, false]) {
-      // Le long du mur ou vers lui : rien ne bouge.
-      expect(advance(hall, x, 3, 0, 0.04, { flush })).toEqual({ x, z: 3 });
-      expect(advance(hall, x, 3, -0.04, 0.04, { flush })).toEqual({ x, z: 3 });
-      // En s'écartant du mur d'un pas suffisant : le visiteur revient en zone praticable.
-      const back = advance(hall, x, 3, 0.04, 0, { flush });
-      expect(back.x).toBeCloseTo(WEST_LIMIT + 0.02, 9);
-    }
+    // Le long du mur ou vers lui : rien ne bouge.
+    expect(advance(hall, x, 3, 0, 0.04)).toEqual({ x, z: 3 });
+    expect(advance(hall, x, 3, -0.04, 0.04)).toEqual({ x, z: 3 });
+    // En s'écartant du mur d'un pas suffisant : le visiteur revient en zone praticable.
+    const back = advance(hall, x, 3, 0.04, 0);
+    expect(back.x).toBeCloseTo(WEST_LIMIT + 0.02, 9);
   });
 
   it('parti d’un endroit non praticable, applique exactement l’ancienne règle, même pour un grand pas', () => {
@@ -572,7 +566,7 @@ describe('robustesse', () => {
       const dx = Math.cos(angle) * length;
       const dz = Math.sin(angle) * length;
       const expected = allOrNothing(furnished, x, z, dx, dz);
-      for (const flush of [true, false]) expect(advance(furnished, x, z, dx, dz, { flush })).toEqual(expected);
+      expect(advance(furnished, x, z, dx, dz)).toEqual(expected);
       if (expected.x !== x || expected.z !== z) rescued++;
     }
     // Le tirage a couvert des milliers de départs hors zone, dont une part ramenée en zone praticable.
