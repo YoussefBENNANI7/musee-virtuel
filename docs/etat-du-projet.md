@@ -243,6 +243,17 @@ Lot demandé par le porteur le 16 novembre 2026, fait en autonomie, pour impress
 
 Pour la réunion : ouvrir le musée, cliquer « Entrer », puis Parcours → « Présentation » sur « Les essentiels ». Ou ouvrir directement `http://localhost:5173/?presentation=essentiels` et cliquer « Entrer ».
 
+### Cession du moteur : ce qui est établi
+
+Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, sans le musée de démonstration (17 novembre 2026).
+
+- **Inventaire des licences** : `docs/licences.md`, produit par `npm run licences`. À relancer après l'ajout d'un outil, d'un son ou d'une œuvre.
+- **Le moteur** ne livre au visiteur qu'un logiciel tiers, Three.js (licence MIT). Les treize outils de fabrication sont sous licences MIT ou Apache 2.0. Le son de la fontaine est du domaine public. Aucune police n'est embarquée ; les icônes sont dessinées dans le code.
+- **Le musée de démonstration** ne fait pas partie du moteur. Sur ses 47 œuvres, 46 sont du domaine public ; seule la *Danseuse* de la Cour est réservée à un usage non commercial. Elle peut rester dans une démonstration, mais pas dans un musée vendu.
+- **Points ouverts, pour un juriste** : la titularité du code si le projet relève du poste du porteur chez son employeur (question posée, sans réponse à ce jour) ; la protection d'un code écrit avec l'aide d'une IA ; la forme de la cession (licence libre, licence d'utilisation, cession des droits) ; le nom du produit.
+- **Conditions de Google sur les voix** : non lues (le site n'est plus joignable depuis l'environnement de travail). Elles ne concernent pas le moteur, qui ne contient que la commande de production : chaque musée produit ses voix avec son propre compte.
+- **Ce qui manque pour livrer le moteur seul** : un musée de départ vide ou neutre à la place de la démonstration, un fichier de licence à la racine du dépôt, et l'outil d'administration.
+
 ## 4. En attente du porteur du projet
 
 - **Son avis sur le lot « autour de l'œuvre » et le pack présentation**, sa relecture des textes des détails commentés, et son écoute du son de la fontaine (niveau, agrément).
