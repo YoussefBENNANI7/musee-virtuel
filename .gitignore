@@ -6,3 +6,4 @@ essais-voix
 # Les musées créés avec l'éditeur restent sur l'ordinateur : seul le musée de démonstration fait partie du dépôt.
 public/museums/*
 !public/museums/demo/
+musees-supprimes

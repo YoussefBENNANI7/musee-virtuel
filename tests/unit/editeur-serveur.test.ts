@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 // @ts-expect-error Module JavaScript sans déclaration de types.
-import { cleanImages, isSlug, listMuseums, parseCrop, saveMuseum, storeImage } from '../../scripts/editeur-serveur.mjs';
+import { cleanImages, isSlug, listMuseums, parseCrop, removeMuseum, saveMuseum, storeImage } from '../../scripts/editeur-serveur.mjs';
 
 const photo = readFileSync(fileURLToPath(new URL('../fixtures/image.webp', import.meta.url)));
 let dir = '';
@@ -30,6 +30,27 @@ describe('service local de l’éditeur', () => {
     expect(saved.id).toBe('essai');
     expect(listMuseums(dir)).toMatchObject([{ id: 'essai', name: { fr: 'Essai' }, rooms: 1, works: 3 }]);
     expect(() => saveMuseum('essai', { name: 'sans salles' }, dir)).toThrow(/illisible/);
+  });
+
+  it('supprime un musée en rangeant son dossier à part, sauf la démonstration', () => {
+    const trash = join(dir, 'corbeille');
+    const museums = join(dir, 'musees');
+    saveMuseum('essai', { name: { fr: 'Essai' }, rooms: [] }, museums);
+    saveMuseum('demo', { name: { fr: 'Démo' }, rooms: [] }, museums);
+    expect(listMuseums(museums).map((m: { id: string; locked: boolean }) => [m.id, m.locked]).sort()).toEqual([['demo', true], ['essai', false]]);
+
+    const when = new Date('2026-11-17T09:30:05Z');
+    expect(removeMuseum('essai', museums, trash, when)).toEqual({ kept: 'musees-supprimes/essai-2026-11-17-09-30-05' });
+    expect(existsSync(join(museums, 'essai'))).toBe(false);
+    // Rien n'est effacé : la configuration est intacte dans la corbeille.
+    expect(JSON.parse(readFileSync(join(trash, 'essai-2026-11-17-09-30-05', 'museum.json'), 'utf8')).name).toEqual({ fr: 'Essai' });
+    // Un second musée du même nom, supprimé dans la même seconde, ne remplace pas le premier.
+    saveMuseum('essai', { name: { fr: 'Essai 2' }, rooms: [] }, museums);
+    expect(removeMuseum('essai', museums, trash, when).kept).toBe('musees-supprimes/essai-2026-11-17-09-30-05-2');
+
+    expect(() => removeMuseum('demo', museums, trash)).toThrow(/démonstration/);
+    expect(existsSync(join(museums, 'demo', 'museum.json'))).toBe(true);
+    expect(() => removeMuseum('absent', museums, trash)).toThrow(/introuvable/);
   });
 
   it('prépare une photo déposée : source, image et versions allégées, puis la recadre', async () => {

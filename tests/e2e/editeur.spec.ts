@@ -3,6 +3,7 @@ import { existsSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const museums = fileURLToPath(new URL('../../public/museums/', import.meta.url));
+const trash = fileURLToPath(new URL('../../musees-supprimes/', import.meta.url));
 const photo = readFileSync(fileURLToPath(new URL('../fixtures/image.webp', import.meta.url)));
 const file = (name: string) => ({ name, mimeType: 'image/webp', buffer: photo });
 const onDisk = (id: string) => JSON.parse(readFileSync(`${museums}${id}/museum.json`, 'utf8'));
@@ -10,6 +11,7 @@ const onDisk = (id: string) => JSON.parse(readFileSync(`${museums}${id}/museum.j
 /** Les musées créés par ces tests commencent par « essai- » : on les retire du disque après chaque test. */
 function clean() {
   for (const id of readdirSync(museums)) if (id.startsWith('essai-')) rmSync(`${museums}${id}`, { recursive: true, force: true });
+  for (const id of existsSync(trash) ? readdirSync(trash) : []) if (id.startsWith('essai-')) rmSync(`${trash}${id}`, { recursive: true, force: true });
 }
 test.beforeAll(clean);
 test.afterEach(clean);
@@ -50,7 +52,9 @@ test('créer un musée, y déposer des photos : elles s’accrochent seules et l
 
   // Trois photos déposées : trois œuvres, réparties sur les murs sans rien régler.
   await page.setInputFiles('#photos', [file('portrait de famille.webp'), file('IMG_2041.webp'), file('nature_morte.webp')]);
-  await expect(page.locator('.work')).toHaveCount(3);
+  // Sans carte graphique, le premier chargement de l'aperçu en 3D occupe la page une vingtaine de
+  // secondes quand un autre test dessine en même temps : le dépôt attend la fin de ce chargement.
+  await expect(page.locator('.work')).toHaveCount(3, { timeout: 60_000 });
   await saved(page);
   // Les œuvres sont rangées par mur : l'ordre à l'écran n'est pas celui du dépôt.
   expect((await page.locator('.work-title').allInnerTexts()).sort()).toEqual(['Nature morte', 'Portrait de famille', 'Sans titre']);
@@ -221,6 +225,33 @@ test('une salle pleine range le surplus en réserve, et les salles changent de n
   await expect(page.locator('label.field', { hasText: 'Nom du musée (anglais)' })).toBeVisible();
 });
 
+test('supprimer un musée le retire de la liste et range son dossier à part', async ({ page }) => {
+  await withoutPreview(page);
+  const { id, name } = await create(page, 'une-salle');
+  await page.goto('/editeur.html');
+  const row = page.locator('.museums li', { hasText: name });
+  await expect(row).toBeVisible();
+  // La démonstration n'a pas de bouton de suppression.
+  await expect(page.locator('.museums li', { hasText: 'Musée des Horizons' }).locator('button')).toHaveCount(0);
+
+  // On change d'avis : rien ne bouge.
+  page.once('dialog', (dialog) => dialog.dismiss());
+  await row.locator('button', { hasText: 'Supprimer' }).click();
+  await expect(row).toBeVisible();
+  expect(existsSync(`${museums}${id}/museum.json`)).toBe(true);
+
+  // On confirme : le musée quitte la liste et le site, son dossier est gardé à part.
+  page.once('dialog', (dialog) => {
+    expect(dialog.message()).toContain(name);
+    void dialog.accept();
+  });
+  await row.locator('button', { hasText: 'Supprimer' }).click();
+  await expect(page.locator('#notice')).toContainText(`« ${name} » est supprimé`);
+  await expect(page.locator('.museums li', { hasText: name })).toHaveCount(0);
+  expect(existsSync(`${museums}${id}`)).toBe(false);
+  expect(readdirSync(trash).filter((f) => f.startsWith(`${id}-`))).toHaveLength(1);
+});
+
 test('ouvrir le musée de démonstration dans l’éditeur ne le modifie pas', async ({ page }) => {
   const path = `${museums}demo/museum.json`;
   const before = readFileSync(path, 'utf8');
@@ -252,4 +283,8 @@ test('le service de l’éditeur refuse ce qui ne vient pas de sa page', async (
   expect((await request.post('/__editeur/museums/essai-refus/images/..%2Fx', { headers, data: 'x' })).status()).toBe(400);
   expect((await request.post('/__editeur/museums/essai-refus/images/toile', { headers, data: 'pas une image' })).status()).toBe(415);
   expect((await request.put('/__editeur/museums/essai-refus', { headers, data: { sans: 'salles' } })).status()).toBe(400);
+  // La démonstration ne se supprime pas, même avec l'en-tête de l'éditeur ; sans lui, rien ne se supprime.
+  expect((await request.delete('/__editeur/museums/demo', { headers })).status()).toBe(403);
+  expect((await request.delete('/__editeur/museums/demo')).status()).toBe(403);
+  expect(existsSync(`${museums}demo/museum.json`)).toBe(true);
 });

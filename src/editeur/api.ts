@@ -7,6 +7,8 @@ export interface MuseumSummary {
   name: L10n;
   rooms: number;
   works: number;
+  /** Vrai pour la démonstration, qui ne se supprime pas depuis l'éditeur. */
+  locked?: boolean;
 }
 export type StoredImage = Extract<ImageSource, { src: string }>;
 export interface Crop {
@@ -48,6 +50,9 @@ export async function loadMuseum(id: string): Promise<MuseumConfig> {
   if (!res.ok) throw new Error('musée introuvable');
   return res.json();
 }
+
+/** Supprime un musée : son dossier est rangé à part. Renvoie l'endroit où il est gardé. */
+export const deleteMuseum = (id: string) => ask<{ kept: string }>(`museums/${id}`, { method: 'DELETE' }).then((r) => r.kept);
 
 export const saveMuseum = (museum: MuseumConfig) =>
   ask<{ saved: boolean }>(`museums/${museum.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(museum) });

@@ -4,6 +4,7 @@
 //   GET  /__editeur/museums                         liste des musées du dossier public/museums
 //   PUT  /__editeur/museums/<id>                    enregistre museum.json
 //   POST /__editeur/museums/<id>/images/<œuvre>     dépose une image, ou la recadre (?crop=x,y,l,h)
+//   DELETE /__editeur/museums/<id>                  supprime un musée : son dossier est rangé dans musees-supprimes/
 //
 // Sécurité : le service ne répond qu'aux demandes venues de cet ordinateur, écrit seulement dans
 // public/museums/<id>/, et exige un en-tête que seule la page de l'éditeur envoie.
@@ -12,6 +13,10 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const MUSEUMS_DIR = fileURLToPath(new URL('../public/museums/', import.meta.url));
+/** Les musées supprimés y sont rangés, hors du site : on peut les récupérer en les remettant dans public/museums. */
+export const TRASH_DIR = fileURLToPath(new URL('../musees-supprimes/', import.meta.url));
+/** La démonstration fait partie du dépôt : elle ne se supprime pas depuis l'éditeur. */
+const LOCKED = new Set(['demo']);
 const SIZES = [640, 1024, 1600];
 const MAX_BODY = 60 * 1024 * 1024;
 const DAY = 24 * 3600 * 1000;
@@ -62,9 +67,10 @@ export function listMuseums(dir = MUSEUMS_DIR) {
           rooms: museum.rooms?.length ?? 0,
           works: (museum.rooms ?? []).reduce((n, r) => n + (r.artworks?.length ?? 0), 0) + (museum.reserve?.length ?? 0),
           modified: statSync(file).mtimeMs,
+          locked: LOCKED.has(id),
         };
       } catch {
-        return { id, name: {}, rooms: 0, works: 0, modified: 0, unreadable: true };
+        return { id, name: {}, rooms: 0, works: 0, modified: 0, locked: LOCKED.has(id), unreadable: true };
       }
     })
     .sort((a, b) => b.modified - a.modified);
@@ -80,6 +86,23 @@ export function saveMuseum(id, museum, dir = MUSEUMS_DIR) {
   writeFileSync(`${file}.tmp`, `${JSON.stringify({ ...museum, id }, null, 2)}\n`);
   renameSync(`${file}.tmp`, file);
   cleanImages(folder, museum);
+}
+
+/**
+ * Supprime un musée sans rien effacer : son dossier quitte le site et part dans musees-supprimes/,
+ * sous son nom suivi de la date. Renvoie l'endroit où il est gardé.
+ */
+export function removeMuseum(id, dir = MUSEUMS_DIR, trash = TRASH_DIR, now = new Date()) {
+  if (LOCKED.has(id)) throw Object.assign(new Error('le musée de démonstration ne se supprime pas depuis l’éditeur'), { status: 403 });
+  const folder = join(dir, id);
+  if (!existsSync(join(folder, 'museum.json'))) throw Object.assign(new Error('musée introuvable'), { status: 404 });
+  mkdirSync(trash, { recursive: true });
+  // 2026-11-17-09-30-05 : lisible, et deux suppressions du même nom ne se marchent pas dessus.
+  const stamp = now.toISOString().slice(0, 19).replace(/[T:]/g, '-');
+  let name = `${id}-${stamp}`;
+  for (let n = 2; existsSync(join(trash, name)); n++) name = `${id}-${stamp}-${n}`;
+  renameSync(folder, join(trash, name));
+  return { kept: `musees-supprimes/${name}` };
 }
 
 /**
@@ -186,6 +209,7 @@ export function editorService() {
           if (req.headers['x-musee-editeur'] !== '1') return reply(403, { error: 'demande refusée' });
           const [root, id, kind, artId] = parts;
           if (root !== 'museums' || !isSlug(id)) return reply(400, { error: 'identifiant de musée invalide' });
+          if (req.method === 'DELETE' && parts.length === 2) return reply(200, removeMuseum(id));
           if (req.method === 'PUT' && parts.length === 2) {
             saveMuseum(id, JSON.parse((await readBody(req)).toString('utf8')));
             return reply(200, { saved: true });

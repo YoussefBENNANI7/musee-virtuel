@@ -254,7 +254,15 @@ input[type='color'] {
   display: grid;
   gap: 10px;
 }
+.museums li {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
 .museums a {
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
   display: flex;
   align-items: baseline;
   gap: 14px;
@@ -276,6 +284,20 @@ input[type='color'] {
   color: var(--green);
   font-weight: 600;
   font-size: 0.86rem;
+}
+/* Supprimer reste discret à côté de « Modifier » : il ne prend sa couleur d'alerte qu'au survol. */
+.museums .remove {
+  flex: none;
+  padding: 0 16px;
+  border-color: var(--line);
+  background: #fff;
+  color: var(--muted);
+}
+.museums .remove:hover:not(:disabled),
+.museums .remove:focus-visible {
+  border-color: var(--danger);
+  background: #fff;
+  color: var(--danger);
 }
 .create {
   display: flex;

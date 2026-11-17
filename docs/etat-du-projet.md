@@ -70,7 +70,7 @@ Le 15 novembre 2026, le porteur a donné son avis sur l'ambiance : la base lui p
 | 3 bis. Salle marocaine | Nouvelle salle au plan, avec ses éléments d'architecture (arcs, zellige, plâtre sculpté, plafond de cèdre, fontaine) et ses objets traditionnels | **Salle pilote faite**, voir ci-dessous. Attend l'avis du porteur |
 | 4. Interface | Écran d'accueil du musée, nouvelle identité visuelle (typographie, icônes, commandes discrètes, fiches animées), clic au sol pour se déplacer, mini-plan permanent | **Fait** : identité choisie par le porteur et appliquée partout, écran d'accueil, clic au sol, mini-plan. Voir ci-dessous. Attend son avis |
 | 5. Mise en ligne | Hébergement sur Vercel, puis vérification sur de vrais appareils | À faire, avec l'accord du porteur |
-| 6. Outil d'administration | L'éditeur de l'étape 2 du produit. Les réglages de décor y deviendront des options | À faire |
+| 6. Outil d'administration | L'éditeur de l'étape 2 du produit. Les réglages de décor y deviendront des options | **Première version faite**, voir « Outil d'administration ». Premier essai du porteur le 17 novembre 2026 |
 
 ### Voix de l'audioguide : décisions prises, production à venir
 
@@ -258,6 +258,7 @@ Demande du porteur : qu'un client crée son musée **sans toucher au code**, ava
 - **Contrôler** : l'onglet « À compléter » dit en clair ce qui manque, œuvre par œuvre.
 - **Voir le résultat** : le vrai musée s'affiche à côté et se recharge après chaque modification. « Voir dans le musée » place l'aperçu devant l'œuvre.
 - Tout s'enregistre seul. « Annuler la dernière modification » revient en arrière (60 pas).
+- **Supprimer un musée**, depuis la page d'accueil, après confirmation. Rien n'est effacé : le dossier part dans `musees-supprimes/<nom>-<date>/`, à la racine du projet, hors du site et hors de GitHub. On le récupère en le remettant dans `public/museums/`. La démonstration n'a pas de bouton « Supprimer », et le service refuse de la supprimer.
 
 **Choix retenus, à confirmer par le porteur** (il n'a pas répondu aux trois questions posées, les valeurs proposées ont été prises) :
 
@@ -275,7 +276,9 @@ Demande du porteur : qu'un client crée son musée **sans toucher au code**, ava
 
 **Ce que l'éditeur ne fait pas encore** : ajouter une sculpture (modèle 3D), composer un parcours, poser des détails commentés, produire les voix en un clic, dessiner librement le plan, exporter un musée en un fichier, fonctionner sur téléphone. Tout cela reste possible dans `museum.json`.
 
-**Vérifié** : 23 tests unitaires (accrochage, plans, modèle de l'éditeur, service d'écriture) et 6 tests dans un navigateur. Non vérifié : un essai sur un vrai Mac, dans Safari et dans Chrome.
+**Vérifié** : 24 tests unitaires (accrochage, plans, modèle de l'éditeur, service d'écriture) et 7 tests dans un navigateur.
+
+**Premier essai du porteur (17 novembre 2026)** : il a ouvert l'éditeur sur son Mac et créé un musée d'essai ; « le reste est OK ». Seul manque relevé : impossible de supprimer un musée. Ajouté le jour même.
 
 ### Cession du moteur : ce qui est établi
 
@@ -291,7 +294,7 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
-- **Son essai de l'éditeur sur son Mac** (`npm run dev`, puis `http://localhost:5173/editeur.html`) et son avis : les quatre plans, l'accrochage automatique, le vocabulaire. Et ses réponses aux trois questions restées ouvertes : la date de la présentation, qui utilisera l'outil, et si un éditeur sur ordinateur, sans compte, lui convient pour commencer.
+- **Son avis sur l'éditeur à l'usage** : dépôt de photos, accrochage automatique, fiches. Et ses réponses aux trois questions restées ouvertes : la date de la présentation, qui utilisera l'outil, et si un éditeur sur ordinateur, sans compte, lui convient pour commencer.
 - **Où ranger le musée de la banque** : les musées créés ne partent pas sur GitHub. S'il est construit dans le cloud par Claude, il faudra un dépôt privé séparé ou un autre moyen de le lui remettre.
 - **Son avis sur le lot « autour de l'œuvre » et le pack présentation**, sa relecture des textes des détails commentés, et son écoute du son de la fontaine (niveau, agrément).
 - **Ses photos pour la salle des 120 ans du Groupe Attijariwafa bank** : œuvres bien de face, cartel de chaque œuvre (titre, artiste, date, technique, dimensions), 8 à 12 œuvres, quelques vues du lieu. À déposer dans un dossier Google Drive. Claude ne rédigera les textes qu'à partir des cartels et de ses indications ; les œuvres d'artistes récents demanderont l'accord de la Fondation avant toute diffusion publique.
@@ -364,8 +367,8 @@ scripts/images.mjs          Préparation des images d'un musée
 scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
 scripts/editeur-serveur.mjs Service d'écriture de l'éditeur, ajouté au serveur de développement
-tests/unit/                 Tests unitaires (Vitest) : 137 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 71 tests
+tests/unit/                 Tests unitaires (Vitest) : 138 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 72 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration

@@ -922,11 +922,26 @@ async function showHome(missing = false) {
             h('span', { class: 'muted' }, `${plural(m.rooms, 'salle', 'salles')} · ${plural(m.works, 'œuvre', 'œuvres')}`),
             h('span', { class: 'go' }, 'Modifier'),
           ),
+          m.locked ? null : h('button', { type: 'button', class: 'remove', 'aria-label': `Supprimer « ${text(m.name, 'fr') || m.id} »`, onclick: () => removeMuseum(m) }, 'Supprimer'),
         ),
       ),
     ),
     form,
   ]);
+}
+
+/** Supprime un musée après confirmation. Rien n'est effacé : le dossier est rangé à part, récupérable. */
+async function removeMuseum(m: api.MuseumSummary) {
+  const title = text(m.name, 'fr') || m.id;
+  const sure = confirm(`Supprimer « ${title} » ?\n\nIl disparaît de l’éditeur et du site. Son dossier est gardé dans « musees-supprimes », dans le dossier du projet : on peut le récupérer en le remettant dans public/museums.`);
+  if (!sure) return;
+  try {
+    const kept = await api.deleteMuseum(m.id);
+    await showHome();
+    notify(`« ${title} » est supprimé. Son dossier est gardé dans ${kept}.`);
+  } catch (error) {
+    notify(`« ${title} » n’a pas été supprimé : ${(error as Error).message}.`);
+  }
 }
 
 // --- Démarrage ----------------------------------------------------------------------------------
