@@ -224,6 +224,18 @@ Ce mélange est maintenant l'interface du musée, appliquée partout : accueil, 
 - Piège rencontré : sur téléphone, une fiche pleine largeur, défilante et sans aucune bordure fait disparaître la vue 3D dans Chrome. La fiche garde donc toujours un filet en haut.
 - Reste hors de ce lot : le panneau affiché dans le casque VR et l'agrandissement gardent leur habillage sombre d'origine ; les fiches ne sont pas animées.
 
+### Marche : arrêt au ras des obstacles
+
+Correction du 17 novembre 2026. Aperçu, avec les mesures avant et après et des captures sur ordinateur et sur téléphone : https://claude.ai/artifact/LHG9faHLxhGGtdWtf1Db31.
+
+- **Le défaut** : au clavier ou à la manette virtuelle, le pas d'une image (2,40 m par seconde, donc jusqu'à 24 cm quand les images sont lentes) était fait ou refusé en entier. Le visiteur s'arrêtait jusqu'à 24 cm avant un mur, un socle ou un banc, puis s'en approchait par à-coups.
+- **La règle de marche** (`advance`, dans `src/engine/marche.ts`) sert maintenant au clavier, à la manette et au casque. Le déplacement d'une image est découpé en petits pas de 5 cm au plus. Devant un obstacle, le visiteur avance le long de chaque axe aussi loin que possible, au millième de millimètre près (recherche par dichotomie). Il arrive donc au ras de l'obstacle dans l'image même, quelle que soit la cadence ; il glisse le long des murs comme avant, et contourne un socle rond en le serrant.
+- **Mesuré** dans le navigateur des tests, vers un mur : avec des images toutes lentes, arrêt à 20 cm avant la correction, au ras après ; à la cadence des tests, le mur est atteint en 0,9 s, alors qu'il ne l'était toujours pas après 8 s.
+- **En casque**, la même règle s'applique par petits pas, mais sans arrêt au ras (`flush: false` dans `src/vr.ts`) : voir « Limites connues ». En casque émulé, avec des images toutes lentes, l'arrêt passe de 16 cm à moins de 5 cm avant l'obstacle.
+- **Parti d'un endroit non praticable** (les deux derniers cas des « Limites connues »), le visiteur garde l'ancienne règle, à l'identique : le pas se fait d'un bloc ou pas du tout.
+- **Le clic au sol** n'est pas concerné : le visiteur s'y arrête jusqu'à 10 cm avant un obstacle, quelle que soit la cadence (`Controls.reach`).
+- **Tests** : `tests/unit/marche.test.ts` et `tests/unit/controls.test.ts` (24 tests). Dans un navigateur, deux tests ralentissent de vraies images (`slowFrames`, dans `tests/e2e/helpers.ts`), au clavier sur ordinateur et à la manette sur téléphone.
+
 ### Autour de l'œuvre, et pack présentation
 
 Lot demandé par le porteur le 16 novembre 2026, fait en autonomie, pour impressionner lors de la présentation à sa hiérarchie. Aperçu en images, sur ordinateur et sur téléphone : https://claude.ai/artifact/Uea2TDhDisxa2BCQVwTcrx.
@@ -313,7 +325,9 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 - Dans le casque VR, ni les parcours ni le plan ne sont disponibles.
 - La VR n'a été testée qu'en émulation (casque Meta Quest 3 émulé).
 - La voix de synthèse n'est pas garantie sur les navigateurs de casque : sans elle, le bouton d'écoute ne s'affiche pas.
-- Quand les images sont lentes, le visiteur qui marche vers un mur ou un obstacle s'arrête un peu avant (jusqu'à 24 cm), puis s'en approche par à-coups : le moteur accepte ou refuse chaque pas en entier (`update` dans `src/engine/controls.ts`). Mesuré dans les tests, où le rendu est calculé par le processeur (environ 4 images par seconde) ; pas encore observé sur un vrai appareil.
+- En casque, le visiteur qui avance au joystick s'arrête jusqu'à 5 cm avant un mur ou un obstacle, au lieu de venir au ras comme au clavier. C'est voulu : sa tête bouge avec lui, et arrêté au ras il dépasserait la limite au moindre mouvement, ce qui l'empêcherait de longer le mur. À revoir après un essai sur un vrai casque.
+- En casque, si le visiteur se penche au-delà de la limite de marche (pour regarder une œuvre de près), le joystick ne lui permet plus de longer le mur tant qu'il ne s'est pas redressé ou reculé : un pas n'est fait que s'il mène à un endroit praticable (`src/vr.ts`). Constaté en casque émulé le 17 novembre 2026, à confirmer sur un vrai casque. Défaut ancien, non corrigé.
+- Un déplacement en douceur interrompu peut coincer le visiteur. Pour l'amener devant une œuvre, le musée le déplace en ligne droite, à travers les murs et les bancs (`Controls.glideTo`). S'il appuie sur une touche de déplacement ou fait glisser la vue à cet instant, il s'arrête où il est, parfois dans l'épaisseur d'un mur, d'où il ne sort plus à pied : il lui reste le plan, un parcours ou un clic sur une œuvre. Reproduit par le calcul le 17 novembre 2026. Défaut ancien, non corrigé.
 - L'éditeur ne s'utilise que sur ordinateur, sur la machine où tourne `npm run dev`, et il n'a pas encore été essayé sur un vrai Mac. Ses limites sont listées dans « Outil d'administration ».
 - Pendant que l'aperçu de l'éditeur se recharge, l'éditeur peut marquer un temps d'arrêt sur un ordinateur sans carte graphique. `editeur.html?apercu=low` allège l'aperçu.
 
@@ -362,14 +376,15 @@ src/engine/artworks.ts      Accrochage des tableaux, pose des sculptures
 src/engine/accrochage.ts    Accrochage automatique : répartition des œuvres sur les murs d'une salle
 src/engine/plans.ts         Plans proposés à la création d'un musée
 src/engine/world.ts         Assemblage du musée, règles de déplacement, points de vue
+src/engine/marche.ts        Règle de marche : petits pas, arrêt au ras des obstacles, glissement le long des murs (sans rendu, testée seule)
 src/engine/...              Contrôles, plan, mobilier, sculptures, textures, reflets, images
 
 scripts/images.mjs          Préparation des images d'un musée
 scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
 scripts/editeur-serveur.mjs Service d'écriture de l'éditeur, ajouté au serveur de développement
-tests/unit/                 Tests unitaires (Vitest) : 138 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 72 tests
+tests/unit/                 Tests unitaires (Vitest) : 162 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 74 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration
@@ -421,7 +436,7 @@ npm run vignettes -- demo         # photographie les sculptures (le musée doit 
 - **Tout en français** : interface, commentaires du code, messages de commit, documentation. Les textes du musée existent en français et en anglais.
 - **Le porteur du projet n'est pas développeur** : commandes exactes à copier, explications simples, sur Mac.
 - **Avant et après chaque modification du moteur** : les tests doivent passer, puis le rendu est vérifié par des captures sur ordinateur et sur téléphone.
-- **Tests dans un navigateur** : attendre une condition que le moteur expose (par exemple `controls.gliding`, vrai tant qu'un déplacement en douceur est en cours), jamais un délai fixe ni « deux positions identiques de suite ». Le rendu des tests est calculé par le processeur : une image prend 100 ms ou plus, et sous charge celle qui suit un clic peut tarder, si bien que deux relevés rapprochés sont identiques avant même que le visiteur ait bougé. Pour savoir où un obstacle arrête le visiteur, l'aide `walkUntilBlocked` fait elle-même avancer le temps, par pas réguliers, au lieu d'attendre les images.
+- **Tests dans un navigateur** : attendre une condition que le moteur expose (par exemple `controls.gliding`, vrai tant qu'un déplacement en douceur est en cours), jamais un délai fixe ni « deux positions identiques de suite ». Le rendu des tests est calculé par le processeur : une image prend 100 ms ou plus, et sous charge celle qui suit un clic peut tarder, si bien que deux relevés rapprochés sont identiques avant même que le visiteur ait bougé. Pour savoir où un obstacle arrête le visiteur, l'aide `walkUntilBlocked` fait elle-même avancer le temps, à grands pas, au lieu d'attendre les images ; elle vérifie ensuite que de tout petits pas ne déplacent plus le visiteur, ce qui prouve à chaque appel qu'il s'est arrêté au ras de l'obstacle.
 - **Un aperçu à la fin de chaque lot**, et pas de lot touchant à l'identité visuelle sans l'avis du porteur.
 - **Œuvres** : Claude cherche de vraies œuvres en accès libre et vérifie la licence de chacune à la source ; le porteur valide la sélection avant toute intégration.
 - **Accès aux collections des musées** : les sessions dans le cloud passent par l'environnement « musee-virtuel », qui autorise les sites du Metropolitan Museum, de l'Art Institute of Chicago, du musée de Cleveland, de Wikimedia Commons, de la Smithsonian et de Sketchfab.

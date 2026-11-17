@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Controls } from './engine/controls';
+import { advance } from './engine/marche';
 import { loc, tr } from './engine/types';
 import type { PlacedArtwork, World } from './engine/world';
 import { metaLine, type App } from './ui';
@@ -239,14 +240,13 @@ export function setupVR(o: Options) {
           const dx = (forward.x * -y + -forward.z * x) * MOVE_SPEED * dt;
           const dz = (forward.z * -y + forward.x * x) * MOVE_SPEED * dt;
           headPosition();
-          if (world.walkable(head.x + dx, head.z + dz)) {
-            rig.position.x += dx;
-            rig.position.z += dz;
-          } else if (world.walkable(head.x + dx, head.z)) {
-            rig.position.x += dx;
-          } else if (world.walkable(head.x, head.z + dz)) {
-            rig.position.z += dz;
-          }
+          // Même règle de marche qu'au clavier, par petits pas, mais sans venir au ras de l'obstacle :
+          // la tête bouge avec le visiteur, et un pas n'est fait que s'il mène à un endroit praticable.
+          // Arrêté au ras d'un mur, le moindre mouvement de tête lui ferait passer la limite,
+          // et il ne pourrait plus longer ce mur. On garde donc la marge d'un petit pas.
+          const to = advance(world.walkable, head.x, head.z, dx, dz, { flush: false });
+          rig.position.x += to.x - head.x;
+          rig.position.z += to.z - head.z;
         } else if (source.handedness === 'right') {
           if (Math.abs(x) > 0.6 && !turned) {
             // On pivote autour de la tête, pas autour du centre de la pièce réelle.

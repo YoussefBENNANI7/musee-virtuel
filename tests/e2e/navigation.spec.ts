@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { clickArtwork, holdUntil, openMuseum, panel, position, roomName, teleport, walkUntilBlocked } from './helpers';
+import { clickArtwork, holdUntil, openMuseum, panel, position, roomName, slowFrames, teleport, walkUntilBlocked } from './helpers';
 
 const WEST = Math.PI / 2; // regard vers l'ouest
 const NORTH = 0;
@@ -28,6 +28,20 @@ test('un mur plein arrête le visiteur', async ({ page }) => {
   // Le mur ouest de la salle est en x = -6 : le visiteur s'arrête avant.
   expect(stopped.x).toBeGreaterThan(-6);
   expect(stopped.x).toBeLessThan(-5);
+});
+
+test('même quand les images sont lentes, le visiteur s’arrête au ras du mur, sans à-coups', async ({ page }) => {
+  await openMuseum(page);
+  await teleport(page, -4, 3, WEST);
+  const frames = await slowFrames(page);
+  await page.keyboard.down('KeyW');
+  const path = await frames.stopped().finally(() => page.keyboard.up('KeyW'));
+  // Cinq pas entiers de 24 cm, puis un sixième, plus court, qui l'amène au ras du mur (limite de marche en x = -5,40).
+  // Aucune autre position ensuite : il ne s'approche pas du mur par à-coups.
+  expect(path).toHaveLength(7);
+  for (let i = 1; i <= 5; i++) expect(path[i].x, `pas n° ${i}`).toBeCloseTo(-4 - 0.24 * i, 6);
+  expect(path[6].x).toBeGreaterThanOrEqual(-5.4);
+  expect(path[6].x).toBeLessThan(-5.39);
 });
 
 test('le visiteur glisse le long du mur à côté d’une porte, sans la traverser en biais', async ({ page }) => {

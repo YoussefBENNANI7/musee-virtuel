@@ -80,7 +80,7 @@ test('visite en casque VR : fiche, téléportation, marche, pivot et sortie', as
   const teleported = await state(page);
   expect(teleported.head.z).toBeLessThan(entered.head.z - 0.5);
 
-  // Joystick gauche : on avance jusqu'à être arrêté par le mur nord (z = -4.5).
+  // Joystick gauche : on avance jusqu'à être arrêté par le mur nord (z = -4.5, limite de marche en z = -3.9).
   await stick(page, 'left', 0, -1);
   let last = teleported.head.z;
   let still = 0;
@@ -92,7 +92,10 @@ test('visite en casque VR : fiche, téléportation, marche, pivot et sortie', as
   }
   await stick(page, 'left', 0, 0);
   expect(last).toBeLessThan(teleported.head.z - 0.3);
-  expect(last).toBeGreaterThan(-4.5);
+  // Le visiteur s'arrête à moins d'un petit pas (5 cm) de la limite, alors que les images de ce test sont lentes
+  // (un pas entier y fait jusqu'à 18 cm). En casque, il n'est pas amené au ras : voir src/vr.ts.
+  expect(last).toBeGreaterThan(-3.9 - 1e-9);
+  expect(last).toBeLessThan(-3.85);
 
   // Joystick droit : pivot d'un cran de 30°, autour de la tête.
   const beforeTurn = await state(page);

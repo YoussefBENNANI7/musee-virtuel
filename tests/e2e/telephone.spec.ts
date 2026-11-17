@@ -1,5 +1,5 @@
 import { devices, expect, test } from '@playwright/test';
-import { clickArtwork, openMuseum, panel } from './helpers';
+import { clickArtwork, openMuseum, panel, slowFrames } from './helpers';
 
 // Un téléphone, émulé dans le même navigateur que les autres tests.
 const { defaultBrowserType: _ignored, ...iphone } = devices['iPhone 13'];
@@ -60,6 +60,29 @@ test('la joystick tactile déplace le visiteur', async ({ page }) => {
     .poll(() => page.evaluate(() => (window as any).__museum.camera.position.z as number), { timeout: 15_000 })
     .toBeLessThan(start - 0.3);
   await page.locator('#joystick').dispatchEvent('pointerup', { pointerId: 7, clientX: cx, clientY: cy - 50, pointerType: 'touch', isPrimary: true });
+});
+
+test('à la manette, même quand les images sont lentes, le visiteur s’arrête au ras du mur, sans à-coups', async ({ page }) => {
+  await openMuseum(page);
+  const stick = (await page.locator('#joystick').boundingBox())!;
+  const cx = stick.x + stick.width / 2;
+  const cy = stick.y + stick.height / 2;
+  const finger = (type: string, dy: number) =>
+    page.locator('#joystick').dispatchEvent(type, { pointerId: 7, clientX: cx, clientY: cy + dy, pointerType: 'touch', isPrimary: true });
+  // Le visiteur part de l'entrée (z = 2,50), face au mur nord du hall : la limite de marche est en z = -3,90.
+  const frames = await slowFrames(page);
+  // Un doigt posé au centre de la manette, puis poussé à fond vers le haut.
+  await finger('pointerdown', 0);
+  await finger('pointermove', -60);
+  const path = await frames.stopped().finally(() => finger('pointerup', -60));
+  // Il s'arrête au ras du mur...
+  const stop = path[path.length - 1];
+  expect(stop.z).toBeGreaterThanOrEqual(-3.9);
+  expect(stop.z).toBeLessThan(-3.89);
+  // ... après des pas entiers de 24 cm, puis un dernier, plus court. Aucun à-coup ensuite.
+  const steps = path.slice(1).map((p, i) => path[i].z - p.z);
+  for (const step of steps.slice(0, -1)) expect(step).toBeCloseTo(0.24, 6);
+  expect(steps[steps.length - 1]).toBeLessThan(0.24);
 });
 
 test('sur téléphone, les commandes sont en bas de l’écran et le mini-plan s’efface devant une fiche', async ({ page }) => {

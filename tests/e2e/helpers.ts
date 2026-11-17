@@ -83,12 +83,12 @@ export async function holdUntil(page: Page, key: string, done: () => Promise<boo
 /**
  * Maintient une touche jusqu'à ce qu'un obstacle arrête le visiteur, et renvoie l'endroit où il s'arrête.
  *
- * Une fois le visiteur en marche, le test fait lui-même avancer le temps au lieu d'attendre les images :
- * d'abord à grands pas (un dixième de seconde, le plus long que la visite accorde à une image, comme sur un
- * appareil très lent), puis à tout petits pas pour trouver l'endroit exact.
- * Attendre « quelques relevés sans mouvement » ne suffit pas. Quand les images sont lentes, le visiteur
- * s'arrête jusqu'à 24 cm avant l'obstacle, puis ne s'en approche que par à-coups, espacés d'une demi-seconde
- * ou davantage : entre deux à-coups, il passerait pour arrêté.
+ * Une fois le visiteur en marche, le test fait lui-même avancer le temps au lieu d'attendre les images,
+ * à grands pas : un dixième de seconde, le plus long que la visite accorde à une image, comme sur un
+ * appareil très lent. Le moteur amène le visiteur au ras de l'obstacle quelle que soit la durée des images :
+ * de tout petits pas ne doivent donc plus le déplacer. L'aide le vérifie à chaque appel. Elle ne peut pas
+ * masquer un retour de l'ancien défaut, où le visiteur s'arrêtait jusqu'à 24 cm avant l'obstacle quand
+ * les images étaient lentes, puis s'en approchait par à-coups.
  */
 export async function walkUntilBlocked(page: Page, key = 'KeyW') {
   const start = await position(page);
@@ -101,7 +101,7 @@ export async function walkUntilBlocked(page: Page, key = 'KeyW') {
         return Math.hypot(now.x - start.x, now.z - start.z);
       }, { message: 'la touche maintenue aurait dû mettre le visiteur en marche' })
       .toBeGreaterThan(0);
-    const blocked = await page.evaluate(() => {
+    const creep = await page.evaluate(() => {
       const { controls, camera } = (window as any).__museum;
       // En dessous de 2 cm par seconde, le visiteur est tenu pour arrêté (il marche à 2,4 m par seconde).
       const STILL = 0.02;
@@ -114,15 +114,63 @@ export async function walkUntilBlocked(page: Page, key = 'KeyW') {
         }
         return false;
       };
-      return walk(0.1) && walk(0.001);
+      if (!walk(0.1)) return null;
+      // Le visiteur est arrêté. De tout petits pas le rapprochent-ils encore de l'obstacle ?
+      const { x, z } = camera.position;
+      if (!walk(0.001)) return null;
+      return Math.hypot(camera.position.x - x, camera.position.z - z);
     });
-    expect(blocked, 'le visiteur aurait dû finir par être arrêté').toBe(true);
+    expect(creep, 'le visiteur aurait dû finir par être arrêté').not.toBeNull();
+    expect(creep, 'à grands pas, le visiteur aurait dû s’arrêter au ras de l’obstacle : de petits pas l’en ont encore approché').toBeLessThan(0.00001);
   } finally {
     await page.keyboard.up(key);
   }
   // Une image passe : le nom de la salle et le mini-plan sont à jour.
   await page.evaluate(() => new Promise<void>((done) => requestAnimationFrame(() => requestAnimationFrame(() => done()))));
   return position(page);
+}
+
+/**
+ * Ralentit toutes les images, comme sur un appareil très lent, et note les positions successives du visiteur.
+ * Chaque image est retenue plus d'un dixième de seconde : à pleine allure, le visiteur avance alors de 24 cm
+ * par image, le pas le plus long que la visite accorde.
+ * Renvoie `stopped`, qui attend que le visiteur ait marché puis soit resté immobile huit images de suite,
+ * et donne les endroits où il s'est trouvé, dans l'ordre, départ compris.
+ */
+export async function slowFrames(page: Page) {
+  await page.evaluate(() => {
+    const w = window as any;
+    const camera = w.__museum.camera;
+    const walk = { path: [{ x: camera.position.x as number, z: camera.position.z as number }], still: 0 };
+    w.__walk = walk;
+    const tick = () => {
+      const until = performance.now() + 120;
+      while (performance.now() < until);
+      const last = walk.path[walk.path.length - 1];
+      if (camera.position.x !== last.x || camera.position.z !== last.z) {
+        walk.path.push({ x: camera.position.x, z: camera.position.z });
+        walk.still = 0;
+      } else {
+        walk.still++;
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+  const walk = () => page.evaluate(() => (window as any).__walk as { path: { x: number; z: number }[]; still: number });
+  // Les images lentes sont en place avant que le visiteur se mette en marche : son premier pas sera déjà un grand pas.
+  await expect.poll(async () => (await walk()).still).toBeGreaterThanOrEqual(2);
+  return {
+    async stopped() {
+      await expect
+        .poll(async () => {
+          const { path, still } = await walk();
+          return path.length > 1 && still >= 8;
+        }, { timeout: 30_000, message: 'le visiteur aurait dû marcher, puis être arrêté' })
+        .toBe(true);
+      return (await walk()).path;
+    },
+  };
 }
 
 export const roomName = (page: Page) => page.locator('#room-name');

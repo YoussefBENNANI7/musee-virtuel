@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { EYE_HEIGHT } from './layout';
+import { advance, type Walkable } from './marche';
 
 const SPEED = 2.4; // m/s
 const TURN_SPEED = 1.6; // rad/s, rotation au clavier
@@ -17,7 +18,7 @@ export class Controls {
   yaw = 0;
   pitch = 0;
   /** Indique si le visiteur peut se tenir en ce point (salles, portes, obstacles). */
-  walkable: (x: number, z: number) => boolean = () => true;
+  walkable: Walkable = () => true;
   /** Appelé lors d'un clic sans glissement, avec les coordonnées normalisées. */
   onTap: (ndc: THREE.Vector2) => void = () => {};
   onHover: (ndc: THREE.Vector2) => void = () => {};
@@ -194,12 +195,10 @@ export class Controls {
         const sin = Math.sin(this.yaw);
         const cos = Math.cos(this.yaw);
         const p = this.camera.position;
-        const nx = p.x + (-sin * forward + cos * strafe) * scale;
-        const nz = p.z + (-cos * forward - sin * strafe) * scale;
-        // En cas d'obstacle, on glisse le long du mur plutôt que de s'arrêter net.
-        if (this.walkable(nx, nz)) p.set(nx, EYE_HEIGHT, nz);
-        else if (this.walkable(nx, p.z)) p.x = nx;
-        else if (this.walkable(p.x, nz)) p.z = nz;
+        // Devant un obstacle, le visiteur vient au ras, puis glisse le long plutôt que de s'arrêter net.
+        const to = advance(this.walkable, p.x, p.z, (-sin * forward + cos * strafe) * scale, (-cos * forward - sin * strafe) * scale);
+        p.x = to.x;
+        p.z = to.z;
       }
     }
 
