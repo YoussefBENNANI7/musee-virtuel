@@ -158,6 +158,8 @@ export interface App {
   quality: Quality;
   /** Adresse du dossier du musée, pour résoudre images et sons. */
   base: string;
+  /** Aperçu dans l'éditeur : pas d'écran d'accueil, et le visiteur retrouve sa place à chaque rechargement. */
+  preview?: boolean;
   lang: string;
   ui(): Record<string, string>;
   guide: AudioGuide;
@@ -197,5 +199,6 @@ export function metaLine(app: App, a: Artwork): string {
     a.type === 'painting'
       ? `${Math.round(a.height * 100)} × ${Math.round(a.width * 100)} cm`
       : `${app.ui().height} ${Math.round(a.height * 100)} cm`;
-  return `${loc(a.year, app.lang)} · ${a.medium[app.lang] ?? Object.values(a.medium)[0]} · ${size}`;
+  // Un cartel encore incomplet n'affiche que ce qu'il sait.
+  return [loc(a.year, app.lang), a.medium?.[app.lang] ?? Object.values(a.medium ?? {})[0], size].filter((part) => part?.trim()).join(' · ');
 }

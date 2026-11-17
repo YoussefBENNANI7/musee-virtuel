@@ -208,6 +208,11 @@ export interface RoomConfig {
   fountain?: { position: [number, number] };
   /** Lanternes de laiton suspendues. Position de chacune depuis le centre de la salle : [x, z]. */
   lanterns?: [number, number][];
+  /**
+   * Accrochage automatique, tenu par l'éditeur : les tableaux de chaque mur sont répartis à intervalles
+   * réguliers, dans l'ordre de la liste. Leur position (`offset`) est alors recalculée à chaque changement.
+   */
+  autoHang?: boolean;
   artworks: ArtworkConfig[];
 }
 
@@ -258,6 +263,8 @@ export interface MuseumConfig {
   rooms: RoomConfig[];
   doors: DoorConfig[];
   tours?: TourConfig[];
+  /** Réserve de l'éditeur : œuvres du musée qui ne sont accrochées dans aucune salle. Le moteur les ignore. */
+  reserve?: ArtworkConfig[];
 }
 
 export function tr(text: L10n, lang: string): string {

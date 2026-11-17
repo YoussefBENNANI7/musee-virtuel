@@ -97,7 +97,7 @@ export function startVisit(app: App): View {
     sun.shadow.normalBias = 0.03;
     sun.shadow.radius = 4;
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.shadowMap.autoUpdate = false;
     renderer.shadowMap.needsUpdate = true;
   }
@@ -107,6 +107,20 @@ export function startVisit(app: App): View {
   const first = world.spawn(museum.start.room);
   controls.teleport(first.x, first.z, first.yaw);
   const byId = new Map(world.artworks.map((a) => [a.config.id, a]));
+  // Aperçu dans l'éditeur : chaque modification recharge le musée, et le visiteur retrouve sa place.
+  const poseKey = `apercu:${museum.id}`;
+  let poseSaved = 0;
+  if (app.preview) {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(poseKey) ?? 'null');
+      if (saved && world.walkable(saved.x, saved.z)) {
+        controls.teleport(saved.x, saved.z, saved.yaw);
+        controls.pitch = saved.pitch ?? 0;
+      }
+    } catch {
+      // Stockage indisponible : on part de l'entrée.
+    }
+  }
   // Ambiance sonore : l'eau des fontaines, plus forte à mesure qu'on s'en approche.
   const ambiance = setupAmbiance(
     museum.rooms.filter((r) => r.fountain).map((r) => ({ x: r.position[0] + r.fountain!.position[0], z: r.position[1] + r.fountain!.position[1], room: r.id })),
@@ -624,6 +638,14 @@ export function startVisit(app: App): View {
       invalidate(300);
       miniMap.update(p.x, p.z, controls.yaw);
       hear();
+      if (app.preview && performance.now() - poseSaved > 300) {
+        poseSaved = performance.now();
+        try {
+          sessionStorage.setItem(poseKey, JSON.stringify({ x: p.x, z: p.z, yaw: controls.yaw, pitch: controls.pitch }));
+        } catch {
+          // Voir plus haut.
+        }
+      }
     }
     // Arrivé au point cliqué (ou détourné en chemin) : le repère du sol s'efface.
     if (walking && !controls.gliding) {
@@ -652,6 +674,33 @@ export function startVisit(app: App): View {
       }
     }
   });
+
+  // Commandes que l'éditeur envoie à son aperçu : aller dans une salle, se placer devant une œuvre.
+  if (app.preview) {
+    Object.assign(window, {
+      __apercu: {
+        goToRoom(roomId: string) {
+          if (!museum.rooms.some((r) => r.id === roomId)) return false;
+          closePanel();
+          const s = world.spawn(roomId);
+          controls.teleport(s.x, s.z, s.yaw);
+          return true;
+        },
+        showArtwork(artId: string) {
+          const art = byId.get(artId);
+          if (!art) return false;
+          closePanel();
+          const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+          const distance = art.depth + Math.max(art.closest, 1.7 * Math.max(art.config.height / (2 * tan), art.span / (2 * tan * camera.aspect)));
+          const view = world.viewpoint(art, camera.position, distance);
+          // On y est porté d'un coup : dans un outil de travail, le résultat doit se voir tout de suite.
+          controls.teleport(view.pos.x, view.pos.z, view.yaw);
+          controls.pitch = view.pitch;
+          return true;
+        },
+      },
+    });
+  }
 
   // Accès réservé aux tests et à la génération des vignettes, absent de la version publiée.
   if (import.meta.env.DEV) {

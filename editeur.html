@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Éditeur de musée</title>
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="editeur.html"><span class="star" aria-hidden="true"></span>Éditeur de musée</a>
+      <span id="museum-title" class="museum-title"></span>
+      <span id="status" class="status" role="status"></span>
+      <span class="spacer"></span>
+      <button id="undo" class="ghost" type="button" hidden>Annuler la dernière modification</button>
+      <a id="open" class="ghost" target="_blank" rel="noopener" hidden>Ouvrir le musée ↗</a>
+    </header>
+
+    <main id="home" class="home" hidden></main>
+
+    <div id="workspace" class="workspace" hidden>
+      <section class="side">
+        <nav id="tabs" class="tabs" aria-label="Parties de l'éditeur"></nav>
+        <div id="pane" class="pane"></div>
+      </section>
+      <section class="stage" aria-label="Aperçu du musée">
+        <iframe id="preview" title="Aperçu du musée en 3D"></iframe>
+      </section>
+    </div>
+
+    <div id="crop" class="crop" role="dialog" aria-modal="true" aria-labelledby="crop-title" hidden>
+      <div class="crop-card">
+        <h2 id="crop-title">Recadrer la photo</h2>
+        <p class="hint">Faites glisser les coins pour ne garder que l'œuvre, sans le mur ni le cadre.</p>
+        <div id="crop-stage" class="crop-stage"><img id="crop-img" alt="" draggable="false" /><div id="crop-box" class="crop-box"><i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i></div></div>
+        <div class="row">
+          <button id="crop-apply" class="primary" type="button">Appliquer le recadrage</button>
+          <button id="crop-full" type="button">Garder toute la photo</button>
+          <button id="crop-cancel" class="ghost" type="button">Fermer sans rien changer</button>
+        </div>
+      </div>
+    </div>
+
+    <p id="notice" class="notice" role="alert" hidden></p>
+
+    <script type="module" src="/src/editeur/main.ts"></script>
+  </body>
+</html>

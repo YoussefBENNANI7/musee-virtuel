@@ -1,5 +1,5 @@
 import { DECORS, coveOf, isDecorId, resolveDecor, type Decor } from './decors';
-import { GILT_FRAME } from './artworks';
+import { frameMargin } from './accrochage';
 import { FOUNTAIN_RADIUS, benchFootprint } from './furniture';
 import { ART_CENTER_Y, MIN_DOOR_WIDTH, WALLS, buildLayout, inside, roomRect, wallFrame } from './layout';
 import { isStyleId, type Style } from './styles';
@@ -234,10 +234,8 @@ function checkDecor(room: RoomConfig, style: Style, where: string, error: Report
 }
 
 /** Marge occupée autour d'une œuvre par son passe-partout (ou le vide du cadre) et son cadre. */
-const frameMargin = (art: { mat?: number; frameless?: boolean; frame?: string }, decor: Decor) =>
-  art.frameless ? 0 : art.frame === 'gilt' ? (art.mat ?? 0) + GILT_FRAME.width : (art.mat ? art.mat : decor.frame.gap) + decor.frame.width;
 /** Demi-largeur occupée sur le mur par un tableau, son passe-partout et son cadre. */
-const framedHalfWidth = (art: { width: number; mat?: number; frameless?: boolean; frame?: string }, decor: Decor) => art.width / 2 + frameMargin(art, decor);
+const framedHalfWidth = (art: { width: number; mat?: number; frameless?: boolean; frame?: 'gilt' }, decor: Decor) => art.width / 2 + frameMargin(art, decor);
 
 function checkPainting(
   art: Extract<ArtworkConfig, { type: 'painting' }>,

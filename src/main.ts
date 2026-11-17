@@ -30,7 +30,9 @@ async function start() {
   const params = new URLSearchParams(location.search);
   const museumId = params.get('m') ?? 'demo';
   const base = new URL(`museums/${encodeURIComponent(museumId)}/`, document.baseURI).href;
-  const res = await fetch(new URL('museum.json', base));
+  // ?apercu : le musée est montré dans l'éditeur, qui vient peut-être de le modifier. On relit toujours le fichier.
+  const preview = params.has('apercu');
+  const res = await fetch(new URL('museum.json', base), preview ? { cache: 'no-store' } : undefined);
   if (!res.ok) throw new Error(`museum.json: ${res.status}`);
   // ?decor=… montre une salle dans un autre décor, et ?style=… tout le musée dans un autre
   // style d'architecture, sans toucher à sa configuration.
@@ -38,6 +40,8 @@ async function start() {
   const style = resolveStyle(museum, params.get('style'));
   const issues = validateMuseum(museum, style);
   for (const issue of issues) {
+    // Dans l'aperçu de l'éditeur, les points à compléter sont déjà listés par l'éditeur lui-même.
+    if (preview && issue.level !== 'error') continue;
     (issue.level === 'error' ? console.error : console.warn)(`[musée] ${issue.where} : ${issue.message}`);
   }
   const errors = issues.filter((i) => i.level === 'error');
@@ -49,6 +53,7 @@ async function start() {
     style,
     quality: detectQuality(params),
     base,
+    preview,
     lang: museum.langs.includes(browserLang) ? browserLang : museum.defaultLang,
     ui: () => UI[app.lang] ?? UI.en,
     guide: new AudioGuide(),
@@ -97,7 +102,7 @@ async function start() {
   };
   if (simple) {
     // La vue simplifiée n'a ni accueil ni présentation.
-  } else if (params.get('accueil') !== 'non') {
+  } else if (params.get('accueil') !== 'non' && !preview) {
     view.intro?.(true);
     showWelcome(app, { setLang, simpleView: switchView, progress: () => view.progress?.() ?? 1, onEnter: enter });
   } else {

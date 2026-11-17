@@ -61,7 +61,28 @@ public/museums/demo/
   thumbs/         Photos des sculptures pour la vue simplifiée
 ```
 
-### Créer un nouveau musée
+### Créer un musée avec l'éditeur
+
+L'éditeur crée et remplit un musée sans toucher au code. Il s'utilise sur ordinateur, pendant que le musée tourne (`npm run dev`) :
+
+http://localhost:5173/editeur.html
+
+1. **Créer le musée** : lui donner un nom et choisir un plan (une grande salle, trois salles en enfilade, une galerie et deux cabinets, un atrium et quatre salles).
+2. **Déposer les photos des œuvres** dans une salle : elles s'accrochent seules, réparties sur les murs, à la bonne hauteur. Une salle pleine range le surplus en réserve.
+3. **Remplir le cartel** de chaque œuvre : titre, artiste, date, technique, commentaire, vraie taille en centimètres, cadre. La photo se recadre dans l'éditeur ; l'originale est gardée.
+4. **Régler les salles** (nom, décor) et **le musée** (nom, couleur, style d'architecture, ajout de l'anglais).
+5. L'onglet **« À compléter »** liste ce qui manque encore, œuvre par œuvre.
+
+Tout s'enregistre au fur et à mesure, et le vrai musée s'affiche à droite. Le bouton « Annuler la dernière modification » revient en arrière.
+
+À savoir :
+
+- Le musée est rangé dans `public/museums/<son-nom>/`, sur cet ordinateur. Il n'est pas envoyé sur GitHub : pour le sauvegarder, copier ce dossier.
+- L'éditeur n'existe que sur l'ordinateur où tourne `npm run dev` : il ne fait pas partie de la version publiée.
+- Sur un ordinateur modeste, `http://localhost:5173/editeur.html?apercu=low` allège l'aperçu.
+- L'éditeur ne permet pas encore d'ajouter une sculpture, de composer un parcours, de poser des détails commentés ni de dessiner librement le plan : cela se règle dans `museum.json`, comme décrit plus bas.
+
+### Créer un musée à la main
 
 1. Copier le dossier `public/museums/demo` et renommer la copie, par exemple `mon-musee`.
 2. Modifier `mon-musee/museum.json` : nom du musée, salles, portes, œuvres, parcours.
@@ -132,8 +153,9 @@ src/visit3d.ts     Visite 3D
 src/simple.ts      Vue simplifiée, sans 3D
 src/vr.ts          Visite en casque VR
 src/audio.ts       Audioguide
-src/engine/        Moteur : plan, bâtiment, éclairage, œuvres, déplacement
-scripts/           Préparation des images et des vignettes
+src/engine/        Moteur : plan, bâtiment, éclairage, œuvres, accrochage automatique, déplacement
+src/editeur/       Éditeur de musée (page editeur.html)
+scripts/           Préparation des images et des vignettes, service local de l'éditeur
 tests/             Tests automatiques
 docs/              État du projet, prompts des images
 ```

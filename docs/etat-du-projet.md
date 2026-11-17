@@ -38,7 +38,7 @@ Le musée de démonstration sert d'abord à une **présentation interne** : le p
 ### Les trois étapes du produit
 
 1. **Moteur de visite** : un musée de démonstration complet. *Terminé, en cours de modernisation.*
-2. **Personnalisation** : un outil de configuration (éditeur visuel) et plusieurs musées sur le même socle.
+2. **Personnalisation** : un outil de configuration (éditeur visuel) et plusieurs musées sur le même socle. *Première version de l'éditeur livrée (novembre 2026).*
 3. **Plateforme** : comptes clients, statistiques de visite, hébergement multi-clients (un sous-domaine ou le domaine du musée).
 
 ## 3. Avancement
@@ -243,6 +243,40 @@ Lot demandé par le porteur le 16 novembre 2026, fait en autonomie, pour impress
 
 Pour la réunion : ouvrir le musée, cliquer « Entrer », puis Parcours → « Présentation » sur « Les essentiels ». Ou ouvrir directement `http://localhost:5173/?presentation=essentiels` et cliquer « Entrer ».
 
+### Outil d'administration : première version (novembre 2026)
+
+Demande du porteur : qu'un client crée son musée **sans toucher au code**, avant la salle des 120 ans, qui sera le premier musée créé avec l'outil.
+
+**Ce que fait l'éditeur** (`http://localhost:5173/editeur.html`, pendant que `npm run dev` tourne) :
+
+- **Créer un musée** : un nom, et un plan à choisir parmi quatre (une grande salle ; trois salles en enfilade ; une galerie et deux cabinets ; un atrium et quatre salles).
+- **Déposer des photos** dans une salle : chaque photo devient une œuvre, **accrochée automatiquement**. Les œuvres sont réparties sur les murs, espacées régulièrement, loin des angles et des portes. Une salle pleine range le surplus en **réserve**.
+- **Remplir le cartel** : titre, artiste, date, technique, commentaire, mention, lien, vraie taille en centimètres (la largeur suit les proportions de la photo), cadre.
+- **Recadrer la photo** dans l'éditeur ; l'originale est gardée et l'on peut y revenir.
+- **Déplacer une œuvre** : vers la gauche ou la droite sur son mur, sur un autre mur, dans une autre salle, en réserve.
+- **Régler les salles** (nom, décor) et **le musée** (nom, couleur, style d'architecture, ajout de l'anglais).
+- **Contrôler** : l'onglet « À compléter » dit en clair ce qui manque, œuvre par œuvre.
+- **Voir le résultat** : le vrai musée s'affiche à côté et se recharge après chaque modification. « Voir dans le musée » place l'aperçu devant l'œuvre.
+- Tout s'enregistre seul. « Annuler la dernière modification » revient en arrière (60 pas).
+
+**Choix retenus, à confirmer par le porteur** (il n'a pas répondu aux trois questions posées, les valeurs proposées ont été prises) :
+
+- L'éditeur est une page du navigateur, **sur ordinateur**, **sans compte** : il écrit dans le dossier du musée, sur l'ordinateur où tourne `npm run dev`. Il vise d'abord le porteur lui-même. Un client non technicien aura besoin d'une version hébergée avec comptes : c'est l'étape 3.
+- **Le plan se choisit à la création.** Le dessin libre des salles viendra plus tard.
+- **Les musées créés ne sont pas envoyés sur GitHub** (fichier `.gitignore`) : seul le musée de démonstration fait partie du dépôt. C'est la séparation convenue entre le moteur et le contenu de la banque. Conséquence : un musée créé n'existe que sur l'ordinateur ; il se sauvegarde en copiant son dossier.
+
+**Comment c'est fait :**
+
+- L'accrochage automatique (`src/engine/accrochage.ts`) est une règle rangée dans le moteur et appliquée par l'éditeur : une salle marquée `"autoHang": true` est raccrochée à chaque modification, et le mur et la position de chaque œuvre sont écrits dans `museum.json`. Le musée les lit ensuite comme ceux d'une salle réglée à la main. Les salles de la démonstration, placées à la main, ne sont pas touchées.
+- Les œuvres sans mur sont gardées dans `"reserve"`, à la racine de `museum.json` : le musée ne les montre pas.
+- L'écriture sur le disque passe par un petit service ajouté au serveur de développement (`scripts/editeur-serveur.mjs`). Il ne répond qu'à l'ordinateur lui-même et qu'à la page de l'éditeur, et n'écrit que dans `public/museums/`. Il n'existe pas dans la version publiée, pas plus que la page de l'éditeur.
+- Les photos déposées sont converties en JPEG et en versions allégées. L'originale va dans `images/sources/`.
+- L'aperçu est le vrai musée, ouvert avec `?apercu` : pas d'écran d'accueil, position gardée d'un rechargement à l'autre. Pendant la saisie d'un texte, l'enregistrement est immédiat mais l'aperçu ne se recharge qu'une fois le champ quitté.
+
+**Ce que l'éditeur ne fait pas encore** : ajouter une sculpture (modèle 3D), composer un parcours, poser des détails commentés, produire les voix en un clic, dessiner librement le plan, exporter un musée en un fichier, fonctionner sur téléphone. Tout cela reste possible dans `museum.json`.
+
+**Vérifié** : 23 tests unitaires (accrochage, plans, modèle de l'éditeur, service d'écriture) et 6 tests dans un navigateur. Non vérifié : un essai sur un vrai Mac, dans Safari et dans Chrome.
+
 ### Cession du moteur : ce qui est établi
 
 Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, sans le musée de démonstration (17 novembre 2026).
@@ -253,10 +287,12 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 - **Titularité du code** : le porteur indique avoir développé le projet avec son abonnement Anthropic personnel (17 novembre 2026). C'est un indice en sa faveur, mais la propriété dépend aussi du temps (hors heures de travail), du matériel (personnel), de la mission (initiative personnelle ou demande de l'employeur) et de son contrat de travail : à faire confirmer par un juriste. Précautions convenues : garder les factures et l'historique du dépôt, dire dès la présentation que le projet est personnel, et **construire le contenu de la banque dans un musée séparé** (`public/museums/attijariwafa/`), jamais dans le moteur.
 - **Autres points ouverts, pour un juriste** : la protection d'un code écrit avec l'aide d'une IA ; la forme de la cession (licence libre, licence d'utilisation, cession des droits) ; le nom du produit.
 - **Conditions de Google sur les voix** : non lues (le site n'est plus joignable depuis l'environnement de travail). Elles ne concernent pas le moteur, qui ne contient que la commande de production : chaque musée produit ses voix avec son propre compte.
-- **Ce qui manque pour livrer le moteur seul** : un musée de départ vide ou neutre à la place de la démonstration, un fichier de licence à la racine du dépôt, et l'outil d'administration.
+- **Ce qui manque pour livrer le moteur seul** : retirer ou remplacer le musée de démonstration (l'éditeur sait maintenant créer un musée vide), et ajouter un fichier de licence à la racine du dépôt. L'outil d'administration existe en première version.
 
 ## 4. En attente du porteur du projet
 
+- **Son essai de l'éditeur sur son Mac** (`npm run dev`, puis `http://localhost:5173/editeur.html`) et son avis : les quatre plans, l'accrochage automatique, le vocabulaire. Et ses réponses aux trois questions restées ouvertes : la date de la présentation, qui utilisera l'outil, et si un éditeur sur ordinateur, sans compte, lui convient pour commencer.
+- **Où ranger le musée de la banque** : les musées créés ne partent pas sur GitHub. S'il est construit dans le cloud par Claude, il faudra un dépôt privé séparé ou un autre moyen de le lui remettre.
 - **Son avis sur le lot « autour de l'œuvre » et le pack présentation**, sa relecture des textes des détails commentés, et son écoute du son de la fontaine (niveau, agrément).
 - **Ses photos pour la salle des 120 ans du Groupe Attijariwafa bank** : œuvres bien de face, cartel de chaque œuvre (titre, artiste, date, technique, dimensions), 8 à 12 œuvres, quelques vues du lieu. À déposer dans un dossier Google Drive. Claude ne rédigera les textes qu'à partir des cartels et de ses indications ; les œuvres d'artistes récents demanderont l'accord de la Fondation avant toute diffusion publique.
 
@@ -274,6 +310,8 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 - Dans le casque VR, ni les parcours ni le plan ne sont disponibles.
 - La VR n'a été testée qu'en émulation (casque Meta Quest 3 émulé).
 - La voix de synthèse n'est pas garantie sur les navigateurs de casque : sans elle, le bouton d'écoute ne s'affiche pas.
+- L'éditeur ne s'utilise que sur ordinateur, sur la machine où tourne `npm run dev`, et il n'a pas encore été essayé sur un vrai Mac. Ses limites sont listées dans « Outil d'administration ».
+- Pendant que l'aperçu de l'éditeur se recharge, l'éditeur peut marquer un temps d'arrêt sur un ordinateur sans carte graphique. `editeur.html?apercu=low` allège l'aperçu.
 
 ---
 
@@ -286,7 +324,14 @@ public/museums/<musée>/     Un dossier par musée client
   museum.json               Toute la configuration du musée
   images/                   Images originales des œuvres (servent au futur zoom)
   images/web/               Versions allégées, produites par « npm run images »
+  images/sources/           Photos d'origine déposées par l'éditeur (servent au recadrage)
   thumbs/                   Photos des sculptures pour la vue simplifiée (« npm run vignettes »)
+
+editeur.html                Page de l'éditeur de musée (absente de la version publiée)
+src/editeur/main.ts         Éditeur : onglets Œuvres, Salles, Musée, Contrôle ; enregistrement, aperçu, recadrage
+src/editeur/modele.ts       Éditeur : création d'un musée, ajout et déplacement des œuvres (sans écran, testé seul)
+src/editeur/api.ts          Éditeur : échanges avec le service d'écriture
+src/editeur/editeur.css     Styles de l'éditeur
 
 src/main.ts                 Démarrage : chargement et contrôle de la configuration, choix de la vue
 src/visit3d.ts              Visite 3D : fiches, parcours, plan, boucle de rendu
@@ -310,14 +355,17 @@ src/engine/layout.ts        Géométrie du plan : murs, portes, zones de marche 
 src/engine/lighting.ts      Calcul de l'éclairage des salles
 src/engine/building.ts      Construction du bâtiment : sols, murs, plafonds, verrières
 src/engine/artworks.ts      Accrochage des tableaux, pose des sculptures
+src/engine/accrochage.ts    Accrochage automatique : répartition des œuvres sur les murs d'une salle
+src/engine/plans.ts         Plans proposés à la création d'un musée
 src/engine/world.ts         Assemblage du musée, règles de déplacement, points de vue
 src/engine/...              Contrôles, plan, mobilier, sculptures, textures, reflets, images
 
 scripts/images.mjs          Préparation des images d'un musée
 scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
-tests/unit/                 Tests unitaires (Vitest) : 114 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 65 tests
+scripts/editeur-serveur.mjs Service d'écriture de l'éditeur, ajouté au serveur de développement
+tests/unit/                 Tests unitaires (Vitest) : 137 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 71 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration
@@ -346,6 +394,8 @@ vercel.json                 Configuration de l'hébergement (pas encore relié)
 - **Tableaux** : mur, décalage le long du mur (positif vers la droite quand on fait face au mur), largeur et hauteur en mètres, image (`{"src": "images/nom.webp"}`), titre, artiste, date, technique, texte. Facultatifs : cadre doré (`"frame": "gilt"`), passe-partout (`"mat": 0.12`, en mètres), mention du musée d'origine (`credit`, par langue), lien vers la notice (`link`), enregistrement audio. L'artiste et la date s'écrivent une fois, ou par langue (`{"fr": "vers 1830", "en": "c. 1830"}`).
 - **Sculptures** : position dans la salle, hauteur, hauteur du socle, et soit un modèle 3D numérisé (`"model": {"src": "models/nom.glb"}`, à préparer avec `npm run modeles`), soit une forme dessinée par le moteur avec son matériau (bronze, marbre, bronze patiné, bois laqué).
 - **Parcours** : nom, description et liste ordonnée des œuvres.
+- **Accrochage automatique** : `"autoHang": true` sur une salle. L'éditeur répartit alors lui-même ses tableaux sur les murs : il recalcule le mur et la position écrits dans chaque œuvre à chaque modification. Sans l'éditeur, ce réglage ne change rien.
+- **Réserve** : `"reserve": [...]` à la racine, les œuvres gardées sans être accrochées.
 - **Contrôle** : à l'ouverture, la configuration est vérifiée (porte qui ne mène nulle part, tableau en travers d'une porte, salle inaccessible, décor inconnu, traduction manquante, etc.).
 
 ## 7. Commandes
@@ -353,6 +403,7 @@ vercel.json                 Configuration de l'hébergement (pas encore relié)
 ```bash
 npm install                       # une seule fois, puis après chaque mise à jour des dépendances
 npm run dev                       # lance le musée sur http://localhost:5173/
+                                  # et l'éditeur sur http://localhost:5173/editeur.html
 npm run check                     # contrôle du code et tests unitaires
 npm run test:e2e                  # tests dans un navigateur (environ 3 minutes)
 npm run build                     # version publiable, dans dist/
