@@ -69,6 +69,13 @@ const stop = (message) => {
   process.exit(1);
 };
 
+// Sur Mac, l'ordinateur ne se met pas en veille pendant le calcul, qui peut durer longtemps.
+if (process.platform === 'darwin') {
+  const awake = spawn('caffeinate', ['-i', '-w', String(process.pid)], { stdio: 'ignore' });
+  awake.on('error', () => {});
+  awake.unref();
+}
+
 const python = process.env.LUMIERE_PYTHON ?? join(homedir(), '.cache', 'musee-virtuel', 'blender', 'bin', 'python');
 if (!existsSync(python)) stop('Blender n’est pas encore installé sur cet ordinateur. Lancez d’abord, une seule fois :\n\n    npm run lumiere:installer');
 

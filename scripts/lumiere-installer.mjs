@@ -11,7 +11,7 @@
 //   4. elle installe le navigateur sans fenêtre qui exporte les salles (Chromium de Playwright).
 // Rien n'est installé dans le projet. Relancée, la commande ne refait que ce qui manque.
 import { chromium } from '@playwright/test';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -31,6 +31,13 @@ const stop = (text) => {
 };
 /** Lance une commande en laissant voir ce qu'elle affiche. Vrai si elle réussit. */
 const run = (command, args) => spawnSync(command, args, { stdio: 'inherit' }).status === 0;
+
+// Sur Mac, l'ordinateur ne se met pas en veille tant que la commande travaille : la veille coupe le Wi-Fi.
+if (process.platform === 'darwin') {
+  const awake = spawn('caffeinate', ['-i', '-w', String(process.pid)], { stdio: 'ignore' });
+  awake.on('error', () => {});
+  awake.unref();
+}
 /** Ce qu'affiche une commande, ou null si elle échoue ou n'existe pas. */
 const read = (command, args) => {
   const result = spawnSync(command, args, { encoding: 'utf8' });
@@ -97,7 +104,20 @@ if (blenderVersion()?.startsWith(BPY.split('.').slice(0, 2).join('.'))) {
   if (!run(python, ['-m', 'venv', '--clear', venv])) stop(`Impossible de créer le dossier de Blender (${venv}). Copiez à Claude ce qui est affiché ci-dessus.`);
   run(venvPython, ['-m', 'pip', 'install', '--quiet', '--upgrade', 'pip']);
   console.log('   Téléchargement et installation : plusieurs minutes selon la connexion…');
-  if (!run(venvPython, ['-m', 'pip', 'install', `bpy==${BPY}`, 'numpy'])) stop('L’installation de Blender a échoué. Copiez à Claude ce qui est affiché ci-dessus.');
+  // Le téléchargement est long : une coupure de la connexion est attendue patiemment, et le
+  // téléchargement reprend là où il s'était arrêté. Après trois échecs, la commande s'arrête.
+  const patient = ['--retries', '20', '--timeout', '60', '--resume-retries', '50'];
+  let installed = false;
+  for (let attempt = 1; attempt <= 3 && !installed; attempt++) {
+    if (attempt > 1) {
+      console.log(`\n   La connexion a été coupée. Nouvel essai (${attempt} sur 3) dans 30 secondes…`);
+      spawnSync('sleep', ['30']);
+    }
+    installed = run(venvPython, ['-m', 'pip', 'install', ...patient, `bpy==${BPY}`, 'numpy']);
+  }
+  if (!installed) {
+    stop('Le téléchargement de Blender n’a pas abouti : la connexion Internet a été coupée plusieurs fois.\n     Vérifiez le Wi-Fi, puis relancez la même commande : npm run lumiere:installer');
+  }
   const version = blenderVersion();
   if (!version) stop('Blender est installé mais ne démarre pas. Copiez à Claude ce qui est affiché ci-dessus.');
   ok(`Blender ${version} installé (${venv})`);

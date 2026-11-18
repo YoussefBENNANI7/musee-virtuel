@@ -83,7 +83,7 @@ Elle vérifie l'ordinateur, puis installe ce qui manque, hors du projet :
 3. **Blender 5.3** (module `bpy`) et numpy, dans `~/.cache/musee-virtuel/blender` : environ 250 Mo à télécharger sur Mac.
 4. **Le navigateur sans fenêtre** qui ouvre le musée pour en exporter les salles (Chromium de Playwright, le même que pour les tests).
 
-Relancée, elle ne refait que ce qui manque. Pour tout désinstaller, supprimer le dossier `~/.cache/musee-virtuel`.
+Relancée, elle ne refait que ce qui manque. Le téléchargement de Blender supporte les coupures de connexion : il reprend là où il s'était arrêté, et la commande fait trois essais avant d'abandonner. Sur Mac, l'ordinateur ne se met pas en veille pendant l'installation ni pendant le calcul. Pour tout désinstaller, supprimer le dossier `~/.cache/musee-virtuel`.
 
 ## Calculer la lumière d'un musée créé avec l'éditeur
 
