@@ -25,7 +25,7 @@
 // puis range les atlas dans public/museums/<musée>/lumiere/ et déclare ce dossier dans museum.json.
 import { chromium } from '@playwright/test';
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -82,7 +82,17 @@ if (!existsSync(python)) stop('Blender n’est pas encore installé sur cet ordi
 const root = fileURLToPath(new URL('..', import.meta.url));
 const dir = join(root, 'public', 'museums', museumId);
 const configPath = join(dir, 'museum.json');
-if (!existsSync(configPath)) stop(`Musée introuvable : il n’y a pas de dossier « ${museumId} » dans public/museums/.`);
+if (!existsSync(configPath)) {
+  // Dire ce qui existe : les musées du site, et ceux que l'éditeur a mis de côté en les supprimant.
+  const list = (folder) => (existsSync(folder) ? readdirSync(folder).filter((name) => existsSync(join(folder, name, 'museum.json'))) : []);
+  const museums = list(join(root, 'public', 'museums'));
+  const deleted = list(join(root, 'musees-supprimes')).filter((name) => name.startsWith(`${museumId}-`));
+  stop(
+    `Musée introuvable : ${existsSync(dir) ? `le dossier « ${museumId} » n’a pas de fichier museum.json` : `il n’y a pas de dossier « ${museumId} » dans public/museums/`}.\n` +
+      `  Musées présents : ${museums.join(', ') || 'aucun'}.` +
+      (deleted.length ? `\n  Supprimé dans l’éditeur, il a été mis de côté ici : musees-supprimes/${deleted.join(', musees-supprimes/')}` : ''),
+  );
+}
 const all = JSON.parse(readFileSync(configPath, 'utf8')).rooms.map((r) => r.id);
 if (!['toutes', 'modifiees'].includes(wanted) && !all.includes(wanted)) stop(`Salle inconnue dans le musée « ${museumId} » : ${wanted}\n  Salles de ce musée : ${all.join(', ')} (ou « toutes »).`);
 const manifestPath = join(dir, 'lumiere', 'lumiere.json');
