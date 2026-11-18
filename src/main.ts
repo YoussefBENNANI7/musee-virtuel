@@ -76,7 +76,8 @@ async function start() {
 
   // Un lien ramène à la page de choix quand plusieurs musées sont proposés.
   const others = $<HTMLAnchorElement>('museums-link');
-  others.hidden = list.length < 2;
+  // Pas dans l'aperçu de l'éditeur : on y quitterait le musée en cours de modification.
+  others.hidden = list.length < 2 || preview;
   others.textContent = app.ui().allMuseums;
   const mode = $('mode');
   mode.hidden = !webgl;

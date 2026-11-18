@@ -194,3 +194,25 @@ test('un musée dont la lumière précalculée manque s’ouvre normalement', as
   // Seule la ressource introuvable est signalée par le navigateur ; la visite, elle, n'a aucune erreur.
   expect(errors.filter((e) => !e.includes('404'))).toEqual([]);
 });
+
+test('l’aperçu de l’éditeur dit où en est la lumière de chaque salle, et se photographie pour une couverture', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  await page.goto('/?m=demo&apercu=1&q=medium');
+  await page.waitForSelector('body.ready');
+  // Toutes les salles de la démonstration sont à jour : aucune à recalculer, aucune jamais calculée.
+  expect(await page.evaluate(() => (window as any).__apercu.lumiere())).toEqual({ applied: ROOMS, stale: [], missing: [] });
+
+  const before = await page.evaluate(() => (window as any).__museum.renderer.domElement.width);
+  const shot = await page.evaluate(async () => {
+    const data: string = (window as any).__apercu.capture();
+    const img = new Image();
+    img.src = data;
+    await img.decode();
+    return { kind: data.slice(0, 23), width: img.naturalWidth, height: img.naturalHeight };
+  });
+  // Au format des cartes de la page de choix (16:10), en JPEG ; l'aperçu reprend ensuite sa taille.
+  expect(shot).toEqual({ kind: 'data:image/jpeg;base64,', width: 1600, height: 1000 });
+  expect(await page.evaluate(() => (window as any).__museum.renderer.domElement.width)).toBe(before);
+  expect(errors).toEqual([]);
+});

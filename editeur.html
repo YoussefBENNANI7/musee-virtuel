@@ -8,7 +8,9 @@
   <body>
     <header class="top">
       <a class="brand" href="editeur.html"><span class="star" aria-hidden="true"></span>Éditeur de musée</a>
+      <a id="visits" class="ghost" href="./">← Page des musées</a>
       <span id="museum-title" class="museum-title"></span>
+      <span id="guard" class="guard" hidden></span>
       <span id="status" class="status" role="status"></span>
       <span class="spacer"></span>
       <button id="undo" class="ghost" type="button" hidden>Annuler la dernière modification</button>
@@ -19,6 +21,7 @@
 
     <div id="workspace" class="workspace" hidden>
       <section class="side">
+        <div id="lumiere-alert" class="lumiere-alert" role="status" hidden></div>
         <nav id="tabs" class="tabs" aria-label="Parties de l'éditeur"></nav>
         <div id="pane" class="pane"></div>
       </section>

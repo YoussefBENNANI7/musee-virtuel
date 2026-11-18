@@ -6,6 +6,7 @@ import { WALLS, buildLayout } from '../engine/layout';
 import { buildMap } from '../engine/map';
 import { PLANS } from '../engine/plans';
 import { STYLES, resolveStyle } from '../engine/styles';
+import type { LumiereState } from '../engine/lumiere';
 import type { ArtworkConfig, L10n, MuseumConfig, PaintingConfig, StyleId, WallId } from '../engine/types';
 import { validateMuseum, type Issue } from '../engine/validate';
 import * as api from './api';
@@ -56,6 +57,16 @@ let roomId = '';
 let editing: string | null = null;
 const undoStack: string[] = [];
 
+/**
+ * Musées qui font partie du projet (la démonstration) : avant leur première modification, l'éditeur
+ * demande confirmation. Si on renonce, le musée revient à son état d'avant.
+ */
+const PROTECTED = new Set(['demo']);
+let unlocked = false;
+/** Taille de l'historique avant la première modification d'un musée protégé : on y revient si on renonce. */
+let guardFrom = -1;
+const guarded = () => PROTECTED.has(museum.id) && !unlocked;
+
 const base = () => new URL(`museums/${museum.id}/`, document.baseURI).href;
 const room = () => museum.rooms.find((r) => r.id === roomId) ?? museum.rooms[0];
 const text = (value: L10n | string | undefined, lang = museum.defaultLang) => (typeof value === 'string' ? value : (value?.[lang] ?? Object.values(value ?? {})[0] ?? ''));
@@ -103,7 +114,9 @@ function status(message: string, kind: 'ok' | 'busy' | 'error' = 'ok') {
 let saveTimer = 0;
 let pendingFocus: { art?: string; room?: string } | null = null;
 const frame = () => $<HTMLIFrameElement>('preview');
-type PreviewWindow = Window & { __apercu?: { goToRoom(id: string): boolean; showArtwork(id: string): boolean } };
+type PreviewWindow = Window & {
+  __apercu?: { goToRoom(id: string): boolean; showArtwork(id: string): boolean; lumiere(): Promise<LumiereState>; capture(): string };
+};
 
 /** Demande à l'aperçu de montrer une œuvre ou une salle ; si le musée se recharge, la demande attend sa nouvelle version. */
 function focusPreview(target: { art?: string; room?: string }) {
@@ -131,6 +144,7 @@ function reloadPreview() {
   clearTimeout(previewTimer);
   previewStale = false;
   previewLoading = true;
+  previewRound++;
   const view = frame();
   const url = `./?m=${encodeURIComponent(museum.id)}&apercu=1&q=${previewQuality}`;
   if (view.dataset.museum === museum.id && view.contentWindow) view.contentWindow.location.reload();
@@ -184,6 +198,8 @@ window.addEventListener('beforeunload', (e) => {
   if (saveTimer || saving) e.preventDefault();
 });
 function scheduleSave() {
+  if (guarded()) return void confirmProtectedEdit();
+  lumiereDone = null;
   status('Modification en cours…', 'busy');
   clearTimeout(saveTimer);
   clearTimeout(previewTimer);
@@ -195,9 +211,55 @@ function check() {
   renderTabs();
 }
 function snapshot() {
+  if (guarded() && guardFrom < 0) guardFrom = undoStack.length;
   undoStack.push(JSON.stringify(museum));
   if (undoStack.length > 60) undoStack.shift();
   $('undo').hidden = false;
+}
+
+// --- Musée protégé : la démonstration ----------------------------------------------------------
+let asking: Promise<boolean> | null = null;
+/** Vrai si l'on peut modifier le musée ; pour un musée protégé, on le demande une fois. */
+function mayEdit(): Promise<boolean> {
+  if (!guarded()) return Promise.resolve(true);
+  asking ??= askConfirm(
+    `Modifier « ${text(museum.name)} » ?`,
+    'C’est le musée de démonstration : il fait partie du projet, et vos changements s’enregistreront dans ses fichiers. En cas d’erreur, le bouton « Rétablir la démonstration d’origine », dans l’onglet Musée, le remet comme avant.',
+    'Modifier quand même',
+  ).then((yes) => {
+    asking = null;
+    if (yes) {
+      unlocked = true;
+      guardFrom = -1;
+      renderGuard();
+    }
+    return yes;
+  });
+  return asking;
+}
+
+/** Une modification attend : on l'enregistre si la personne confirme, sinon le musée revient à son état d'avant. */
+async function confirmProtectedEdit() {
+  if (await mayEdit()) return scheduleSave();
+  if (guardFrom < 0) return;
+  museum = JSON.parse(undoStack[guardFrom]);
+  undoStack.length = guardFrom;
+  guardFrom = -1;
+  typing = false;
+  $('undo').hidden = undoStack.length === 0;
+  if (editing && !allWorks(museum).some((a) => a.id === editing)) editing = null;
+  check();
+  renderPane();
+  renderHeader();
+  status('Rien n’a été modifié');
+}
+
+function renderGuard() {
+  const badge = $('guard');
+  badge.hidden = !PROTECTED.has(museum.id);
+  badge.textContent = unlocked ? 'Démonstration : modifications autorisées' : 'Démonstration protégée';
+  badge.dataset.open = String(unlocked);
+  badge.title = unlocked ? 'Les modifications s’enregistrent dans le musée de démonstration.' : 'Chaque modification demandera d’abord une confirmation.';
 }
 
 /** Applique un changement qui déplace ou transforme des œuvres : on raccroche, on contrôle, on enregistre. */
@@ -242,9 +304,9 @@ $('undo').addEventListener('click', () => {
 });
 
 // --- Champs de saisie ---------------------------------------------------------------
-function field(label: string, value: string, onInput: (value: string) => void, options: { multiline?: boolean; placeholder?: string; type?: string; hint?: string } = {}) {
+function field(label: string, value: string, onInput: (value: string) => void, options: { multiline?: boolean; rows?: number; placeholder?: string; type?: string; hint?: string } = {}) {
   const input = options.multiline
-    ? h('textarea', { rows: 6, placeholder: options.placeholder, value })
+    ? h('textarea', { rows: options.rows ?? 6, placeholder: options.placeholder, value })
     : h('input', { type: options.type ?? 'text', placeholder: options.placeholder, value });
   input.addEventListener('input', () => onInput(input.value));
   return h('label', { class: 'field' }, h('span', {}, label), input, options.hint ? h('small', {}, options.hint) : null);
@@ -277,6 +339,7 @@ function renderHeader() {
   const open = $<HTMLAnchorElement>('open');
   open.href = `./?m=${encodeURIComponent(museum.id)}`;
   open.hidden = false;
+  renderGuard();
 }
 
 function renderTabs() {
@@ -363,8 +426,294 @@ function museumPane(): Child[] {
       ),
       h('small', {}, 'Le style règle l’épaisseur des murs et la forme des portes. Chaque salle garde son propre décor.'),
     ),
+    showcaseSection(),
+    lumiereSection(),
+    PROTECTED.has(museum.id) ? demoSection() : null,
     h('p', { class: 'hint' }, `Dossier du musée : public/museums/${museum.id}/. C’est ce dossier, avec le moteur, qui se met en ligne.`),
   ];
+}
+
+// --- Page de choix des musées : présentation et couverture -------------------------------------------
+/** Place du musée sur la page de choix, lue à l'ouverture du musée. */
+let vitrine: api.Showcase | null = null;
+let vitrineTimer = 0;
+
+/** Enregistre la place du musée sur la page de choix (après une pause dans la saisie d'un texte). */
+function saveShowcase(delay = 0) {
+  const v = vitrine;
+  if (!v) return;
+  status('Modification en cours…', 'busy');
+  clearTimeout(vitrineTimer);
+  vitrineTimer = window.setTimeout(async () => {
+    try {
+      // Seule l'image vient de la réponse : le texte a pu continuer de changer pendant l'envoi.
+      v.image = (await api.setShowcase(museum.id, { shown: v.shown, summary: v.summary })).image;
+      status('Enregistré');
+    } catch (error) {
+      status(`Non enregistré : ${(error as Error).message}`, 'error');
+    }
+  }, delay);
+}
+
+function showcaseSection() {
+  const v = vitrine;
+  if (!v) return null;
+  const upload = h('input', {
+    type: 'file',
+    accept: 'image/*',
+    hidden: true,
+    onchange: (e: Event) => {
+      const picture = (e.target as HTMLInputElement).files?.[0];
+      if (picture) void storeCover(picture);
+    },
+  });
+  return h('section', { class: 'card', id: 'vitrine' },
+    h('h3', {}, 'Page de choix des musées'),
+    h('p', { class: 'hint' }, 'La page d’accueil du site présente les musées côte à côte : chacun a sa carte, avec une photo de couverture, son nom et une courte présentation.'),
+    h('label', { class: 'check' },
+      h('input', {
+        type: 'checkbox',
+        id: 'vitrine-shown',
+        checked: v.shown,
+        onchange: (e: Event) => {
+          v.shown = (e.target as HTMLInputElement).checked;
+          saveShowcase();
+        },
+      }),
+      h('span', {}, 'Proposer ce musée sur la page de choix'),
+    ),
+    ...museum.langs.map((lang) =>
+      field(museum.langs.length > 1 ? `Présentation courte (${LANG_NAMES[lang] ?? lang})` : 'Présentation courte', v.summary[lang] ?? '', (value) => {
+        v.summary = { ...v.summary, [lang]: value };
+        saveShowcase(700);
+      }, { multiline: true, rows: 3, placeholder: 'Une ou deux phrases, sous le nom du musée.' }),
+    ),
+    h('p', { class: 'field-label' }, 'Photo de couverture'),
+    v.image
+      ? h('img', { class: 'cover', id: 'cover', src: new URL(`museums/${v.image}`, document.baseURI).href, alt: 'Couverture du musée' })
+      : h('div', { class: 'cover empty', id: 'cover' }, 'Pas encore de photo de couverture'),
+    h('div', { class: 'row' },
+      h('button', { type: 'button', id: 'cover-shot', onclick: () => void coverFromPreview() }, 'Prendre la vue de l’aperçu'),
+      h('button', { type: 'button', onclick: () => upload.click() }, 'Choisir une photo…'),
+      upload,
+    ),
+    h('small', { class: 'muted' }, 'Pour la vue de l’aperçu : dans le musée à droite, placez-vous là où il est le plus beau, puis cliquez sur «\u00a0Prendre la vue de l’aperçu\u00a0».'),
+  );
+}
+
+/** Photographie la vue actuelle de l'aperçu et en fait la couverture du musée. */
+async function coverFromPreview() {
+  const view = (frame().contentWindow as PreviewWindow | null)?.__apercu;
+  if (!view?.capture || previewLoading) return notify('L’aperçu se charge encore : réessayez dans un instant.');
+  if (!(await mayEdit())) return;
+  const shot = view.capture();
+  await storeCover(await (await fetch(shot)).blob());
+}
+
+async function storeCover(picture: Blob) {
+  if (!(await mayEdit())) return;
+  status('Enregistrement de la couverture…', 'busy');
+  try {
+    const image = await api.uploadCover(museum.id, picture);
+    if (vitrine) vitrine.image = image;
+    status('Enregistré');
+    if (tab === 'musee') renderPane();
+  } catch (error) {
+    status(`Non enregistré : ${(error as Error).message}`, 'error');
+    notify((error as Error).message);
+  }
+}
+
+// --- Lumière précalculée : alerte, calcul depuis l'éditeur --------------------------------------------
+/** Ce que l'aperçu dit de la lumière de chaque salle, une fois chargé ; null avant son premier chargement. */
+let lumiereState: LumiereState | null = null;
+/** Calcul de la lumière lancé sur cet ordinateur (en cours ou dernier terminé). */
+let job: api.LumiereJob | null = null;
+let jobTimer = 0;
+let jobWatched = false;
+/** Échec déjà lu (fermé) : on ne le montre plus. */
+let failureSeen = 0;
+/** Compte rendu du dernier calcul terminé, gardé dans le bandeau jusqu'à ce qu'on le ferme. */
+let lumiereDone: string | null = null;
+/** Chaque rechargement de l'aperçu a son numéro : la réponse d'un aperçu remplacé est ignorée. */
+let previewRound = 0;
+
+const roomLabel = (id: string) => `« ${text(museum.rooms.find((r) => r.id === id)?.name) || id} »`;
+const listOf = (items: string[]) => (items.length > 1 ? `${items.slice(0, -1).join(', ')} et ${items.at(-1)}` : (items[0] ?? ''));
+/** Salles dont la lumière calculée n'est plus à jour : l'aperçu les éclaire par formule en attendant. */
+const staleRooms = () => (lumiereState && museum.lumiere ? [...lumiereState.stale, ...lumiereState.missing] : []);
+
+/** Lit, dans l'aperçu qui vient de se charger, où en est la lumière de chaque salle. */
+async function readLumiere(round: number, since = performance.now()) {
+  if (round !== previewRound) return;
+  const view = (frame().contentWindow as PreviewWindow | null)?.__apercu;
+  if (!view?.lumiere) {
+    if (performance.now() - since < 60000) window.setTimeout(() => readLumiere(round, since), 300);
+    return;
+  }
+  const state = await view.lumiere();
+  if (round !== previewRound) return;
+  lumiereState = state;
+  renderLumiere();
+}
+
+/** Où en est le calcul, en une phrase. */
+function jobProgress(j: api.LumiereJob) {
+  const minutes = j.started ? Math.floor((Date.now() - j.started) / 60000) : 0;
+  const since = minutes >= 1 ? `, depuis ${minutes} min` : '';
+  if (j.progress) return `Salle ${roomLabel(j.progress.room)} (${j.progress.index} sur ${j.progress.total})${since}.`;
+  return `Préparation des salles${since}…`;
+}
+
+function lumiereButton(label: string) {
+  return h('button', {
+    type: 'button',
+    class: 'primary lumiere-start',
+    disabled: Boolean(job?.running || job?.busy || job?.installed === false),
+    onclick: () => void startJob(),
+  }, label);
+}
+
+/** Bandeau au-dessus des onglets : calcul en cours, échec, ou salles à recalculer. */
+function lumiereAlert(): Child[] {
+  if (job?.running) {
+    return [
+      h('strong', {}, 'Calcul de la lumière en cours'),
+      h('span', {}, `${jobProgress(job)} Vous pouvez continuer à travailler : l’aperçu se mettra à jour à la fin.`),
+    ];
+  }
+  if (job?.ok === false && job.ended && job.ended !== failureSeen) {
+    return [
+      h('strong', {}, 'Le calcul de la lumière n’a pas abouti'),
+      h('pre', {}, job.lines.slice(-6).join('\n')),
+      h('span', {}, 'Copiez ce message à Claude.'),
+      h('div', { class: 'row' },
+        lumiereButton('Réessayer'),
+        h('button', { type: 'button', onclick: () => ((failureSeen = job?.ended ?? 0), renderLumiere()) }, 'Fermer'),
+      ),
+    ];
+  }
+  const stale = staleRooms();
+  if (!stale.length) {
+    if (!lumiereDone) return [];
+    return [
+      h('strong', {}, 'Lumière calculée'),
+      h('span', {}, lumiereDone),
+      h('button', { type: 'button', onclick: () => ((lumiereDone = null), renderLumiere()) }, 'Fermer'),
+    ];
+  }
+  const many = stale.length > 1;
+  return [
+    h('strong', {}, 'Lumière à recalculer'),
+    h('span', {}, `La lumière précalculée ${many ? 'des salles' : 'de la salle'} ${listOf(stale.map(roomLabel))} n’est plus à jour : en attendant, ${many ? 'elles sont éclairées' : 'elle est éclairée'} plus simplement.`),
+    job?.installed === false ? h('span', {}, 'Blender n’est pas installé sur cet ordinateur : voir l’onglet Musée.') : null,
+    lumiereButton('Recalculer la lumière'),
+  ];
+}
+
+/** Section « Lumière précalculée » de l'onglet Musée. */
+function lumiereSection() {
+  const stale = staleRooms();
+  const applied = lumiereState?.applied.length ?? 0;
+  const state = !lumiereState
+    ? 'L’aperçu se charge…'
+    : !museum.lumiere
+      ? 'Pas encore calculée : le musée est éclairé plus simplement.'
+      : stale.length
+        ? `À recalculer : ${listOf(stale.map(roomLabel))}.${applied ? ` À jour : ${plural(applied, 'salle', 'salles')}.` : ''}`
+        : `À jour (${plural(applied, 'salle', 'salles')}).`;
+  return h('section', { class: 'card', id: 'lumiere-section' },
+    h('h3', {}, 'Lumière précalculée (rendu premium)'),
+    h('p', {}, state),
+    job?.running ? h('p', { class: 'muted' }, `Calcul en cours : ${jobProgress(job)}`) : null,
+    job?.busy ? h('p', { class: 'muted' }, `Un calcul est déjà en cours pour le musée « ${job.busy} » : attendez qu’il se termine.`) : null,
+    job?.installed === false
+      ? h('p', { class: 'callout error' }, 'Blender n’est pas installé sur cet ordinateur. Dans le Terminal, dans le dossier du projet, lancez une seule fois : ', h('code', {}, 'npm run lumiere:installer'))
+      : null,
+    h('div', { class: 'row' }, lumiereButton(museum.lumiere ? 'Recalculer la lumière' : 'Calculer la lumière')),
+    h('small', { class: 'muted' }, 'Blender calcule la lumière des salles modifiées, ou jamais calculées : un peu plus d’une minute par salle sur un Mac récent. Le calcul se fait sur cet ordinateur, tant que la commande « npm run dev » reste ouverte.'),
+  );
+}
+
+function renderLumiere() {
+  const box = $('lumiere-alert');
+  fill(box, lumiereAlert());
+  box.hidden = box.childElementCount === 0;
+  box.dataset.kind = job?.running ? 'busy' : job?.ok === false && job.ended !== failureSeen ? 'error' : staleRooms().length ? 'warning' : 'ok';
+  document.getElementById('lumiere-section')?.replaceWith(lumiereSection());
+}
+
+const pause = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
+/** Lance le calcul de la lumière des salles modifiées, puis suit son avancement. */
+async function startJob() {
+  if (!(await mayEdit())) return;
+  // Le calcul lit le musée sur le disque : la dernière modification doit d'abord y être.
+  if (saveTimer) void save();
+  while (saveTimer || saving) await pause(200);
+  try {
+    job = await api.startLumiere(museum.id);
+    jobWatched = true;
+    renderLumiere();
+    jobTimer = window.setTimeout(pollJob, 2000);
+  } catch (error) {
+    notify((error as Error).message);
+    await pollJob();
+  }
+}
+
+/** Relit l'état du calcul ; à la fin, l'aperçu se recharge avec la nouvelle lumière. */
+async function pollJob() {
+  clearTimeout(jobTimer);
+  const id = museum.id;
+  try {
+    job = await api.lumiereStatus(id);
+  } catch {
+    return;
+  }
+  if (job.running) {
+    jobWatched = true;
+    jobTimer = window.setTimeout(pollJob, 3000);
+  } else if (jobWatched) {
+    jobWatched = false;
+    if (job.ok) {
+      const done = job.step?.startsWith('Toutes les salles')
+        ? 'Toutes les salles étaient déjà à jour : il n’y avait rien à calculer.'
+        : `${job.progress ? `${plural(job.progress.total, 'salle recalculée', 'salles recalculées')}` : 'Calcul terminé'} à ${new Date(job.ended ?? Date.now()).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}. L’aperçu montre la nouvelle lumière.`;
+      lumiereDone = done;
+      notify(done);
+      // Le calcul a déclaré la lumière dans museum.json : l'éditeur le sait désormais.
+      const fresh = await api.loadMuseum(id).catch(() => null);
+      if (fresh?.lumiere) museum.lumiere = fresh.lumiere;
+      // L'état des salles est relu dans l'aperçu rechargé : d'ici là, on ne montre plus l'ancien.
+      lumiereState = null;
+      reloadPreview();
+    }
+  }
+  renderLumiere();
+}
+
+// --- Démonstration : la rétablir --------------------------------------------------------------------
+function demoSection() {
+  return h('section', { class: 'card' },
+    h('h3', {}, 'Musée de démonstration'),
+    h('p', {}, 'Il fait partie du projet. Après une modification malencontreuse, ce bouton le remet tel qu’il est dans le projet : salles, œuvres, décors et lumière.'),
+    h('div', { class: 'row' }, h('button', { type: 'button', class: 'danger', id: 'restore-demo', onclick: () => void restoreDemo() }, 'Rétablir la démonstration d’origine')),
+  );
+}
+
+async function restoreDemo() {
+  const sure = await askConfirm('Rétablir la démonstration d’origine ?', `Toutes les modifications faites à « ${text(museum.name)} » sont abandonnées.`, 'Rétablir');
+  if (!sure) return;
+  clearTimeout(saveTimer);
+  saveTimer = 0;
+  while (saving) await pause(200);
+  try {
+    await api.restoreDemo();
+    location.reload();
+  } catch (error) {
+    notify((error as Error).message);
+  }
 }
 
 // --- Onglet Salles ----------------------------------------------------------------------
@@ -565,7 +914,7 @@ function worksPane(): Child[] {
 
 /** Dépose des photos : chacune devient une œuvre de la salle affichée. */
 async function addPhotos(files: File[]) {
-  if (files.length === 0) return;
+  if (files.length === 0 || !(await mayEdit())) return;
   const r = room();
   let added = 0;
   let kept = 0;
@@ -761,6 +1110,7 @@ async function applyCrop(full: boolean) {
   const art = cropTarget;
   if (!art) return;
   $('crop').hidden = true;
+  if (!(await mayEdit())) return;
   try {
     status('Recadrage…', 'busy');
     const image = await api.cropImage(museum.id, art.id, full ? null : { ...cropBox });
@@ -943,6 +1293,7 @@ async function showHome(missing = false) {
           h('a', { href: `?m=${m.id}` },
             h('strong', {}, text(m.name, 'fr') || m.id),
             h('span', { class: 'muted' }, `${plural(m.rooms, 'salle', 'salles')} · ${plural(m.works, 'œuvre', 'œuvres')}`),
+            m.shown ? h('span', { class: 'tag' }, 'Sur la page de choix') : null,
             h('span', { class: 'go' }, 'Modifier'),
           ),
           m.locked ? null : h('button', { type: 'button', class: 'remove', 'aria-label': `Supprimer « ${text(m.name, 'fr') || m.id} »`, onclick: () => removeMuseum(m) }, 'Supprimer'),
@@ -978,6 +1329,7 @@ async function start() {
   }
   museum.id = id;
   roomId = museum.rooms[0]?.id ?? '';
+  vitrine = await api.showcase(id).catch(() => null);
   $('home').hidden = true;
   $('workspace').hidden = false;
   renderHeader();
@@ -987,7 +1339,10 @@ async function start() {
   frame().addEventListener('load', () => {
     previewLoading = false;
     applyFocus();
+    void readLumiere(previewRound);
   });
   reloadPreview();
+  // Un calcul de lumière lancé avant (la page a pu être rechargée entre-temps) est suivi.
+  void pollJob();
 }
 void start();

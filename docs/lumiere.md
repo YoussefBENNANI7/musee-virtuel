@@ -95,13 +95,13 @@ npm run lumiere -- 120-ans
 
 La commande donne des nouvelles chaque minute, puis indique l'adresse où voir le résultat. Elle ne touche ni aux œuvres ni aux textes du musée : elle ajoute un dossier `lumiere/` dans le dossier du musée, et une ligne `"lumiere"` dans son fichier `museum.json`. Pour revenir en arrière, supprimer ce dossier `lumiere/`.
 
-Après une modification dans l'éditeur (une photo ajoutée, déplacée ou retirée, un décor changé), la salle modifiée retrouve l'ancien éclairage : relancer la même commande, elle ne recalcule que les salles modifiées.
+Après une modification dans l'éditeur (une photo ajoutée, déplacée ou retirée, un décor changé), la salle modifiée retrouve l'ancien éclairage. L'éditeur le signale par un bandeau « Lumière à recalculer », qui nomme les salles concernées : son bouton « Recalculer la lumière » lance cette même commande sur l'ordinateur, pour les seules salles modifiées. Le bandeau suit le calcul, puis l'aperçu se recharge avec la nouvelle lumière. On peut aussi relancer la commande dans le Terminal.
 
 ## Limites
 
 - Les objets (cadres, bancs, socles, sculptures, fontaine) gardent leur éclairage d'avant : seuls les murs, le sol et le plafond lisent l'atlas. Les embrasures des portes aussi gardent leur éclairage par formule.
 - La lumière des salles voisines est calculée d'après leur éclairage par formule. Si le décor d'une salle change, la lumière qu'elle envoie chez ses voisines par les portes n'est pas recalculée d'elle-même : relancer `--salle toutes`.
-- Les musées créés avec l'éditeur restent sur l'ordinateur du porteur (ils ne vont pas sur GitHub) : leur lumière se calcule donc sur son Mac. L'éditeur ne signale pas encore qu'une salle modifiée est à recalculer.
+- Les musées créés avec l'éditeur restent sur l'ordinateur du porteur (ils ne vont pas sur GitHub) : leur lumière se calcule donc sur son Mac, depuis l'éditeur ou dans le Terminal. Un calcul lancé depuis l'éditeur s'arrête si l'on ferme `npm run dev`.
 - Le calcul se fait sur le processeur. Il pourra se faire sur la carte graphique du Mac (bien plus vite) dans un second temps.
 - Dans une salle en rotonde, seul le sol lit l'atlas : le mur courbe et la coupole gardent leur éclairage, et les œuvres du mur courbe leur halo peint.
 

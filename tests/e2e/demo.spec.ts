@@ -296,8 +296,10 @@ test('sans musée dans l\'adresse, une page propose les musées ; chacun s\'ouvr
   // La liste des musées proposés est propre à chaque ordinateur (museums/index.json, hors du dépôt) :
   // le test en fournit une, avec le musée de démonstration et le musée de test.
   const list = [
-    { id: 'demo', name: { fr: 'Musée des Horizons' }, summary: { fr: 'Le musée de démonstration.' }, image: 'demo/images/web/un-dimanche-a-la-grande-jatte-640.webp' },
+    { id: 'demo', name: { fr: 'Musée des Horizons' }, summary: { fr: 'Le musée de démonstration.' }, image: 'demo/couverture.webp' },
     { id: 'fixture', name: { fr: 'Musée de test' }, summary: { fr: 'Un plan figé.' }, image: 'demo/images/web/un-dimanche-a-la-grande-jatte-640.webp' },
+    // Retiré de la page dans l'éditeur : il garde sa fiche, mais ne se montre pas.
+    { id: 'retire', name: { fr: 'Musée retiré' }, summary: {}, image: '', hidden: true },
   ];
   await page.route('**/museums/index.json', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(list) }));
   await page.route('**/museums/fixture/museum.json', (route) =>
@@ -310,9 +312,11 @@ test('sans musée dans l\'adresse, une page propose les musées ; chacun s\'ouvr
   await expect(page.locator('#scene')).toBeHidden();
   const hrefs = await cards.evaluateAll((nodes) => nodes.map((n) => (n as HTMLAnchorElement).getAttribute('href')));
   expect(hrefs).toEqual(['?m=demo', '?m=fixture']);
-  // Les couvertures se chargent.
+  // Les couvertures se chargent ; celle de la démonstration est une vue de son atrium.
   const first = cards.first().locator('img');
-  await expect.poll(() => first.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+  await expect.poll(() => first.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1600);
+  // Sur l'ordinateur qui fait tourner le projet, un bouton mène à l'éditeur.
+  await expect(page.locator('.chooser-admin')).toHaveAttribute('href', 'editeur.html');
 
   await cards.nth(1).click();
   await page.waitForSelector('body.ready #scene');
@@ -323,6 +327,11 @@ test('sans musée dans l\'adresse, une page propose les musées ; chacun s\'ouvr
   await expect(back).toBeVisible();
   await back.click();
   await expect(page.locator('.chooser-card')).toHaveCount(2);
+
+  // Dans la version publiée, pas de bouton vers l'éditeur : il n'y fonctionnerait pas.
+  await page.goto(`${PROD_URL}/`);
+  await expect(page.locator('.chooser-card')).toHaveCount(2);
+  await expect(page.locator('.chooser-admin')).toHaveCount(0);
 });
 
 test('sans liste de musées, l\'adresse sans réglage ouvre le musée de démonstration, comme avant', async ({ page }) => {

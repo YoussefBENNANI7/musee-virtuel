@@ -110,8 +110,9 @@ Déroulé : un pilote sur la Salle des Horizons, validé par le porteur le 18 no
 - **Durée du calcul** : 27 minutes pour les six salles (de 1 min 30 pour la Galerie des Lignes à 7 minutes pour l'Atrium), à 256 échantillons, sur les 4 cœurs de l'environnement de travail. Les passes gardées occupent 49 Mo hors du projet.
 - **Vérifié** : 9 tests unitaires (rangement de l'atlas, plans partagés, coordonnées, empreinte, force des faisceaux) et 6 tests dans un navigateur (les six salles éclairées et leurs effets peints retirés, comparaison, salle modifiée, atlas réduit sur appareil modeste, scène exportée pour Blender, fichier manquant). Captures avant et après de chaque salle, sur ordinateur et sur téléphone.
 - **Musées créés avec l'éditeur** : ils restent sur l'ordinateur du porteur, leur lumière s'y calcule donc aussi. `npm run lumiere:installer` y installe ce qu'il faut, une fois (Python 3.13, Blender comme module Python, navigateur de calcul), hors du projet ; puis `npm run lumiere -- <dossier du musée>`. Vérifié dans l'environnement de travail sur des musées fabriqués comme le fait l'éditeur : les quatre plans proposés, douze salles, se calculent sans erreur (essai rapide à 16 échantillons, puis contrôle à l'œil). **Le calcul n'a pas encore tourné sur un Mac** : le musée des 120 ans sera le premier essai, guidé pas à pas le 18 novembre 2026. La commande essaie plusieurs façons d'ouvrir la 3D dans le navigateur sans fenêtre, et affiche un message à recopier en cas d'échec.
-- **Limites** : les objets (cadres, bancs, socles, sculptures, fontaine) et les embrasures des portes gardent leur éclairage d'avant ; le calcul se fait sur le processeur (la carte graphique du Mac irait plus vite) ; un musée créé avec l'éditeur se calcule sur le Mac du porteur, et l'éditeur ne signale pas encore qu'une salle modifiée est à recalculer.
-- **Suite possible** : l'avertissement « lumière à recalculer » dans l'éditeur, puis les autres améliorations de la version 2 (finitions de l'image sur ordinateur, vrais reflets, matières plus riches, objets éclairés par la lumière calculée).
+- **Limites** : les objets (cadres, bancs, socles, sculptures, fontaine) et les embrasures des portes gardent leur éclairage d'avant ; le calcul se fait sur le processeur (la carte graphique du Mac irait plus vite) ; un musée créé avec l'éditeur se calcule sur le Mac du porteur.
+- **Fait depuis** : l'éditeur signale une salle à recalculer et lance le calcul lui-même (voir « Mode administrateur »).
+- **Suite possible** : les autres améliorations de la version 2 (finitions de l'image sur ordinateur, vrais reflets, matières plus riches, objets éclairés par la lumière calculée).
 
 ### Moteur de l'exposition « 120 ans », réuni à la version 2 (18 novembre 2026)
 
@@ -132,6 +133,19 @@ Ce que le moteur sait faire en plus (le détail des réglages est dans `src/engi
 **Pourquoi le musée avait disparu du dossier du projet** : dans la branche locale, `.gitignore` faisait suivre le musée des 120 ans par git. En passant à la version 2, git l'a donc retiré du dossier. Il a été remis depuis la copie du Bureau (`musees-sauvegarde-v1`). `.gitignore` ne fait plus suivre aucun musée client.
 
 **Lumière précalculée et nouveautés** : dans une rotonde, seul le sol lit l'atlas ; le mur courbe et la coupole gardent leur éclairage, et les œuvres du mur courbe leur halo peint. L'ambiance du calcul vient de sous la coupole. Comptoirs, cubes et vitrines font de l'ombre au sol. Vérifié sur un musée d'essai neutre (galerie `nef` avec cubes, rotonde `chambre-forte` avec vitrines et billets, hall `guichets` sous verrière) ; le vrai musée n'existe que sur le Mac du porteur.
+
+### Mode administrateur : accès depuis la page des musées, couverture, lumière, démonstration protégée (18 novembre 2026)
+
+Demande du porteur, après avoir éteint par erreur la lumière de l'Atrium dans l'éditeur (décor « nuit ») : accéder à l'éditeur depuis la page qui présente les deux musées côte à côte, et éviter ce genre d'accident. Lot accepté tel que proposé. Aperçu en images, sur ordinateur et sur téléphone : https://claude.ai/artifact/Fh6dPTPTQkgKqx18phRXhV.
+
+- **Bouton « Mode administrateur »** en haut à droite de la page de choix des musées. Il n'existe que sur l'ordinateur qui fait tourner `npm run dev`, jamais dans la version publiée (l'éditeur n'y fonctionnerait pas). Dans l'éditeur, le lien **« ← Page des musées »** y ramène.
+- **Page de choix tenue par l'éditeur** : dans l'onglet Musée, section « Page de choix des musées » : la case « Proposer ce musée sur la page de choix », une présentation courte (une par langue) et la **photo de couverture**, prise dans l'aperçu (« Prendre la vue de l'aperçu » : on se place dans le musée, là où il est le plus beau) ou choisie parmi ses photos. La couverture est rangée dans le dossier du musée (`couverture-….webp`, 1600 × 1000, le format des cartes). Tout s'écrit dans `public/museums/index.json`, toujours propre à chaque ordinateur et hors de GitHub. Un musée retiré de la page y reste marqué `"hidden": true` : sa présentation est retrouvée s'il revient. Quand la liste n'existe pas encore, l'éditeur y inscrit aussi la démonstration, puisque la page n'apparaît qu'à partir de deux musées. Un musée renommé garde le même nom sur la page. Une liste rendue illisible par une modification à la main n'est jamais remplacée : l'éditeur le dit. L'accueil de l'éditeur signale les musées présents sur la page (« Sur la page de choix »).
+- **Couverture du Musée des Horizons** : une vue de l'Atrium avec sa lumière calculée (soleil de la verrière, statue, Salle des Horizons et Galerie des Lignes par les portes), `public/museums/demo/couverture.webp`. Au démarrage de `npm run dev`, la page de choix reprend la couverture que chaque musée a dans son dossier : sur le Mac du porteur, la carte de la démonstration la montre donc d'elle-même.
+- **Alerte « Lumière à recalculer »** : l'aperçu de l'éditeur dit, salle par salle, si la lumière calculée correspond encore à la salle (même empreinte que dans la visite). Sinon, un bandeau au-dessus des onglets nomme les salles concernées, rappelle qu'elles sont éclairées plus simplement en attendant, et propose **« Recalculer la lumière »**. L'onglet Musée a une section « Lumière précalculée » : état de chaque salle, bouton « Calculer la lumière » pour un musée jamais calculé.
+- **Calcul lancé depuis l'éditeur** : le bouton lance `npm run lumiere -- <musée>` sur l'ordinateur, par le service de l'éditeur ; seules les salles modifiées sont recalculées. Le bandeau suit le calcul (« Salle « Atrium » (1 sur 2), depuis 3 min ») ; on peut continuer à travailler. À la fin, l'aperçu se recharge avec la nouvelle lumière et le bandeau en garde le compte rendu jusqu'à ce qu'on le ferme. En cas d'échec, il montre les dernières lignes du calcul, à recopier à Claude. Sans Blender, l'éditeur donne la commande d'installation (`npm run lumiere:installer`). Un seul calcul à la fois ; il s'arrête si l'on ferme `npm run dev`. Un enregistrement de l'éditeur ne fait plus oublier la lumière déclarée entre-temps par le calcul.
+- **Démonstration protégée** : un badge « Démonstration protégée » dans l'en-tête. À la première modification (ou au premier dépôt, recadrage, changement de couverture, calcul de lumière), l'éditeur demande « Modifier « Musée des Horizons » ? ». « Annuler » remet le musée comme avant et n'écrit rien ; « Modifier quand même » vaut jusqu'à la fermeture de la page. L'onglet Musée de la démonstration a un bouton **« Rétablir la démonstration d'origine »** (après confirmation) : il remet ses fichiers tels qu'ils sont dans le projet (`git checkout`), salles, œuvres, décors et lumière compris.
+- **Aperçu de l'éditeur** : il n'affiche plus le lien vers la page des musées, qui ferait quitter le musée en cours de modification.
+- **Vérifié** : 8 tests unitaires de plus (page de choix, couverture, calcul lancé et suivi, deux calculs refusés, absence de Blender, lumière gardée à l'enregistrement, rétablissement par git) et 5 tests dans un navigateur de plus (aller-retour entre la page des musées et l'éditeur, page de choix tenue par l'éditeur, démonstration protégée, alerte et suivi du calcul, prise de vue pour la couverture) ; le test de la page de choix vérifie aussi que le bouton « Mode administrateur » est absent de la version publiée. Un vrai calcul a été lancé depuis l'éditeur dans l'environnement de travail, sur un musée d'essai d'une salle : 2 minutes, l'alerte s'efface une fois la lumière recalculée. Captures sur ordinateur et sur téléphone.
 
 ### Voix de l'audioguide : décisions prises, production à venir
 
@@ -415,6 +429,8 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
+- **Son essai du mode administrateur sur son Mac** : bouton « Mode administrateur » de la page des musées, alerte et recalcul de la lumière depuis l'éditeur, protection et rétablissement de la démonstration, couverture du musée des 120 ans (« Prendre la vue de l'aperçu »). Le lancement du calcul depuis l'éditeur n'a tourné que dans l'environnement de travail.
+
 - **Son avis sur le rendu premium du musée des 120 ans** : premier calcul sur son Mac réussi le 18 novembre 2026 (`npm run lumiere -- 120-ans`) : galerie, hall des guichets et chambre forte, 3 min 40 en tout à 256 échantillons (de 66 à 80 s par salle, deux à trois fois plus vite que dans l'environnement de travail). Reste à le regarder (`?m=120-ans`) et à dire ce que cela donne.
 - **Sa branche locale `claude/laughing-galileo-0mch8q`** : elle contient le musée des 120 ans et les notes détaillées de l'autre conversation. À garder, et à ne jamais envoyer sur GitHub (dépôt public).
 - **Son avis sur le rendu premium des six salles** : la chaleur convient-elle (réglage `--chaleur`, salle par salle) ? faisceaux plus ou moins marqués ? tache de soleil plus ou moins forte ? Puis sa décision : faire de cette version la nouvelle branche principale, ou continuer la version 2 d'abord.
@@ -471,12 +487,14 @@ public/museums/<musée>/     Un dossier par musée client
   lumiere/                  Lumière précalculée : un atlas par salle calculée, et lumiere.json (« npm run lumiere »)
 
 editeur.html                Page de l'éditeur de musée (absente de la version publiée)
-src/editeur/main.ts         Éditeur : onglets Œuvres, Salles, Musée, Contrôle ; enregistrement, aperçu, recadrage
+src/editeur/main.ts         Éditeur : onglets Œuvres, Salles, Musée, Contrôle ; enregistrement, aperçu, recadrage ;
+                            page de choix et couverture, alerte et calcul de la lumière, démonstration protégée
 src/editeur/modele.ts       Éditeur : création d'un musée, ajout et déplacement des œuvres (sans écran, testé seul)
 src/editeur/api.ts          Éditeur : échanges avec le service d'écriture
 src/editeur/editeur.css     Styles de l'éditeur
 
 src/main.ts                 Démarrage : chargement et contrôle de la configuration, choix de la vue
+src/choix.ts                Page de choix des musées (museums/index.json) ; bouton « Mode administrateur » en développement
 src/visit3d.ts              Visite 3D : fiches, parcours, plan, boucle de rendu
 src/simple.ts               Vue simplifiée, sans 3D
 src/vr.ts                   Visite en casque VR
@@ -510,9 +528,10 @@ scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
 scripts/lumiere.mjs         Lumière précalculée des salles (« npm run lumiere »), calcul par Blender dans scripts/lumiere/
 scripts/lumiere-installer.mjs  Prépare un ordinateur pour ce calcul (« npm run lumiere:installer »)
-scripts/editeur-serveur.mjs Service d'écriture de l'éditeur, ajouté au serveur de développement
-tests/unit/                 Tests unitaires (Vitest) : 205 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 89 tests
+scripts/editeur-serveur.mjs Service d'écriture de l'éditeur, ajouté au serveur de développement : musées, images,
+                            page de choix et couvertures, calcul de la lumière, rétablissement de la démonstration
+tests/unit/                 Tests unitaires (Vitest) : 213 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 94 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration

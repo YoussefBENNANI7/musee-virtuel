@@ -59,8 +59,9 @@ p {
 .top {
   flex: none;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 16px;
+  gap: 8px 16px;
   padding: 10px 18px;
   background: var(--green);
   color: #fff;
@@ -100,6 +101,19 @@ p {
 }
 .spacer {
   flex: 1;
+}
+/* Musée de démonstration : protégé tant qu'on n'a pas confirmé vouloir le modifier. */
+.guard {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #f1d59a;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.guard[data-open='true'] {
+  background: #fff;
+  color: var(--danger);
 }
 
 /* --- Boutons et champs ------------------------------------------------------ */
@@ -279,6 +293,14 @@ input[type='color'] {
 .museums strong {
   font: 400 1.25rem Georgia, serif;
 }
+.museums .tag {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #dfeadd;
+  color: var(--green);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
 .museums .go {
   margin-left: auto;
   color: var(--green);
@@ -384,6 +406,60 @@ input[type='color'] {
   flex-direction: column;
   min-height: 0;
   border-right: 1px solid var(--line);
+}
+/* Bandeau de la lumière précalculée, au-dessus des onglets : salles à recalculer, calcul en cours. */
+.lumiere-alert {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  border-left: 4px solid #c58a1c;
+  background: #fbf0d6;
+  font-size: 0.88rem;
+}
+.lumiere-alert[data-kind='busy'] {
+  border-left-color: var(--green);
+  background: #dfeadd;
+}
+.lumiere-alert[data-kind='ok'] {
+  border-left-color: var(--green);
+  background: #eef4ec;
+}
+.lumiere-alert[data-kind='error'] {
+  border-left-color: var(--danger);
+  background: #f6e3de;
+}
+.lumiere-alert pre {
+  max-width: 100%;
+  margin: 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  font-size: 0.78rem;
+}
+.cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper-2);
+}
+.cover.empty {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+.card code,
+.callout code {
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.06);
+  font-size: 0.86em;
 }
 .tabs {
   flex: none;

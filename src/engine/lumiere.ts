@@ -311,7 +311,7 @@ function halved(texture: THREE.Texture): THREE.Texture {
 /**
  * Charge la lumière précalculée d'un musée et la plaque, salle par salle, à mesure que les atlas arrivent.
  * Jusque-là, et pour toute salle dont l'empreinte a changé, l'éclairage par formule reste en place.
- * Renvoie les salles éclairées par un atlas, une fois tout chargé.
+ * Renvoie, une fois tout chargé, où en est chaque salle (l'éditeur s'en sert pour signaler une salle à recalculer).
  */
 export async function loadLumiere(
   url: string,
@@ -320,7 +320,8 @@ export async function loadLumiere(
   context: (room: RoomConfig) => string,
   onApplied: () => void,
   options: { light?: boolean } = {},
-): Promise<string[]> {
+): Promise<LumiereState> {
+  const state: LumiereState = { applied: [], stale: [], missing: [] };
   let manifest: LumiereManifest;
   try {
     const res = await fetch(url);
@@ -328,32 +329,43 @@ export async function loadLumiere(
     manifest = await res.json();
   } catch (e) {
     console.warn(`Lumière précalculée indisponible (${url}) : éclairage par formule.`, e);
-    return [];
+    return { ...state, missing: rooms.map((r) => r.id) };
   }
   const loader = new THREE.TextureLoader();
-  const applied = await Promise.all(
-    rooms.map(async (room) => {
-      const entry = manifest.rooms?.[room.id];
-      if (!entry) return null;
+  const results = await Promise.all(
+    rooms.map(async (room): Promise<keyof LumiereState | null> => {
       const meshes = bakeTargets(group, room.id);
       if (!meshes.length) return null;
+      const entry = manifest.rooms?.[room.id];
+      if (!entry) return 'missing';
       const { fingerprint } = layoutLightmap(meshes, context(room));
       if (fingerprint !== entry.fingerprint) {
         console.warn(`Salle « ${room.id} » modifiée depuis le calcul de sa lumière : relancer npm run lumiere.`);
-        return null;
+        return 'stale';
       }
       try {
         const texture = await loader.loadAsync(new URL(entry.image, new URL(url, location.href)).href);
         applyLightmap(group, room, meshes, options.light ? halved(texture) : texture, entry);
         onApplied();
-        return room.id;
+        return 'applied';
       } catch (e) {
         console.warn(`Atlas de lumière de la salle « ${room.id} » illisible : éclairage par formule.`, e);
-        return null;
+        return 'stale';
       }
     }),
   );
-  return applied.filter((id): id is string => id !== null);
+  results.forEach((result, i) => result && state[result].push(rooms[i].id));
+  return state;
+}
+
+/** Où en est la lumière précalculée des salles d'un musée. */
+export interface LumiereState {
+  /** Salles éclairées par leur atlas. */
+  applied: string[];
+  /** Salles modifiées depuis le calcul de leur lumière (ou dont l'atlas est illisible) : à recalculer. */
+  stale: string[];
+  /** Salles dont la lumière n'a jamais été calculée. */
+  missing: string[];
 }
 
 /** Couleur moyenne d'une image (bois, enduit, ciel, tableau), pour la lumière qu'elle renvoie. */

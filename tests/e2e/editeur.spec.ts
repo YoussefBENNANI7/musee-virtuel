@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { existsSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const museums = fileURLToPath(new URL('../../public/museums/', import.meta.url));
@@ -8,10 +8,20 @@ const photo = readFileSync(fileURLToPath(new URL('../fixtures/image.webp', impor
 const file = (name: string) => ({ name, mimeType: 'image/webp', buffer: photo });
 const onDisk = (id: string) => JSON.parse(readFileSync(`${museums}${id}/museum.json`, 'utf8'));
 
+/**
+ * La liste de la page de choix (public/museums/index.json) est propre à chaque ordinateur : les tests
+ * qui la modifient la remettent ensuite exactement comme elle était, ou la retirent si elle n'existait pas.
+ */
+const indexFile = `${museums}index.json`;
+const indexBefore = existsSync(indexFile) ? readFileSync(indexFile, 'utf8') : null;
+const listed = (id: string) => (existsSync(indexFile) ? JSON.parse(readFileSync(indexFile, 'utf8')) : []).find((e: { id: string }) => e.id === id);
+
 /** Les musées créés par ces tests commencent par « essai- » : on les retire du disque après chaque test. */
 function clean() {
   for (const id of readdirSync(museums)) if (id.startsWith('essai-')) rmSync(`${museums}${id}`, { recursive: true, force: true });
   for (const id of existsSync(trash) ? readdirSync(trash) : []) if (id.startsWith('essai-')) rmSync(`${trash}${id}`, { recursive: true, force: true });
+  if (indexBefore === null) rmSync(indexFile, { force: true });
+  else if (readFileSync(indexFile, 'utf8') !== indexBefore) writeFileSync(indexFile, indexBefore);
 }
 test.beforeAll(clean);
 test.afterEach(clean);
@@ -219,7 +229,7 @@ test('une salle pleine range le surplus en réserve, et les salles changent de n
 
   // L'anglais s'ajoute d'une case : chaque texte reçoit alors un second champ.
   await page.locator('#tabs button', { hasText: 'Musée' }).click();
-  await page.locator('label.check input').check();
+  await page.locator('label.check', { hasText: 'en anglais' }).locator('input').check();
   await saved(page);
   expect(onDisk(id).langs).toEqual(['fr', 'en']);
   await expect(page.locator('label.field', { hasText: 'Nom du musée (anglais)' })).toBeVisible();
@@ -286,4 +296,152 @@ test('le service de l’éditeur refuse ce qui ne vient pas de sa page', async (
   expect((await request.delete('/__editeur/museums/demo', { headers })).status()).toBe(403);
   expect((await request.delete('/__editeur/museums/demo')).status()).toBe(403);
   expect(existsSync(`${museums}demo/museum.json`)).toBe(true);
+});
+
+test('la page des musées mène au mode administrateur, et l’éditeur y ramène', async ({ page }) => {
+  // La page de choix n'apparaît qu'à partir de deux musées proposés : le test fournit sa liste.
+  const list = [
+    { id: 'demo', name: { fr: 'Musée des Horizons' }, summary: { fr: 'La démonstration.' }, image: 'demo/couverture.webp' },
+    { id: 'autre', name: { fr: 'Un autre musée' }, summary: {}, image: '' },
+  ];
+  await page.route('**/museums/index.json', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(list) }));
+  await page.goto('/');
+  await page.locator('.chooser-admin', { hasText: 'Mode administrateur' }).click();
+  await expect(page).toHaveURL(/editeur\.html$/);
+  await expect(page.locator('.museums strong', { hasText: 'Musée des Horizons' })).toBeVisible();
+  // Depuis l'éditeur, un lien ramène à la page des musées, ouvert ou non sur un musée.
+  await page.goto('/editeur.html?m=demo');
+  await page.locator('#visits', { hasText: 'Page des musées' }).click();
+  await expect(page.locator('.chooser-card')).toHaveCount(2);
+  // Un musée sans couverture a un aplat de sa couleur à la place.
+  await expect(page.locator('.chooser-card').nth(1).locator('i')).toBeVisible();
+});
+
+test('proposer un musée sur la page de choix, avec sa présentation et sa couverture, puis l’en retirer', async ({ page }) => {
+  await withoutPreview(page);
+  const { id, name } = await create(page, 'une-salle');
+  await page.locator('#tabs button', { hasText: 'Musée' }).click();
+  const shown = page.locator('#vitrine-shown');
+  await expect(shown).not.toBeChecked();
+  await expect(page.locator('#cover')).toHaveText('Pas encore de photo de couverture');
+  await shown.check();
+  await page.locator('#vitrine textarea').fill('Une salle, quelques photos.');
+  await expect.poll(() => listed(id)?.summary?.fr).toBe('Une salle, quelques photos.');
+  // Quand la liste n'existait pas, la démonstration y est inscrite aussi : la page de choix demande deux musées.
+  if (indexBefore === null) expect(listed('demo')).toMatchObject({ image: 'demo/couverture.webp' });
+
+  // Une photo choisie devient la couverture, au format des cartes.
+  await page.setInputFiles('#vitrine input[type=file]', file('vue.webp'));
+  await expect(page.locator('img#cover')).toBeVisible();
+  const cover = listed(id).image;
+  expect(cover).toMatch(new RegExp(`^${id}/couverture-[a-z0-9]+\\.webp$`));
+  expect(existsSync(`${museums}${cover}`)).toBe(true);
+  await expect.poll(() => page.locator('img#cover').evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1600);
+
+  // La page de choix le présente.
+  await page.goto('/');
+  const card = page.locator('.chooser-card', { hasText: name });
+  await expect(card).toContainText('Une salle, quelques photos.');
+  await expect(card.locator('img')).toHaveAttribute('src', new RegExp(`museums/${cover}$`));
+  // L'accueil de l'éditeur le signale.
+  await page.goto('/editeur.html');
+  await expect(page.locator('.museums li', { hasText: name }).locator('.tag')).toHaveText('Sur la page de choix');
+
+  // Retiré : il quitte la page de choix, et garde sa présentation pour le jour où il y revient.
+  await page.goto(`/editeur.html?m=${id}`);
+  await page.locator('#tabs button', { hasText: 'Musée' }).click();
+  await expect(page.locator('#vitrine textarea')).toHaveValue('Une salle, quelques photos.');
+  await shown.uncheck();
+  await expect.poll(() => listed(id)?.hidden).toBe(true);
+  expect(listed(id).summary.fr).toBe('Une salle, quelques photos.');
+});
+
+test('le musée de démonstration demande confirmation avant d’être modifié', async ({ page }) => {
+  await withoutPreview(page);
+  const path = `${museums}demo/museum.json`;
+  const before = readFileSync(path, 'utf8');
+  try {
+    await page.goto('/editeur.html?m=demo');
+    await expect(page.locator('#guard')).toHaveText('Démonstration protégée');
+    await page.locator('#tabs button', { hasText: 'Salles' }).click();
+    const decor = () => page.locator('.card select').first();
+    await expect(decor()).toHaveValue('pierre-claire');
+
+    // On renonce : l'atrium retrouve son décor, et rien n'est écrit.
+    await decor().selectOption('nuit');
+    const dialog = page.locator('dialog.confirm');
+    await expect(dialog).toContainText('Modifier « Musée des Horizons » ?');
+    await dialog.locator('button.cancel').click();
+    await expect(page.locator('#status')).toHaveText('Rien n’a été modifié');
+    await expect(decor()).toHaveValue('pierre-claire');
+    await page.waitForTimeout(1500);
+    expect(readFileSync(path, 'utf8')).toBe(before);
+
+    // On confirme : la modification s'enregistre, et les suivantes ne redemandent rien.
+    await decor().selectOption('nuit');
+    await dialog.locator('button.accept', { hasText: 'Modifier quand même' }).click();
+    await saved(page);
+    expect(onDisk('demo').rooms[0].decor).toBe('nuit');
+    await expect(page.locator('#guard')).toHaveText('Démonstration : modifications autorisées');
+    await decor().selectOption('terre-cuite');
+    await expect(dialog).toHaveCount(0);
+    await saved(page);
+    expect(onDisk('demo').rooms[0].decor).toBe('terre-cuite');
+
+    // Un bouton rétablit la démonstration d'origine, après confirmation (ici, on renonce).
+    await page.locator('#tabs button', { hasText: 'Musée' }).click();
+    await page.locator('#restore-demo').click();
+    await expect(dialog).toContainText('Rétablir la démonstration d’origine ?');
+    await dialog.locator('button.cancel').click();
+    await expect(dialog).toHaveCount(0);
+  } finally {
+    writeFileSync(path, before);
+  }
+});
+
+test('une salle modifiée depuis le calcul de sa lumière est signalée, et le calcul se lance depuis l’éditeur', async ({ page }) => {
+  // L'atrium de la démonstration est passé en décor « nuit » : sa lumière calculée ne lui correspond plus.
+  const museum = onDisk('demo');
+  museum.rooms.find((r: { id: string }) => r.id === 'atrium').decor = 'nuit';
+  await page.route('**/museums/demo/museum.json', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(museum) }));
+  // Le calcul lui-même (Blender, plusieurs minutes) est simulé : le test vérifie ce que l'éditeur en montre.
+  const idle = { installed: true, running: false, busy: null, started: null, ended: null, ok: null, step: null, progress: null, lines: [] };
+  let started = false;
+  let polls = 0;
+  await page.route('**/__editeur/museums/demo/lumiere', (route) => {
+    if (route.request().method() === 'POST') {
+      started = true;
+      return route.fulfill({ json: { ...idle, running: true, started: Date.now() } });
+    }
+    if (!started) return route.fulfill({ json: idle });
+    return route.fulfill({
+      json: polls++ < 1
+        ? { ...idle, running: true, started: Date.now() - 125_000, progress: { room: 'atrium', index: 1, total: 1 } }
+        : { ...idle, ok: true, started: Date.now() - 200_000, ended: Date.now(), step: 'Terminé : 1 salle(s) calculée(s).', progress: { room: 'atrium', index: 1, total: 1 } },
+    });
+  });
+
+  await page.goto('/editeur.html?m=demo');
+  // L'aperçu se construit, puis dit quelle salle a perdu sa lumière calculée.
+  const alert = page.locator('#lumiere-alert');
+  await expect(alert).toContainText('Lumière à recalculer', { timeout: 90_000 });
+  await expect(alert).toContainText('de la salle « Atrium » n’est plus à jour');
+  await page.locator('#tabs button', { hasText: 'Musée' }).click();
+  await expect(page.locator('#lumiere-section p').first()).toHaveText('À recalculer : « Atrium ». À jour : 5 salles.');
+
+  await alert.locator('button', { hasText: 'Recalculer la lumière' }).click();
+  // C'est la démonstration : on confirme d'abord.
+  await page.locator('dialog.confirm button.accept').click();
+  // Après le calcul, l'aperçu relira la démonstration telle qu'elle est sur le disque, à jour.
+  await page.unroute('**/museums/demo/museum.json');
+  await expect(alert).toContainText('Calcul de la lumière en cours');
+  await expect(alert).toContainText('Salle « Atrium » (1 sur 1), depuis 2 min.');
+  // À la fin, le bandeau en garde le compte rendu jusqu'à ce qu'on le ferme.
+  await expect(alert).toContainText('Lumière calculée', { timeout: 20_000 });
+  await expect(alert).toContainText('1 salle recalculée à');
+  await expect(page.locator('#notice')).toContainText('1 salle recalculée');
+  await expect(page.locator('#lumiere-section p').first()).toHaveText('À jour (6 salles).', { timeout: 90_000 });
+  await expect(alert).toContainText('Lumière calculée');
+  await alert.locator('button', { hasText: 'Fermer' }).click();
+  await expect(alert).toBeHidden();
 });

@@ -79,6 +79,9 @@ Tout s'enregistre au fur et à mesure, et le vrai musée s'affiche à droite. Le
 
 - Le musée est rangé dans `public/museums/<son-nom>/`, sur cet ordinateur. Il n'est pas envoyé sur GitHub : pour le sauvegarder, copier ce dossier.
 - **Supprimer un musée** : bouton « Supprimer » sur la page d'accueil de l'éditeur. Rien n'est effacé : son dossier part dans `musees-supprimes/`, à la racine du projet. Pour le récupérer, le remettre dans `public/museums/` en retirant la date de son nom. Le musée de démonstration ne se supprime pas depuis l'éditeur.
+- **Page de choix des musées** : quand plusieurs musées sont proposés, l'adresse `http://localhost:5173/` les présente côte à côte. Son bouton « Mode administrateur » ouvre l'éditeur, et le lien « ← Page des musées » de l'éditeur y ramène. Dans l'onglet Musée, la section « Page de choix des musées » y propose le musée, avec une courte présentation et une photo de couverture (« Prendre la vue de l'aperçu », ou une photo choisie).
+- **Lumière précalculée** : quand une modification rend la lumière calculée d'une salle périmée, un bandeau le signale ; le bouton « Recalculer la lumière » lance le calcul sur cet ordinateur (Blender doit y être installé une fois : `npm run lumiere:installer`). Voir `docs/lumiere.md`.
+- **Musée de démonstration protégé** : l'éditeur demande confirmation avant sa première modification, et le bouton « Rétablir la démonstration d'origine » (onglet Musée) le remet comme dans le projet.
 - L'éditeur n'existe que sur l'ordinateur où tourne `npm run dev` : il ne fait pas partie de la version publiée.
 - Sur un ordinateur modeste, `http://localhost:5173/editeur.html?apercu=low` allège l'aperçu.
 - L'éditeur ne permet pas encore d'ajouter une sculpture, de composer un parcours, de poser des détails commentés ni de dessiner librement le plan : cela se règle dans `museum.json`, comme décrit plus bas.

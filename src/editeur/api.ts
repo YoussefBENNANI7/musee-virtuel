@@ -9,6 +9,34 @@ export interface MuseumSummary {
   works: number;
   /** Vrai pour la démonstration, qui ne se supprime pas depuis l'éditeur. */
   locked?: boolean;
+  /** Vrai si le musée est proposé sur la page de choix des musées. */
+  shown?: boolean;
+}
+
+/** Ce que la page de choix des musées montre d'un musée. */
+export interface Showcase {
+  shown: boolean;
+  summary: L10n;
+  /** Image de la carte, depuis le dossier des musées ; null si le musée n'en a pas encore. */
+  image: string | null;
+}
+
+/** Où en est le calcul de la lumière précalculée d'un musée (npm run lumiere, lancé par l'éditeur). */
+export interface LumiereJob {
+  /** Blender est installé sur cet ordinateur. */
+  installed: boolean;
+  running: boolean;
+  /** Autre musée dont la lumière est en train d'être calculée, s'il y en a un. */
+  busy: string | null;
+  started: number | null;
+  ended: number | null;
+  ok: boolean | null;
+  /** Dernière étape annoncée par le calcul. */
+  step: string | null;
+  /** Salle en cours de calcul (identifiant), et son rang parmi les salles à calculer. */
+  progress: { room: string; index: number; total: number } | null;
+  /** Dernières lignes affichées par le calcul, pour comprendre un échec. */
+  lines: string[];
 }
 export type StoredImage = Extract<ImageSource, { src: string }>;
 export interface Crop {
@@ -85,5 +113,23 @@ export async function uploadImage(museumId: string, artId: string, file: File): 
 /** Recadre la photo d'origine d'une œuvre ; sans zone, garde toute la photo. */
 export const cropImage = (museumId: string, artId: string, crop: Crop | null) =>
   ask<{ image: StoredImage }>(`museums/${museumId}/images/${artId}?crop=${crop ? [crop.x, crop.y, crop.w, crop.h].map((n) => n.toFixed(4)).join(',') : '0,0,1,1'}`, { method: 'POST' }).then((r) => r.image);
+
+/** Place du musée sur la page de choix des musées. */
+export const showcase = (id: string) => ask<Showcase>(`museums/${id}/vitrine`);
+export const setShowcase = (id: string, change: { shown?: boolean; summary?: L10n }) =>
+  ask<Showcase>(`museums/${id}/vitrine`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(change) });
+
+/** Photo de couverture du musée, déposée ou prise dans l'aperçu. Renvoie son chemin depuis le dossier des musées. */
+export async function uploadCover(id: string, picture: File | Blob): Promise<string> {
+  const body = picture instanceof File ? await prepare(picture) : picture;
+  return ask<{ image: string }>(`museums/${id}/couverture`, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body }).then((r) => r.image);
+}
+
+export const lumiereStatus = (id: string) => ask<LumiereJob>(`museums/${id}/lumiere`);
+/** Lance le calcul de la lumière des salles modifiées (ou jamais calculées) du musée. */
+export const startLumiere = (id: string) => ask<LumiereJob>(`museums/${id}/lumiere`, { method: 'POST' });
+
+/** Rétablit le musée de démonstration tel qu'il est dans le projet. */
+export const restoreDemo = () => ask<{ restored: boolean }>('museums/demo/retablir', { method: 'POST' });
 
 export const sourceUrl = (museumId: string, artId: string) => `museums/${museumId}/images/sources/${artId}.jpg`;

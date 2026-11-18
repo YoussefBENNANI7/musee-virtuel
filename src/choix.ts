@@ -1,8 +1,8 @@
 /**
  * Page de choix : quand l'adresse ne désigne aucun musée, on propose ceux de `museums/index.json`.
- * C'est une liste tenue à la main : elle dit quels musées se présentent au public. Un musée créé
- * dans l'éditeur n'y figure qu'une fois ajouté ici. S'il y en a un seul (ou aucune liste), on ouvre
- * directement le musée de démonstration, comme avant.
+ * Cette liste dit quels musées se présentent au public ; l'éditeur la tient à jour (onglet Musée,
+ * « Page de choix des musées »), et elle peut aussi se modifier à la main. S'il y a un seul musée
+ * proposé (ou aucune liste), on ouvre directement le musée de démonstration, comme avant.
  */
 export interface MuseumEntry {
   id: string;
@@ -11,6 +11,8 @@ export interface MuseumEntry {
   /** Image de couverture, depuis le dossier des musées. */
   image: string;
   accent?: string;
+  /** Musée retiré de la page dans l'éditeur : il garde sa fiche, pour le jour où il y revient. */
+  hidden?: boolean;
 }
 
 /** La liste des musées proposés, ou une liste vide si elle est absente ou illisible. */
@@ -19,15 +21,15 @@ export async function loadMuseumList(): Promise<MuseumEntry[]> {
     const res = await fetch(new URL('museums/index.json', document.baseURI));
     if (!res.ok) return [];
     const list = await res.json();
-    return Array.isArray(list) ? list.filter((m) => m && typeof m.id === 'string' && m.name) : [];
+    return Array.isArray(list) ? list.filter((m) => m && typeof m.id === 'string' && m.name && !m.hidden) : [];
   } catch {
     return [];
   }
 }
 
-const TEXT: Record<string, { title: string; subtitle: string; open: string }> = {
-  fr: { title: 'Musées virtuels', subtitle: 'Choisissez le musée à visiter.', open: 'Entrer' },
-  en: { title: 'Virtual museums', subtitle: 'Choose a museum to visit.', open: 'Enter' },
+const TEXT: Record<string, { title: string; subtitle: string; open: string; admin: string }> = {
+  fr: { title: 'Musées virtuels', subtitle: 'Choisissez le musée à visiter.', open: 'Entrer', admin: 'Mode administrateur' },
+  en: { title: 'Virtual museums', subtitle: 'Choose a museum to visit.', open: 'Enter', admin: 'Admin mode' },
 };
 
 /** Affiche la page de choix à la place de la visite. */
@@ -47,6 +49,15 @@ export function showChooser(list: MuseumEntry[]) {
   const subtitle = document.createElement('p');
   subtitle.textContent = t.subtitle;
   head.append(title, subtitle);
+  // L'éditeur ne fonctionne que sur l'ordinateur qui fait tourner « npm run dev » : le bouton qui y
+  // mène n'existe que là, jamais dans la version publiée.
+  if (import.meta.env.DEV) {
+    const admin = document.createElement('a');
+    admin.className = 'chooser-admin';
+    admin.href = 'editeur.html';
+    admin.textContent = t.admin;
+    head.append(admin);
+  }
   const cards = document.createElement('div');
   cards.className = 'chooser-cards';
   for (const museum of list) {
@@ -54,10 +65,13 @@ export function showChooser(list: MuseumEntry[]) {
     card.className = 'chooser-card';
     card.href = `?m=${encodeURIComponent(museum.id)}`;
     if (museum.accent) card.style.setProperty('--card', museum.accent);
-    const picture = document.createElement('img');
-    picture.src = new URL(`museums/${museum.image}`, document.baseURI).href;
-    picture.alt = '';
-    picture.loading = 'lazy';
+    // Sans couverture, un aplat de la couleur du musée tient sa place.
+    const picture = document.createElement(museum.image ? 'img' : 'i');
+    if (picture instanceof HTMLImageElement) {
+      picture.src = new URL(`museums/${museum.image}`, document.baseURI).href;
+      picture.alt = '';
+      picture.loading = 'lazy';
+    }
     const body = document.createElement('div');
     const name = document.createElement('h2');
     name.textContent = pick(museum.name);

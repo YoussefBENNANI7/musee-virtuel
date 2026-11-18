@@ -3,7 +3,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { Controls } from './engine/controls';
 import { ALONE_LAYER } from './engine/artworks';
 import { SUN_AZIMUTH } from './engine/lighting';
-import { DEFAULT_BAKE, bakeTargets, exportBakeScene, layoutLightmap, loadLumiere, roomContext, type BakeSettings } from './engine/lumiere';
+import { DEFAULT_BAKE, bakeTargets, exportBakeScene, layoutLightmap, loadLumiere, roomContext, type BakeSettings, type LumiereState } from './engine/lumiere';
 import { buildMap } from './engine/map';
 import { buildFloorReflection } from './engine/reflection';
 import { spoken } from './engine/narration';
@@ -110,7 +110,7 @@ export function startVisit(app: App): View {
   const lumiere =
     museum.lumiere && new URLSearchParams(location.search).get('lumiere') !== '0'
       ? loadLumiere(new URL(museum.lumiere, new URL(app.base, location.href)).href, world.group, museum.rooms, lumiereContext, () => invalidate(), { light: quality.tier === 'low' })
-      : Promise.resolve([] as string[]);
+      : Promise.resolve<LumiereState>({ applied: [], stale: [], missing: museum.rooms.map((r) => r.id) });
   if (reflection) scene.add(reflection.object);
   controls.walkable = world.walkable;
   const first = world.spawn(museum.start.room);
@@ -736,6 +736,27 @@ export function startVisit(app: App): View {
           controls.teleport(s.x, s.z, s.yaw);
           return true;
         },
+        /** Où en est la lumière précalculée de chaque salle, une fois tout chargé. */
+        lumiere: () => lumiere,
+        /**
+         * Photographie la vue actuelle, au format des couvertures de la page de choix (16:10), en JPEG.
+         * L'image est calculée à part, en grand, puis l'aperçu reprend sa taille.
+         */
+        capture(width = 1600, height = 1000) {
+          closePanel();
+          renderer.setPixelRatio(1);
+          renderer.setSize(width, height, false);
+          reflection?.resize(width, height);
+          camera.clearViewOffset();
+          camera.aspect = width / height;
+          camera.fov = 62;
+          camera.updateProjectionMatrix();
+          renderer.render(scene, camera);
+          const image = canvas.toDataURL('image/jpeg', 0.92);
+          renderer.setPixelRatio(pixelRatio);
+          resize();
+          return image;
+        },
         showArtwork(artId: string) {
           const art = byId.get(artId);
           if (!art) return false;
@@ -793,7 +814,7 @@ export function startVisit(app: App): View {
     Object.assign(window, {
       __museum: { screenAt, marker, inspect, carnet, ambiance, presenting: () => presenting, style: style.id, decors: Object.fromEntries([...world.decors].map(([id, d]) => [id, d.preset])), quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel, vrUpdate: (dt: number) => vr.update(dt), vrSupport: () => vr.support(),
         /** Salles éclairées par un atlas de lumière, une fois tout chargé. */
-        lumiere: () => lumiere,
+        lumiere: () => lumiere.then((state) => state.applied),
         /** Empreinte actuelle d'une salle : si elle diffère de celle de son atlas, la lumière est à recalculer. */
         lumiereEmpreinte: (roomId: string) => layoutLightmap(bakeTargets(world.group, roomId), lumiereContext(museum.rooms.find((r) => r.id === roomId)!)).fingerprint,
         /** Scène d'une salle à calculer par Blender (npm run lumiere), en JSON. */

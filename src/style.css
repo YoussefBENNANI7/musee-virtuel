@@ -1219,7 +1219,8 @@ body.choosing {
 body.choosing #scene,
 body.choosing .bar,
 body.choosing .minimap,
-body.choosing .help {
+body.choosing .help,
+body.choosing .joystick {
   display: none;
 }
 .chooser {
@@ -1232,10 +1233,38 @@ body.choosing .help {
   margin: 0 0 6px;
   font: 600 clamp(1.7rem, 4vw, 2.4rem) Georgia, 'Times New Roman', serif;
 }
+.chooser header {
+  position: relative;
+}
 .chooser header p {
   margin: 0 0 28px;
   color: var(--muted);
   font: 1rem system-ui, sans-serif;
+}
+/* Bouton vers l'éditeur, sur l'ordinateur du porteur seulement. */
+.chooser-admin {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  padding: 7px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font: 600 0.82rem system-ui, sans-serif;
+  text-decoration: none;
+}
+.chooser-admin:hover,
+.chooser-admin:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+@media (max-width: 560px) {
+  .chooser-admin {
+    position: static;
+    display: inline-block;
+    margin: -14px 0 22px;
+  }
 }
 .chooser-cards {
   display: grid;
@@ -1261,13 +1290,17 @@ body.choosing .help {
   outline: 3px solid var(--card);
   outline-offset: 2px;
 }
-.chooser-card img {
+.chooser-card img,
+.chooser-card > i {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 10;
   object-fit: cover;
   background: var(--paper-2);
   border-bottom: 4px solid var(--card);
+}
+.chooser-card > i {
+  background: color-mix(in srgb, var(--card) 22%, var(--paper-2));
 }
 .chooser-card div {
   display: flex;
