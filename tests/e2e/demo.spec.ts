@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { PROD_URL } from '../../playwright.config';
 
 /** Ces tests portent sur le vrai musée de démonstration, pas sur le musée de test. */
@@ -206,7 +208,7 @@ test('version publiée : la visite 3D et la vue simplifiée se chargent', async 
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('response', (r) => r.status() >= 400 && errors.push(`${r.status()} ${r.url()}`));
 
-  await page.goto(`${PROD_URL}/`);
+  await page.goto(`${PROD_URL}/?m=demo`);
   await page.waitForSelector('body.ready');
   await expect(page.locator('#scene')).toBeVisible();
   await expect(page.locator('#museum-name')).not.toBeEmpty();
@@ -288,4 +290,46 @@ test('démo : l’eau de la fontaine s’entend plus fort de près, se coupe et 
   await page.waitForSelector('body.ready');
   await expect(page.locator('#sound')).toHaveAttribute('aria-pressed', 'false');
   expect(errors).toEqual([]);
+});
+
+test('sans musée dans l\'adresse, une page propose les musées ; chacun s\'ouvre, et un lien y ramène', async ({ page }) => {
+  // La liste des musées proposés est propre à chaque ordinateur (museums/index.json, hors du dépôt) :
+  // le test en fournit une, avec le musée de démonstration et le musée de test.
+  const list = [
+    { id: 'demo', name: { fr: 'Musée des Horizons' }, summary: { fr: 'Le musée de démonstration.' }, image: 'demo/images/web/un-dimanche-a-la-grande-jatte-640.webp' },
+    { id: 'fixture', name: { fr: 'Musée de test' }, summary: { fr: 'Un plan figé.' }, image: 'demo/images/web/un-dimanche-a-la-grande-jatte-640.webp' },
+  ];
+  await page.route('**/museums/index.json', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(list) }));
+  await page.route('**/museums/fixture/museum.json', (route) =>
+    route.fulfill({ contentType: 'application/json', body: readFileSync(fileURLToPath(new URL('../fixtures/museum.json', import.meta.url)), 'utf8') }),
+  );
+  await page.goto('/');
+  await page.waitForSelector('body.ready');
+  const cards = page.locator('.chooser-card');
+  await expect(cards).toHaveCount(2);
+  await expect(page.locator('#scene')).toBeHidden();
+  const hrefs = await cards.evaluateAll((nodes) => nodes.map((n) => (n as HTMLAnchorElement).getAttribute('href')));
+  expect(hrefs).toEqual(['?m=demo', '?m=fixture']);
+  // Les couvertures se chargent.
+  const first = cards.first().locator('img');
+  await expect.poll(() => first.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+
+  await cards.nth(1).click();
+  await page.waitForSelector('body.ready #scene');
+  await expect(page).toHaveURL(/\?m=fixture/);
+  // L'écran d'accueil du musée se referme avec Échap.
+  await page.keyboard.press('Escape');
+  const back = page.locator('#museums-link');
+  await expect(back).toBeVisible();
+  await back.click();
+  await expect(page.locator('.chooser-card')).toHaveCount(2);
+});
+
+test('sans liste de musées, l\'adresse sans réglage ouvre le musée de démonstration, comme avant', async ({ page }) => {
+  await page.route('**/museums/index.json', (route) => route.fulfill({ status: 404, body: '' }));
+  await page.goto('/');
+  await page.waitForSelector('body.ready');
+  await expect(page.locator('.chooser-card')).toHaveCount(0);
+  await expect(page.locator('#scene')).toBeVisible();
+  await expect(page.locator('#museums-link')).toBeHidden();
 });

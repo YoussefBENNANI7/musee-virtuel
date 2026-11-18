@@ -169,7 +169,7 @@ describe('erreurs détectées', () => {
     cabinet.decor = { walls: 'crépi' as never, ceiling: { type: 'skylight' } as never, labels: 'fluo' as never, frame: { width: 0.8 } };
     rotonde.wall = 'rouge';
     const errors = errorsOf(museum);
-    expect(errors).toContain('Salle "hall" : décor inconnu : "rococo" (décors disponibles : pierre-claire, argile-claire, terre-cuite, riad, nuit)');
+    expect(errors).toContain('Salle "hall" : décor inconnu : "rococo" (décors disponibles : pierre-claire, argile-claire, terre-cuite, riad, chambre-forte, guichets, nef, nuit)');
     expect(errors).toContain('Salle "galerie" : décor : couleur invalide pour "wall" : "bleu" (attendu : "#rrggbb")');
     expect(errors).toContain('Salle "galerie" : décor : sol inconnu : "moquette"');
     expect(errors).toContain('Salle "galerie" : décor : niveau d\'éclairage invalide (entre 0 et 2)');
@@ -305,5 +305,19 @@ describe('avertissements', () => {
     const museum = fixture();
     painting(museum, 'petite-fugue').offset = -2.4;
     expect(warningsOf(museum)).toEqual(['Œuvre "equilibre-no-7" : recouvre l\'œuvre "petite-fugue" sur le mur north']);
+  });
+});
+
+describe('audioguide : textes, témoignages et présentations de salle', () => {
+  it('accepte un musée qui les déclare, et signale un témoignage sans fichier', () => {
+    const museum = demo();
+    const room = museum.rooms[0];
+    room.intro = { text: { fr: 'Bienvenue.', en: 'Welcome.' } };
+    const art = room.artworks[0];
+    art.narration = { fr: 'Texte dit.', en: 'Spoken text.' };
+    art.testimony = { audio: { fr: 'audio/temoin.fr.mp3' }, label: { fr: 'Écouter', en: 'Listen' } };
+    expect(errorsOf(museum)).toEqual([]);
+    art.testimony = { audio: {}, label: { fr: 'Écouter', en: 'Listen' } };
+    expect(errorsOf(museum)).toContain(`Œuvre "${art.id}" : témoignage : indiquez son fichier audio`);
   });
 });

@@ -144,13 +144,19 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
   const bare = cfg.frameless === true;
   const gilt = !bare && cfg.frame === 'gilt';
   const fw = bare ? 0 : gilt ? GILT_FRAME.width : decor.frame.width;
-  const depth = bare ? 0.03 : gilt ? 0.02 : decor.frame.depth;
+  const depth = bare ? (cfg.thickness ?? 0.03) : gilt ? 0.02 : decor.frame.depth;
   // Sous passe-partout, pas de vide entre l'œuvre et le cadre : le carton va jusqu'au montant.
   const mat = bare ? 0 : (cfg.mat ?? 0);
   const gap = bare || gilt || mat > 0 ? 0 : decor.frame.gap;
   const centerY = cfg.y ?? ART_CENTER_Y;
   const art = new THREE.Group();
   art.position.set(cfg.offset, centerY, 0);
+  if (bare && cfg.turn) {
+    // Totem tourné : on l'avance juste assez pour que son arête arrière reste devant le mur.
+    const angle = THREE.MathUtils.degToRad(cfg.turn);
+    art.rotation.y = angle;
+    art.position.z = Math.abs(Math.sin(angle)) * (cfg.width / 2) + 0.02;
+  }
   holder.add(art);
 
   // Sous une verrière, la lumière du jour suffit. Ailleurs, chaque œuvre a son projecteur :
@@ -223,6 +229,8 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
   const card = label(decor);
   // Le cartel reste à hauteur de lecture, même à côté d'une porte ou d'un tapis qui descend jusqu'au sol.
   card.position.set(cfg.width / 2 + border + 0.14 + LABEL_W / 2, THREE.MathUtils.clamp(-cfg.height / 2 + 0.12, 1.15 - centerY, 1.5 - centerY), 0.012);
+  // Un totem épais se passe de cartel : ses voisins le cacheraient.
+  card.visible = !(bare && depth > 0.1);
   art.add(canvas, card);
 
   const placed: PlacedArtwork = {

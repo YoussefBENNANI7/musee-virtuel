@@ -103,6 +103,7 @@ Après une modification dans l'éditeur (une photo ajoutée, déplacée ou retir
 - La lumière des salles voisines est calculée d'après leur éclairage par formule. Si le décor d'une salle change, la lumière qu'elle envoie chez ses voisines par les portes n'est pas recalculée d'elle-même : relancer `--salle toutes`.
 - Les musées créés avec l'éditeur restent sur l'ordinateur du porteur (ils ne vont pas sur GitHub) : leur lumière se calcule donc sur son Mac. L'éditeur ne signale pas encore qu'une salle modifiée est à recalculer.
 - Le calcul se fait sur le processeur. Il pourra se faire sur la carte graphique du Mac (bien plus vite) dans un second temps.
+- Dans une salle en rotonde, seul le sol lit l'atlas : le mur courbe et la coupole gardent leur éclairage, et les œuvres du mur courbe leur halo peint.
 
 ## Comment c'est fait
 

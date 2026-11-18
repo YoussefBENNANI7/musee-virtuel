@@ -136,9 +136,12 @@ export function setupInspect(options: {
       const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
       const fit = 1.45 * Math.max(target.config.height / (2 * tan), target.span / (2 * tan * camera.aspect));
       const radius = Math.max(target.config.height, target.span) / 2;
-      min = radius * 0.45 + 0.12;
-      max = fit * 1.7;
-      distance = wanted = fit;
+      // Une pièce de monnaie s'approche de plus près qu'une sculpture.
+      min = Math.min(radius * 0.45 + 0.12, radius * 2.5 + 0.06);
+      // Un très petit objet (une pièce de monnaie) se regarde de près, mais jamais en deçà de ce que la caméra peut montrer.
+      const start = Math.max(fit, min * 1.2);
+      max = start * 1.7;
+      distance = wanted = start;
       // On part du côté où se tenait le visiteur.
       home.copy(camera.position);
       yaw = Math.atan2(home.x - target.center.x, home.z - target.center.z);

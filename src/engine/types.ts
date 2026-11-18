@@ -30,7 +30,14 @@ export type ModelSource =
    */
   | { src: string; web?: boolean }
   /** Sculpture fictive dessinée par le moteur à partir d'une graine. */
-  | { generator: SculptureGenerator; seed: number };
+  | { generator: SculptureGenerator; seed: number }
+  /**
+   * Pièce de monnaie : un disque de métal qui porte la photo de sa face (`coin`, image carrée
+   * cadrée au ras de la pièce). Elle se présente dans une vitrine de la salle (voir `vitrine`).
+   */
+  | { coin: string; metal: CoinMetal; /** Vrai pour une monnaie carrée, comme certains qirats. */ square?: boolean };
+
+export type CoinMetal = 'gold' | 'silver' | 'bronze';
 
 export type ImageSource =
   /**
@@ -52,6 +59,16 @@ interface ArtworkBase {
   description: L10n;
   /** Commentaire enregistré, un fichier par langue. Sans fichier, le texte est lu par une voix de synthèse. */
   audio?: L10n;
+  /**
+   * Texte de l'audioguide, s'il diffère du texte affiché : écrit pour être dit, plus vivant qu'un cartel.
+   * Sans lui, l'audioguide lit `description`.
+   */
+  narration?: L10n;
+  /**
+   * Témoignage enregistré, en plus du commentaire : par exemple la voix de la commissaire de
+   * l'exposition. `label` est le texte du bouton (« Écouter la commissaire »).
+   */
+  testimony?: { audio: L10n; label: L10n };
   /** Photo de l'œuvre pour la vue simplifiée (utile surtout pour les sculptures). */
   photo?: string;
   /** Mention affichée sous la légende : lieu de conservation de l'œuvre et licence de son image. */
@@ -77,10 +94,27 @@ export interface PaintingConfig extends ArtworkBase {
   y?: number;
   /** Vrai pour un objet accroché tel quel, sans cadre : porte, panneau de bois, tapis, tenture. */
   frameless?: boolean;
+  /**
+   * Pour un objet sans cadre : son épaisseur, en mètres. Un panneau épais (un totem d'exposition)
+   * avance dans la salle ; il n'a alors pas de cartel à côté de lui. Par défaut : 3 cm.
+   */
+  thickness?: number;
+  /**
+   * Pour un panneau épais : angle, en degrés, dont il est tourné par rapport au mur (positif = sa face
+   * regarde vers la droite, et sa tranche gauche se montre). Une rangée de totems tournés du même
+   * angle dessine un escalier, comme un paravent.
+   */
+  turn?: number;
   /** Cadre particulier à cette œuvre, à la place de celui de la salle : "gilt" pour un cadre doré mouluré. */
   frame?: 'gilt';
   /** Détails commentés, montrés dans l'agrandissement de l'œuvre : trois ou quatre suffisent. */
   details?: DetailConfig[];
+  /**
+   * Dans une salle en rotonde : l'œuvre est présentée dans une niche du mur courbe, à cet angle
+   * en degrés (0 = nord, puis dans le sens des aiguilles d'une montre vu de dessus).
+   * `wall` et `offset` ne servent alors plus.
+   */
+  rotunda?: { angle: number };
 }
 
 /** Un détail à regarder de près dans un tableau. */
@@ -107,6 +141,12 @@ export interface SculptureConfig extends ArtworkBase {
   /** Rotation de la sculpture sur son socle, en degrés, vue de dessus dans le sens inverse des aiguilles d'une montre. */
   turn?: number;
   model: ModelSource;
+  /**
+   * Pour une pièce de monnaie : la vitrine de la salle qui la présente, et sa place dedans
+   * (0 = au centre, sur le cube le plus haut ; 1 et 2 = devant ; 3 et 4 = derrière).
+   * `position` et `plinth` ne servent alors plus ; `height` est le diamètre de la pièce.
+   */
+  vitrine?: { id: string; slot: number };
   /** Matière d'une sculpture dessinée par le moteur. Un modèle numérisé porte la sienne. */
   material?: SculptureMaterial;
   color?: string;
@@ -130,6 +170,33 @@ export type CeilingConfig =
    * lumineuse large de `inset` mètres. La lumière cachée dans la gorge lave le haut des murs.
    */
   | { type: 'cove'; inset?: number; drop?: number };
+
+/**
+ * Rotonde : la salle garde son plan rectangulaire, mais le visiteur évolue dans un cercle
+ * bâti à l'intérieur (mur courbe, coupole ajourée, anneau de laiton au sol).
+ */
+export interface RotundaConfig {
+  /** Rayon du mur courbe, en mètres. Par défaut : le plus grand cercle qui tient dans la salle. */
+  radius?: number;
+  /** Hauteur du mur courbe, là où naît la coupole. Par défaut : les deux tiers de la hauteur de la salle. */
+  wallHeight?: number;
+  /** Angle, en degrés, d'une niche tendue de rouge. */
+  niche?: number;
+  /** Angle, en degrés, d'une porte ronde de chambre forte, ouverte vers l'intérieur. */
+  vaultDoor?: number;
+  /**
+   * Vrai si l'on entre par cette porte : le mur courbe est alors percé à cet endroit. Il faut
+   * déclarer, en face, une porte ordinaire sur le mur de la salle (au nord pour 0, à l'est pour 90, etc.).
+   */
+  passage?: boolean;
+}
+
+/** Vitrine sur socle : une cloche de verre sur des cubes noirs, pour une à cinq pièces de monnaie. */
+export interface VitrineConfig {
+  id: string;
+  /** Position dans la salle, en mètres, depuis son centre : [x, z]. */
+  position: [number, number];
+}
 
 /** Couleurs d'une salle. Celles qui manquent sont celles du style du musée. */
 export interface DecorColors {
@@ -208,6 +275,16 @@ export interface RoomConfig {
   fountain?: { position: [number, number] };
   /** Lanternes de laiton suspendues. Position de chacune depuis le centre de la salle : [x, z]. */
   lanterns?: [number, number][];
+  /** Murs longés par un comptoir de banque à guichets : bois, plateau de pierre, montants et lisse de laiton. */
+  counters?: WallId[];
+  /** Cubes suspendus au plafond, dont les faces portent des photographies. */
+  cubes?: { position: [number, number]; images: string[] };
+  /** Présentation de la salle, que le visiteur écoute en y entrant. `audio` : enregistrement par langue. */
+  intro?: { text: L10n; audio?: L10n };
+  /** Salle en rotonde : voir RotundaConfig. */
+  rotunda?: RotundaConfig;
+  /** Vitrines à pièces de monnaie. */
+  vitrines?: VitrineConfig[];
   /**
    * Accrochage automatique, tenu par l'éditeur : les tableaux de chaque mur sont répartis à intervalles
    * réguliers, dans l'ordre de la liste. Leur position (`offset`) est alors recalculée à chaque changement.

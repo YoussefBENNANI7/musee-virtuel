@@ -13,6 +13,46 @@ export class AudioGuide {
   onChange: () => void = () => {};
   private audio: HTMLAudioElement | null = null;
 
+  /**
+   * Un enregistrement à lire tel quel, sans voix de synthèse de secours : un témoignage,
+   * la présentation d'une salle. `id` le distingue du commentaire de l'œuvre.
+   */
+  playFile(id: string, file: string, base: string) {
+    this.stop();
+    const done = () => {
+      if (this.playingId !== id) return;
+      this.playingId = null;
+      this.onChange();
+    };
+    this.audio = new Audio(new URL(file, base).href);
+    this.audio.addEventListener('ended', done);
+    this.audio.addEventListener('error', done);
+    void this.audio.play().catch(done);
+    this.playingId = id;
+    this.onChange();
+  }
+
+  /** Lit un texte avec la voix de synthèse du navigateur, quand aucun enregistrement n'existe. */
+  speak(id: string, text: string, lang: string) {
+    if (!('speechSynthesis' in window)) return;
+    this.stop();
+    const speech = new SpeechSynthesisUtterance(text);
+    speech.lang = VOICE_LANG[lang] ?? lang;
+    const voice = speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith(lang));
+    if (voice) speech.voice = voice;
+    speech.rate = 0.95;
+    const done = () => {
+      if (this.playingId !== id) return;
+      this.playingId = null;
+      this.onChange();
+    };
+    speech.onend = done;
+    speech.onerror = done;
+    speechSynthesis.speak(speech);
+    this.playingId = id;
+    this.onChange();
+  }
+
   available(cfg: ArtworkConfig, lang: string): boolean {
     return Boolean(cfg.audio?.[lang]) || 'speechSynthesis' in window;
   }

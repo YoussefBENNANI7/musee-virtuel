@@ -4,6 +4,7 @@ import { clearHeight, coveOf, type Decor } from './decors';
 import { LANTERN_COLOR, lanternHeight } from './furniture';
 import type { Layout } from './layout';
 import { skylightOpening, sunDirection } from './lighting';
+import { rotundaShape } from './rotonde';
 import type { RoomConfig } from './types';
 
 /**
@@ -193,12 +194,17 @@ function atlasUV(layout: Pick<LightmapLayout, 'width' | 'height'>, c: Chart & Pl
  * projecteurs les visent, les sculptures font de l'ombre), son mobilier et le style du musée.
  */
 export function roomContext(room: RoomConfig, decor: Decor, style: string): string {
+  // Les réglages plus récents (rotonde, vitrines, comptoirs, cubes) ne comptent que s'ils sont là :
+  // l'empreinte des salles qui n'en ont pas ne change pas, et leur lumière reste valable.
+  const when = <T>(value: T | undefined) => (value === undefined ? [] : [value]);
   const artworks = room.artworks.map((a) =>
     a.type === 'painting'
-      ? [a.id, a.wall, a.offset, a.width, a.height, a.y ?? null, a.frame ?? null, a.frameless ?? null]
-      : [a.id, a.position, a.plinth, a.height, a.turn ?? null, 'src' in a.model ? a.model.src : a.model],
+      ? [a.id, a.wall, a.offset, a.width, a.height, a.y ?? null, a.frame ?? null, a.frameless ?? null, ...when(a.rotunda)]
+      : [a.id, a.position, a.plinth, a.height, a.turn ?? null, 'src' in a.model ? a.model.src : a.model, ...when(a.vitrine)],
   );
-  return JSON.stringify([style, decor, artworks, room.benches ?? [], room.fountain ?? null, room.lanterns ?? []]);
+  const extras = { counters: room.counters, cubes: room.cubes, rotunda: room.rotunda, vitrines: room.vitrines };
+  const more = Object.values(extras).some((v) => v !== undefined) ? [extras] : [];
+  return JSON.stringify([style, decor, artworks, room.benches ?? [], room.fountain ?? null, room.lanterns ?? [], ...more]);
 }
 
 /**
@@ -559,6 +565,9 @@ export function exportBakeScene(
   if (decor.light.spots > 0 && !sky) {
     for (const art of artworks) {
       if (art.room.id !== room.id || !art.normal || art.config.type !== 'painting') continue;
+      // Seules les œuvres accrochées à un mur de la salle : le mur courbe d'une rotonde ne lit pas
+      // l'atlas, ses œuvres gardent leur halo peint.
+      if (!locate(art.center, art.normal)) continue;
       // Le projecteur pend au rail, à 1,50 m du mur, et vise le centre de l'œuvre. Sa lumière part
       // de 12 cm devant lui : le corps du projecteur ne lui fait pas d'ombre.
       const position = art.center.clone().addScaledVector(art.normal, 1.5).setY(top - 0.24);
@@ -578,15 +587,18 @@ export function exportBakeScene(
   }
 
   // Ambiance : le plafond entier éclaire doucement la salle. Sous une verrière, c'est le ciel qui s'en charge.
+  // Dans une rotonde, la coupole cache le plafond : l'ambiance vient de sous la coupole, au-dessus du cercle.
   const cove = coveOf(room, decor);
   const inset = cove ? cove.inset + 0.3 : 0.6;
+  const rotunda = rotundaShape(room);
+  const [ax, ad, ay] = rotunda ? [rotunda.radius * 1.3, rotunda.radius * 1.3, rotunda.wallHeight - 0.05] : [w - inset * 2, d - inset * 2, top - 0.05];
   const areas = sky
     ? []
     : [
         {
-          position: [cx, round(top - 0.05), cz],
-          size: [round(w - inset * 2), round(d - inset * 2)],
-          power: round(settings.fill * decor.light.level * (w - inset * 2) * (d - inset * 2), 2),
+          position: [cx, round(ay), cz],
+          size: [round(ax), round(ad)],
+          power: round(settings.fill * decor.light.level * ax * ad, 2),
           color: [tint.r, tint.g, tint.b].map((x) => round(x)),
         },
       ];

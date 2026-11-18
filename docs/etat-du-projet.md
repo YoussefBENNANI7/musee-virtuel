@@ -113,6 +113,26 @@ Déroulé : un pilote sur la Salle des Horizons, validé par le porteur le 18 no
 - **Limites** : les objets (cadres, bancs, socles, sculptures, fontaine) et les embrasures des portes gardent leur éclairage d'avant ; le calcul se fait sur le processeur (la carte graphique du Mac irait plus vite) ; un musée créé avec l'éditeur se calcule sur le Mac du porteur, et l'éditeur ne signale pas encore qu'une salle modifiée est à recalculer.
 - **Suite possible** : l'avertissement « lumière à recalculer » dans l'éditeur, puis les autres améliorations de la version 2 (finitions de l'image sur ordinateur, vrais reflets, matières plus riches, objets éclairés par la lumière calculée).
 
+### Moteur de l'exposition « 120 ans », réuni à la version 2 (18 novembre 2026)
+
+Le porteur a construit l'exposition des 120 ans dans une autre conversation, sur son Mac, les 17 et 18 novembre 2026. Ce travail est resté dans sa branche locale `claude/laughing-galileo-0mch8q` (8 étapes) : il n'a jamais été envoyé sur GitHub, faute de connexion du Mac à son compte GitHub. **La version 1 (`v1`, `main`) ne le contient donc pas**, alors que c'était la dernière version que le porteur voyait.
+
+**Le dépôt GitHub est public.** Seul le code du moteur a été repris, réuni en une étape (`ba2a705`), transmis sous forme de correctif par le Drive du porteur. Restent sur le Mac seulement, dans sa branche locale et dans `public/museums/120-ans/` : le musée lui-même (photos, cartels, textes, voix, liste `museums/index.json`), les notes détaillées de cette conversation, et le script qui fabrique l'un des objets de l'exposition.
+
+Ce que le moteur sait faire en plus (le détail des réglages est dans `src/engine/types.ts`) :
+
+- **Salle en rotonde** (`rotunda`) : mur courbe à coffres, coupole ajourée, porte de chambre forte franchissable, œuvres dans des niches du mur courbe.
+- **Vitrines à pièces de monnaie** (`vitrines`) ; une pièce est une sculpture dont le modèle est une face photographiée et un métal.
+- **Comptoirs à guichets** le long des murs (`counters`) et **grappe de cubes suspendus** portant des photos (`cubes`).
+- **Trois décors** : `nef`, `guichets`, `chambre-forte`.
+- **Audioguide** : texte écrit pour être dit (`narration`), présentation de salle (`intro`), témoignage enregistré (`testimony`).
+- **Page de choix des musées** quand l'adresse n'en désigne aucun, d'après `museums/index.json` ; sans cette liste, le musée de démonstration s'ouvre, comme avant.
+- La clé du service de voix peut venir d'un fichier `.env`, ignoré par git. Éditeur : confirmations dans la page.
+
+**Pourquoi le musée avait disparu du dossier du projet** : dans la branche locale, `.gitignore` faisait suivre le musée des 120 ans par git. En passant à la version 2, git l'a donc retiré du dossier. Il a été remis depuis la copie du Bureau (`musees-sauvegarde-v1`). `.gitignore` ne fait plus suivre aucun musée client.
+
+**Lumière précalculée et nouveautés** : dans une rotonde, seul le sol lit l'atlas ; le mur courbe et la coupole gardent leur éclairage, et les œuvres du mur courbe leur halo peint. L'ambiance du calcul vient de sous la coupole. Comptoirs, cubes et vitrines font de l'ombre au sol. Vérifié sur un musée d'essai neutre (galerie `nef` avec cubes, rotonde `chambre-forte` avec vitrines et billets, hall `guichets` sous verrière) ; le vrai musée n'existe que sur le Mac du porteur.
+
 ### Voix de l'audioguide : décisions prises, production à venir
 
 Le moteur lit déjà un enregistrement par œuvre et par langue quand on lui en fournit un (champ `audio` de l'œuvre) ; sans lui, il fait lire le texte par la voix du navigateur. Il ne manque que les fichiers.
@@ -395,14 +415,15 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
-- **Le rendu premium du musée des 120 ans, sur son Mac** : installer (`npm run lumiere:installer`), calculer (`npm run lumiere -- 120-ans`), puis dire ce que cela donne. C'est le premier calcul sur un Mac : toute erreur affichée est à recopier à Claude.
+- **Le rendu premium du musée des 120 ans, sur son Mac** : installation faite et réussie le 18 novembre 2026 (`npm run lumiere:installer`). Reste, après `git pull` : `npm run lumiere -- 120-ans`, puis dire ce que cela donne. C'est le premier calcul sur un Mac : toute erreur affichée est à recopier à Claude.
+- **Sa branche locale `claude/laughing-galileo-0mch8q`** : elle contient le musée des 120 ans et les notes détaillées de l'autre conversation. À garder, et à ne jamais envoyer sur GitHub (dépôt public).
 - **Son avis sur le rendu premium des six salles** : la chaleur convient-elle (réglage `--chaleur`, salle par salle) ? faisceaux plus ou moins marqués ? tache de soleil plus ou moins forte ? Puis sa décision : faire de cette version la nouvelle branche principale, ou continuer la version 2 d'abord.
 
 - **Son choix sur le glissement de la vue pendant un déplacement en douceur** (vers une œuvre ou vers un point du sol) : l'arrêter, comme aujourd'hui (retenu par défaut), ou seulement tourner le regard, le visiteur allant au bout de son déplacement. Voir « Déplacement en douceur interrompu ».
 - **Son avis sur l'éditeur à l'usage** : dépôt de photos, accrochage automatique, fiches. Et ses réponses aux trois questions restées ouvertes : la date de la présentation, qui utilisera l'outil, et si un éditeur sur ordinateur, sans compte, lui convient pour commencer.
-- **Où ranger le musée de la banque** : les musées créés ne partent pas sur GitHub. S'il est construit dans le cloud par Claude, il faudra un dépôt privé séparé ou un autre moyen de le lui remettre.
+- **Où ranger le musée de la banque** : les musées créés ne partent pas sur GitHub (dépôt public). Il est aujourd'hui sur le Mac du porteur seulement, avec la copie du Bureau. Pour le travailler à plusieurs ou dans le cloud, il faudra un dépôt privé séparé, ou le Drive du porteur.
 - **Son avis sur le lot « autour de l'œuvre » et le pack présentation**, sa relecture des textes des détails commentés, et son écoute du son de la fontaine (niveau, agrément).
-- **Ses photos pour la salle des 120 ans du Groupe Attijariwafa bank** : œuvres bien de face, cartel de chaque œuvre (titre, artiste, date, technique, dimensions), 8 à 12 œuvres, quelques vues du lieu. À déposer dans un dossier Google Drive. Claude ne rédigera les textes qu'à partir des cartels et de ses indications ; les œuvres d'artistes récents demanderont l'accord de la Fondation avant toute diffusion publique.
+- ~~Ses photos pour la salle des 120 ans~~ : fait. L'exposition a été construite sur son Mac dans une autre conversation (voir « Moteur de l'exposition « 120 ans », réuni à la version 2 »).
 
 - **Son avis sur le Patio marocain enrichi** : couleurs du zellige, choix des pièces, présentation des objets en volume.
 
@@ -490,8 +511,8 @@ scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
 scripts/lumiere.mjs         Lumière précalculée des salles (« npm run lumiere »), calcul par Blender dans scripts/lumiere/
 scripts/lumiere-installer.mjs  Prépare un ordinateur pour ce calcul (« npm run lumiere:installer »)
 scripts/editeur-serveur.mjs Service d'écriture de l'éditeur, ajouté au serveur de développement
-tests/unit/                 Tests unitaires (Vitest) : 203 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 87 tests
+tests/unit/                 Tests unitaires (Vitest) : 205 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 89 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration
@@ -544,6 +565,7 @@ npm run lumiere -- demo           # calcule la lumière des salles modifiées, a
 ## 8. Méthode de travail retenue
 
 - **Tout en français** : interface, commentaires du code, messages de commit, documentation. Les textes du musée existent en français et en anglais.
+- **Le dépôt GitHub est public** : aucun contenu client n'y entre (photos, cartels, textes, voix, notes sur une exposition, noms de personnes). Le code du moteur, lui, peut y aller. Pour transmettre du code fait sur le Mac sans GitHub : `git format-patch` limité au code, déposé sur le Drive du porteur.
 - **Le porteur du projet n'est pas développeur** : commandes exactes à copier, explications simples, sur Mac.
 - **Avant et après chaque modification du moteur** : les tests doivent passer, puis le rendu est vérifié par des captures sur ordinateur et sur téléphone.
 - **Tests dans un navigateur** : attendre une condition que le moteur expose (par exemple `controls.gliding`, vrai tant qu'un déplacement en douceur est en cours), jamais un délai fixe ni « deux positions identiques de suite ». Le rendu des tests est calculé par le processeur : une image prend 100 ms ou plus, et sous charge celle qui suit un clic peut tarder, si bien que deux relevés rapprochés sont identiques avant même que le visiteur ait bougé. Pour savoir où un obstacle arrête le visiteur, l'aide `walkUntilBlocked` fait elle-même avancer le temps, à grands pas, au lieu d'attendre les images ; elle vérifie ensuite que de tout petits pas ne déplacent plus le visiteur, ce qui prouve à chaque appel qu'il s'est arrêté au ras de l'obstacle. Pour qu'un vrai geste (souris, clavier, doigt) arrive à un instant précis d'un déplacement en douceur, l'aide `holdClock` tient l'horloge de la visite : le visiteur ne bouge plus que lorsque le test fait avancer le temps.

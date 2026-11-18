@@ -59,10 +59,12 @@ export function spoken(text: string, lang: string): string {
 }
 
 /** Texte complet lu pour une œuvre, dans une langue. */
-export function narrationText(a: Pick<ArtworkConfig, 'title' | 'artist' | 'year' | 'description'>, lang: string): string {
+export function narrationText(a: Pick<ArtworkConfig, 'title' | 'artist' | 'year' | 'description' | 'narration'>, lang: string): string {
   const title = pick(a.title, lang);
   const artist = pick(a.artist, lang);
   const year = pick(a.year, lang);
   const label = [artist, year].filter(Boolean).join(', ');
-  return spoken(`${title}. ${label}. ${pick(a.description, lang)}`, lang);
+  // Le texte écrit pour l'audioguide, s'il existe, remplace le texte affiché.
+  const body = pick(a.narration ?? a.description, lang);
+  return spoken([title, label, body].filter(Boolean).join('. '), lang);
 }

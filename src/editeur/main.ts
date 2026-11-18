@@ -70,6 +70,29 @@ function notify(message: string) {
   clearTimeout(noticeTimer);
   noticeTimer = window.setTimeout(() => (box.hidden = true), 7000);
 }
+/**
+ * Demande une confirmation dans la page. On n'utilise pas confirm() : certains navigateurs
+ * (navigateurs intégrés, aperçus) bloquent ces fenêtres et répondent « non » sans rien afficher.
+ */
+function askConfirm(message: string, details = '', yes = 'Supprimer'): Promise<boolean> {
+  return new Promise((resolve) => {
+    const box = h('dialog', { class: 'confirm', 'aria-labelledby': 'confirm-title' },
+      h('p', { id: 'confirm-title', class: 'confirm-title' }, message),
+      details ? h('p', { class: 'muted' }, details) : null,
+      h('div', { class: 'row end' },
+        h('button', { type: 'button', class: 'cancel', onclick: () => box.close('non') }, 'Annuler'),
+        h('button', { type: 'button', class: yes === 'Supprimer' ? 'danger accept' : 'primary accept', onclick: () => box.close('oui') }, yes),
+      ),
+    );
+    box.addEventListener('close', () => {
+      box.remove();
+      resolve(box.returnValue === 'oui');
+    });
+    document.body.append(box);
+    box.showModal();
+    box.querySelector<HTMLButtonElement>('.cancel')?.focus();
+  });
+}
 function status(message: string, kind: 'ok' | 'busy' | 'error' = 'ok') {
   const node = $('status');
   node.textContent = message;
@@ -503,8 +526,8 @@ function worksPane(): Child[] {
           h('p', {}, 'Les œuvres de cette salle ont été placées à la main, une par une. L’éditeur conserve leur emplacement ; vous pouvez modifier leurs textes.'),
           h('button', {
             type: 'button',
-            onclick: () => {
-              if (confirm('Répartir automatiquement les œuvres de cette salle ? Leur emplacement actuel sera remplacé.')) commit(() => (r.autoHang = true));
+            onclick: async () => {
+              if (await askConfirm('Répartir automatiquement les œuvres de cette salle ?', 'Leur emplacement actuel sera remplacé.', 'Répartir')) commit(() => (r.autoHang = true));
             },
           }, 'Passer cette salle en accrochage automatique'),
         ),
@@ -529,8 +552,8 @@ function worksPane(): Child[] {
             h('button', {
               type: 'button',
               class: 'danger',
-              onclick: () => {
-                if (confirm(`Supprimer définitivement « ${titleOf(art)} » ?`)) commit(() => removeWork(museum, art));
+              onclick: async () => {
+                if (await askConfirm(`Supprimer définitivement « ${titleOf(art)} » ?`)) commit(() => removeWork(museum, art));
               },
             }, 'Supprimer'),
           ]),
@@ -700,8 +723,8 @@ function workForm(): Child[] {
       h('button', {
         type: 'button',
         class: 'danger',
-        onclick: () => {
-          if (!confirm(`Supprimer définitivement « ${titleOf(art)} » ?`)) return;
+        onclick: async () => {
+          if (!(await askConfirm(`Supprimer définitivement « ${titleOf(art)} » ?`))) return;
           editing = null;
           commit(() => removeWork(museum, art));
         },
@@ -933,7 +956,7 @@ async function showHome(missing = false) {
 /** Supprime un musée après confirmation. Rien n'est effacé : le dossier est rangé à part, récupérable. */
 async function removeMuseum(m: api.MuseumSummary) {
   const title = text(m.name, 'fr') || m.id;
-  const sure = confirm(`Supprimer « ${title} » ?\n\nIl disparaît de l’éditeur et du site. Son dossier est gardé dans « musees-supprimes », dans le dossier du projet : on peut le récupérer en le remettant dans public/museums.`);
+  const sure = await askConfirm(`Supprimer « ${title} » ?`, 'Il disparaît de l’éditeur et du site. Son dossier est gardé dans « musees-supprimes », dans le dossier du projet : on peut le récupérer en le remettant dans public/museums.');
   if (!sure) return;
   try {
     const kept = await api.deleteMuseum(m.id);

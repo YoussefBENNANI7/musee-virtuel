@@ -4,6 +4,11 @@ test-results
 playwright-report
 essais-voix
 # Les musées créés avec l'éditeur restent sur l'ordinateur : seul le musée de démonstration fait partie du dépôt.
+# Le dépôt est public : un musée client (ses photos, ses textes, ses voix) n'y entre jamais, ni la liste
+# des musées proposés (museums/index.json), propre à chaque ordinateur.
 public/museums/*
 !public/museums/demo/
 musees-supprimes
+# Clés d'accès : jamais dans le dépôt.
+.env
+.env.*

@@ -99,6 +99,52 @@ export const DECORS: Record<string, DecorPreset> = {
       light: { level: 1, tint: '#fff5e4', spots: 1 },
     },
   },
+  'chambre-forte': {
+    name: { fr: 'Chambre forte', en: 'Vault' },
+    summary: {
+      fr: 'Salle du trésor : pénombre chaude, pierre noire polie, laiton et noyer. Faite pour les monnaies et les billets, éclairés comme des bijoux.',
+      en: 'A treasure room: warm half-light, polished black stone, brass and walnut. Made for coins and banknotes, lit like jewels.',
+    },
+    settings: {
+      colors: { wall: '#2a2018', ceiling: '#0d0a08', floor: '#1b1815', trim: '#0b0a09', frame: '#8a6a2c', plinth: '#141312', wood: '#3a2618', fixture: '#0b0a09' },
+      floor: 'stone',
+      walls: 'paint',
+      gloss: 0.6,
+      baseboard: 'none',
+      ceiling: { type: 'flat' },
+      light: { level: 0.42, tint: '#ffe9cc', spots: 2.2 },
+      labels: 'dark',
+    },
+  },
+  guichets: {
+    name: { fr: 'Guichets', en: 'Banking hall' },
+    summary: {
+      fr: 'Hall de banque des années 1930 : murs crème, dalles de pierre claire, noyer et laiton. Fait pour la lumière du jour et les objets du métier.',
+      en: 'A 1930s banking hall: cream walls, pale stone slabs, walnut and brass. Made for daylight and the tools of the trade.',
+    },
+    settings: {
+      colors: { wall: '#efe6d6', ceiling: '#f6f1e6', floor: '#d6ccb9', trim: '#8a6a2c', frame: '#3a2416', plinth: '#4a2f1c', wood: '#4a2f1c', fixture: '#3a2416' },
+      floor: 'stone',
+      walls: 'limewash',
+      gloss: 0.3,
+      light: { level: 1, tint: '#fff4e2', spots: 1 },
+    },
+  },
+  nef: {
+    name: { fr: 'Nef', en: 'Nave' },
+    summary: {
+      fr: 'Longue galerie claire : murs de tadelakt sable, sol de pierre sombre et poli, lumière chaude. Faite pour une frise ou une suite de panneaux.',
+      en: 'A long bright gallery: sand-coloured tadelakt walls, dark polished stone floor, warm light. Made for a frieze or a run of panels.',
+    },
+    settings: {
+      colors: { wall: '#e6dccb', ceiling: '#2a1d14', floor: '#2a2520', trim: '#8a6a2c', frame: '#1d1512', plinth: '#1d1a17', wood: '#4d3626', fixture: '#15120f' },
+      floor: 'stone',
+      walls: 'limewash',
+      gloss: 0.5,
+      ceiling: { type: 'flat' },
+      light: { level: 0.82, tint: '#fff0dc', spots: 1.3 },
+    },
+  },
   nuit: {
     name: { fr: 'Nuit', en: 'Night' },
     summary: {

@@ -2,12 +2,14 @@ import * as THREE from 'three';
 import { fixtureMaterial, hangPainting, placeSculpture, TRACK_DISTANCE, type ArtworkContext, type PlacedArtwork } from './artworks';
 import { buildBuilding } from './building';
 import { clearHeight, resolveDecor, type Decor } from './decors';
-import { FOUNTAIN_RADIUS, benchFootprint, buildBench, buildFountain, buildLantern, lanternHeight } from './furniture';
-import { EYE_HEIGHT, WALLS, buildLayout, type Layout } from './layout';
+import { COUNTER, FOUNTAIN_RADIUS, benchFootprint, buildBench, buildCounter, buildFountain, buildLantern, buildPhotoCubes, lanternHeight } from './furniture';
+import { EYE_HEIGHT, WALLS, buildLayout, inside, roomRect, wallFrame, type Layout } from './layout';
 import type { Quality } from './quality';
 import type { Style } from './styles';
+import { buildRotunda, rotundaFrame, wallNiche } from './rotonde';
 import { labelTexture } from './textures';
 import { loc, tr, type MuseumConfig, type RoomConfig } from './types';
+import { VITRINE_RADIUS, buildVitrine, placeCoin } from './vitrines';
 
 export type { PlacedArtwork } from './artworks';
 
@@ -62,7 +64,7 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
     const decor = decors.get(room.id)!;
     for (const wall of WALLS) {
       const { holder, frame } = building.wall(room.id, wall);
-      const hung = room.artworks.filter((cfg) => cfg.type === 'painting' && cfg.wall === wall);
+      const hung = room.artworks.filter((cfg) => cfg.type === 'painting' && !cfg.rotunda && cfg.wall === wall);
       for (const cfg of hung) {
         if (cfg.type === 'painting') artworks.push(hangPainting(cfg, room, holder, frame, ctx));
       }
@@ -87,9 +89,50 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
       const fz = room.position[1] + room.fountain.position[1];
       blocked.push((x, z) => Math.hypot(x - fx, z - fz) < FOUNTAIN_RADIUS + 0.3);
     }
+    for (const wall of room.counters ?? []) {
+      group.add(buildCounter(wall, room, decor, style.wallThickness));
+      // Le visiteur reste devant le comptoir : une bande le long du mur lui est fermée.
+      const frame = wallFrame(room, wall, style.wallThickness / 2);
+      const rect = roomRect(room);
+      const reach = COUNTER.depth + 0.3;
+      blocked.push((x, z) => inside(rect, x, z) && (x - frame.center.x) * frame.normal.x + (z - frame.center.z) * frame.normal.z < reach);
+    }
+    if (room.cubes) group.add(buildPhotoCubes(room.cubes, room, decor, options.base, ctx.onLoad));
     for (const at of room.lanterns ?? []) group.add(buildLantern(at, room, room.size[1], lanternHeight(room)));
+    // Rotonde : le mur courbe porte ses propres œuvres, chacune dans une niche de laiton.
+    const rotunda = room.rotunda ? buildRotunda(room, decor, quality, options.env) : null;
+    if (rotunda) {
+      group.add(rotunda.group);
+      blocked.push(rotunda.blocked);
+      for (const cfg of room.artworks) {
+        if (cfg.type !== 'painting' || !cfg.rotunda) continue;
+        const frame = rotundaFrame(rotunda.shape, cfg.rotunda.angle, 0.14);
+        const holder = new THREE.Group();
+        holder.position.copy(frame.center);
+        holder.rotation.y = frame.rotY;
+        group.add(holder);
+        wallNiche(holder, cfg.width, cfg.height, cfg.y ?? 1.55, decor, options.env);
+        artworks.push(hangPainting({ ...cfg, offset: 0 }, room, holder, frame, ctx));
+        artworks[artworks.length - 1].config = cfg;
+        // Le mur courbe ne lit pas la lumière précalculée : le halo peint de l'œuvre y reste toujours.
+        holder.traverse((o) => {
+          delete o.userData.halo;
+        });
+      }
+    }
+    // Vitrines : chaque pièce de monnaie y a sa place.
+    const vitrines = new Map<string, THREE.Group>();
+    for (const cfg of room.vitrines ?? []) {
+      const vitrine = buildVitrine(cfg, room, decor, rotunda ? rotunda.shape.wallHeight + 0.6 : 0);
+      vitrines.set(cfg.id, vitrine);
+      group.add(vitrine);
+      const [vx, vz] = [vitrine.position.x, vitrine.position.z];
+      blocked.push((x, z) => Math.hypot(x - vx, z - vz) < VITRINE_RADIUS);
+    }
     for (const cfg of room.artworks) {
-      if (cfg.type === 'sculpture') artworks.push(placeSculpture(cfg, room, group, ctx));
+      if (cfg.type !== 'sculpture') continue;
+      const vitrine = cfg.vitrine && 'coin' in cfg.model ? vitrines.get(cfg.vitrine.id) : undefined;
+      artworks.push(vitrine ? placeCoin(cfg, room, vitrine, ctx) : placeSculpture(cfg, room, group, ctx));
     }
   }
   for (const art of artworks) {
