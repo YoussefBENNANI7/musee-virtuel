@@ -80,7 +80,7 @@ Le 15 novembre 2026, le porteur a donné son avis sur l'ambiance : la base lui p
 
 ### Version 2, rendu premium : lumière précalculée des six salles (18 novembre 2026)
 
-Sur la branche `claude/optimistic-davinci-kqpqmj`, pas sur `main` : la version 1 reste intacte tant que le porteur n'a pas validé. Détail, réglages et installation : `docs/lumiere.md`.
+Sur la branche `claude/optimistic-davinci-kqpqmj`, pas sur `main` : la version 1 reste intacte tant que le porteur n'a pas validé. Détail, réglages et installation : `docs/lumiere.md`. Aperçu, avec chaque salle avant et après, sur ordinateur et sur téléphone : https://claude.ai/artifact/QntvVcbKckY9qSDbpcNizX.
 
 Déroulé : un pilote sur la Salle des Horizons, validé par le porteur le 18 novembre 2026 (« oui, l'étendre à toutes les salles, avec plus de chaleur »), puis l'extension aux six salles le même jour. Sa troisième question, la force des faisceaux, est restée sans réponse : ils gardent la force du pilote.
 
