@@ -3,6 +3,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { Controls } from './engine/controls';
 import { ALONE_LAYER } from './engine/artworks';
 import { SUN_AZIMUTH } from './engine/lighting';
+import { DEFAULT_BAKE, exportBakeScene, loadLumiere, roomContext, type BakeSettings } from './engine/lumiere';
 import { buildMap } from './engine/map';
 import { buildFloorReflection } from './engine/reflection';
 import { loc, tr, type RoomConfig, type TourConfig } from './engine/types';
@@ -102,6 +103,13 @@ export function startVisit(app: App): View {
     renderer.shadowMap.needsUpdate = true;
   }
   const reflection = quality.reflections ? buildFloorReflection(museum, world.decors, world.layout.wallThickness) : null;
+  // Lumière précalculée (rendu premium, voir engine/lumiere.ts) : plaquée salle par salle, à mesure que
+  // les atlas arrivent. `?lumiere=0` montre le musée avec l'éclairage par formule, pour comparer.
+  const lumiereContext = (room: RoomConfig) => roomContext(room, world.decors.get(room.id)!, style.id);
+  const lumiere =
+    museum.lumiere && new URLSearchParams(location.search).get('lumiere') !== '0'
+      ? loadLumiere(new URL(museum.lumiere, new URL(app.base, location.href)).href, world.group, museum.rooms, lumiereContext, () => invalidate())
+      : Promise.resolve([] as string[]);
   if (reflection) scene.add(reflection.object);
   controls.walkable = world.walkable;
   const first = world.spawn(museum.start.room);
@@ -741,7 +749,15 @@ export function startVisit(app: App): View {
       return { x: ((v.x + 1) / 2) * canvas.clientWidth, y: ((1 - v.y) / 2) * canvas.clientHeight };
     };
     Object.assign(window, {
-      __museum: { screenAt, marker, inspect, carnet, ambiance, presenting: () => presenting, style: style.id, decors: Object.fromEntries([...world.decors].map(([id, d]) => [id, d.preset])), quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel, vrUpdate: (dt: number) => vr.update(dt), vrSupport: () => vr.support() },
+      __museum: { screenAt, marker, inspect, carnet, ambiance, presenting: () => presenting, style: style.id, decors: Object.fromEntries([...world.decors].map(([id, d]) => [id, d.preset])), quality: quality.tier, reflections: () => Boolean(reflection?.object.visible), controls, world, camera, rig, renderer, thumb, standBefore, screenOf, ids: () => [...byId.keys()], pixelRatio: () => pixelRatio, vrPanel: () => vr.panel, vrUpdate: (dt: number) => vr.update(dt), vrSupport: () => vr.support(),
+        /** Salles éclairées par un atlas de lumière, une fois tout chargé. */
+        lumiere: () => lumiere,
+        /** Scène d'une salle à calculer par Blender (npm run lumiere), en JSON. */
+        lumiereExport: (roomId: string, settings: Partial<BakeSettings> = {}) => {
+          const room = museum.rooms.find((r) => r.id === roomId)!;
+          return JSON.stringify(exportBakeScene(world.group, room, world.decors.get(roomId)!, world.artworks, lumiereContext(room), { ...DEFAULT_BAKE, ...settings }));
+        },
+      },
     });
   }
 

@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "rooms": {
+    "horizons": {
+      "image": "horizons.webp",
+      "fingerprint": "7451da24",
+      "width": 512,
+      "height": 2048,
+      "samples": 512,
+      "scale": {
+        "sol": [
+          1.1198,
+          1.2702,
+          1.3899
+        ],
+        "plafond": [
+          3.6188,
+          5.1302,
+          6.8852
+        ],
+        "murs": [
+          1.4815,
+          1.7402,
+          1.9682
+        ]
+      },
+      "settings": {}
+    }
+  }
+}

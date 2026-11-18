@@ -265,6 +265,8 @@ export interface MuseumConfig {
   tours?: TourConfig[];
   /** Réserve de l'éditeur : œuvres du musée qui ne sont accrochées dans aucune salle. Le moteur les ignore. */
   reserve?: ArtworkConfig[];
+  /** Lumière précalculée (`npm run lumiere`) : chemin de son fichier, depuis le dossier du musée. */
+  lumiere?: string;
 }
 
 export function tr(text: L10n, lang: string): string {

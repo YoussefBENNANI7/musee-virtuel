@@ -205,6 +205,7 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(cx, 0, cz);
     floor.userData.floor = true;
+    floor.userData.lumiere = room.id;
     group.add(floor);
     buildCeiling(room, decor);
     buildSunPatch(room);
@@ -233,6 +234,7 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
         const rows = [bottom, ...wallRows.filter((row) => row > bottom + 0.02)].map((row) => row - y);
         const mesh = lit(new THREE.Mesh(gridGeometry(width, height, { u0: x, v0: y, tile: WALL_TILE }, rows), wallMat), light);
         mesh.position.set(x, y, 0);
+        mesh.userData.lumiere = room.id;
         holder.add(mesh);
       };
       const solid = (from: number, to: number) => {
@@ -250,6 +252,7 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
           const mesh = lit(new THREE.Mesh(gridGeometry(to - from, top - bottom, { u0: mid, v0: (top - bottom) / 2, tile }), material), light);
           mesh.position.set(mid, (bottom + top) / 2, 0.003);
           mesh.raycast = noRaycast;
+          mesh.userData.lumiere = room.id;
           holder.add(mesh);
         };
         const edge = (y: number) => {
@@ -392,6 +395,9 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
       const m = glow ? new THREE.Mesh(new THREE.PlaneGeometry(width, depth), glow) : lit(new THREE.Mesh(gridGeometry(width, depth, metric), ceilingMat), light);
       m.rotation.x = Math.PI / 2;
       m.position.set(x, y, z);
+      // Surfaces de la salle pour la lumière précalculée (voir lumiere.ts) ; la gorge, elle, rayonne.
+      if (glow) m.userData.gorge = room.id;
+      else m.userData.lumiere = room.id;
       ceiling.add(m);
     };
 
@@ -477,6 +483,10 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
   }
 
   for (const { mesh, lights: roomLights } of pending) bake(mesh, roomLights);
+  // Tout ce qui précède appartient au bâtiment ; les œuvres et le mobilier viendront s'y ajouter.
+  group.traverse((o) => {
+    if ((o as THREE.Mesh).isMesh) o.userData.building = true;
+  });
 
   return {
     group,

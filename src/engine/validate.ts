@@ -46,6 +46,9 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
   if (langs.length === 0) error('Musée', 'aucune langue déclarée dans "langs"');
   if (!langs.includes(museum.defaultLang)) error('Musée', `la langue par défaut "${museum.defaultLang}" n'est pas dans "langs"`);
   if (museum.style !== undefined && !isStyleId(museum.style)) error('Musée', `style inconnu : "${museum.style}"`);
+  if (museum.lumiere !== undefined && (typeof museum.lumiere !== 'string' || !museum.lumiere.endsWith('.json'))) {
+    error('Musée', 'lumière précalculée : "lumiere" doit être le chemin d\'un fichier .json');
+  }
 
   const translated = (where: string, field: string, text: L10n | undefined) => {
     if (!text || typeof text !== 'object') return error(where, `texte manquant : ${field}`);

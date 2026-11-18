@@ -2715,5 +2715,6 @@
         "tapis"
       ]
     }
-  ]
+  ],
+  "lumiere": "lumiere/lumiere.json"
 }

@@ -159,6 +159,8 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
     const pool = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width + mat * 2 + 1.7, cfg.height + mat * 2 + 1.9), poolMaterial(decor.colors.wall, decor.light.spots));
     pool.position.set(0, 0.15, 0.006);
     pool.raycast = noRaycast;
+    // Avec la lumière précalculée, le vrai faisceau est dans l'atlas : ce halo est alors retiré.
+    pool.userData.halo = room.id;
     art.add(pool);
     holder.add(spotFixture(cfg.offset, clearHeight(room, decor), fixtureMaterial(decor)));
   }

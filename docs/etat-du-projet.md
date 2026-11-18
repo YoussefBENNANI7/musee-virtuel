@@ -14,9 +14,9 @@ Le musée de démonstration sert d'abord à une **présentation interne** : le p
 
 ### Versions
 
-- **Version 1** (18 novembre 2026) : étiquette `v1` dans GitHub, sur la branche `main`. Elle réunit le travail de toutes les conversations jusqu'au 17 novembre 2026 (moteur, éditeur, musée de démonstration à six salles, voix de l'audioguide), plus la correction « Déplacement en douceur interrompu ». Pour la retrouver telle quelle : `git checkout v1`.
+- **Version 1** (18 novembre 2026) : la branche `main`, commit `5aeaa69`, et l'étiquette `v1` une fois créée par le porteur (voir « En attente du porteur »). Elle réunit le travail de toutes les conversations jusqu'au 17 novembre 2026 (moteur, éditeur, musée de démonstration à six salles, voix de l'audioguide), plus la correction « Déplacement en douceur interrompu ». Pour la retrouver telle quelle : `git checkout v1`.
 - **Les musées créés avec l'éditeur ne sont pas dans GitHub** (voir « Outil d'administration ») : la salle des 120 ans (`120-ans`) et le musée d'essai (`musee-test`) n'existent que sur le Mac du porteur. Leur sauvegarde de la version 1 est le dossier `musees-sauvegarde-v1`, sur son Bureau (copie de `public/museums/`, faite le 18 novembre 2026). À garder aussi hors du Mac (clé USB ou iCloud Drive).
-- **Version 2** : rendu premium du même moteur (lumière précalculée, finitions, reflets, matières), toujours dans le navigateur. Décision du 18 novembre 2026, après examen d'une version sous Unreal Engine, écartée : pas de visite par simple lien, ni sur téléphone, coût de diffusion par visiteur, accessibilité à refaire, et travail surtout manuel dans l'éditeur d'Unreal. Elle commence par un pilote sur une salle, à valider par le porteur.
+- **Version 2** : rendu premium du même moteur (lumière précalculée, finitions, reflets, matières), toujours dans le navigateur, sur la branche `claude/optimistic-davinci-kqpqmj` (voir « Version 2, rendu premium : pilote sur une salle »). Choix du porteur, le 18 novembre 2026, plutôt qu'une version sous Unreal Engine, dont les limites lui ont été présentées : pas de visite par simple lien, ni dans le navigateur du téléphone, coût de diffusion par visiteur, accessibilité à refaire, et travail surtout manuel dans l'éditeur d'Unreal. Elle commence par un pilote sur une salle, à valider par le porteur.
 
 ## 2. Décisions prises
 
@@ -77,6 +77,20 @@ Le 15 novembre 2026, le porteur a donné son avis sur l'ambiance : la base lui p
 | 4. Interface | Écran d'accueil du musée, nouvelle identité visuelle (typographie, icônes, commandes discrètes, fiches animées), clic au sol pour se déplacer, mini-plan permanent | **Fait** : identité choisie par le porteur et appliquée partout, écran d'accueil, clic au sol, mini-plan. Voir ci-dessous. Attend son avis |
 | 5. Mise en ligne | Hébergement sur Vercel, puis vérification sur de vrais appareils | À faire, avec l'accord du porteur |
 | 6. Outil d'administration | L'éditeur de l'étape 2 du produit. Les réglages de décor y deviendront des options | **Première version faite**, voir « Outil d'administration ». Premier essai du porteur le 17 novembre 2026 |
+
+### Version 2, rendu premium : pilote sur une salle (18 novembre 2026)
+
+Sur la branche `claude/optimistic-davinci-kqpqmj`, pas sur `main` : la version 1 reste intacte tant que le porteur n'a pas validé. Détail, réglages et installation : `docs/lumiere.md`.
+
+- **Ce qui est fait** : la lumière précalculée de la Salle des Horizons. Blender (moteur Cycles, utilisé comme module Python `bpy` 5.3, sans interface) calcule la lumière de la salle : projecteurs braqués sur chaque œuvre, gorge lumineuse, éclairage d'ambiance du plafond, lumière renvoyée par les surfaces, lumière des salles voisines par les portes, ombres de contact. Le résultat est un atlas de lumière de 512 × 2048 points (un point tous les 2,5 cm, 18 Ko en WebP), que la visite plaque sur les murs, le sol et le plafond.
+- **Le décor reste celui qui a été choisi** : chaque famille de surfaces (sol, murs, plafond) garde la clarté et la teinte que lui donne son décor (médiane, canal par canal). Le calcul n'apporte que les variations. Sans cela, le plafond devenait brun et grenu (il ne reçoit que la lumière renvoyée par le parquet).
+- **Effets peints retirés** dans la salle calculée : les halos autour des œuvres et les ombres douces sous les bancs. Ils comptaient d'abord dans le calcul comme des objets opaques, d'où de grands rectangles noirs sous les bancs : les matières transparentes sont maintenant ignorées.
+- **Ombres de contact** : sous un éclairage aussi diffus, la vraie ombre d'un banc est presque invisible, et les bancs semblaient flotter. Un second calcul (occlusion ambiante sur 80 cm) assombrit le pied des bancs, des cadres et des murs ; plus fort au sol que sur les murs.
+- **Grain** : 512 échantillons (7 min 30 de calcul sur 4 cœurs), puis un lissage surface par surface, plus fort au plafond.
+- **Sécurité** : une empreinte de la salle (surfaces, décor, œuvres, bancs, style) accompagne l'atlas. Si la salle change ensuite, par exemple un tableau déplacé dans l'éditeur, la visite garde l'éclairage par formule pour cette salle et l'écrit dans la console. `?lumiere=0` montre la salle sans l'atlas, pour comparer.
+- **Vérifié** : 6 tests unitaires (rangement de l'atlas, coordonnées, empreinte) et 4 tests dans un navigateur (salle éclairée et effets peints retirés, comparaison, salle modifiée, fichier manquant). Captures avant et après sur ordinateur et sur téléphone.
+- **Limites** : une seule salle ; les objets (cadres, bancs, sculptures) gardent leur éclairage ; le calcul se fait sur le processeur (la carte graphique du Mac irait plus vite) ; un musée créé avec l'éditeur devra être calculé sur le Mac du porteur.
+- **Suite possible**, si le porteur valide : les autres salles (le patio marocain et la cour sous verrière demanderont le soleil), puis les autres améliorations de la version 2 (finitions de l'image sur ordinateur, vrais reflets, matières plus riches).
 
 ### Voix de l'audioguide : décisions prises, production à venir
 
@@ -359,6 +373,9 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
+- **Son avis sur le pilote du rendu premium** (Salle des Horizons) : l'étendre aux autres salles ? plus de chaleur sur les murs ? faisceaux plus ou moins marqués ?
+- **L'étiquette `v1` dans GitHub** : l'environnement de travail de Claude ne peut pas la publier (refus du serveur). Le porteur la crée depuis son Mac (commandes données le 18 novembre 2026). En attendant, `main` est la version 1.
+
 - **Son choix sur le glissement de la vue pendant un déplacement en douceur** (vers une œuvre ou vers un point du sol) : l'arrêter, comme aujourd'hui (retenu par défaut), ou seulement tourner le regard, le visiteur allant au bout de son déplacement. Voir « Déplacement en douceur interrompu ».
 - **Son avis sur l'éditeur à l'usage** : dépôt de photos, accrochage automatique, fiches. Et ses réponses aux trois questions restées ouvertes : la date de la présentation, qui utilisera l'outil, et si un éditeur sur ordinateur, sans compte, lui convient pour commencer.
 - **Où ranger le musée de la banque** : les musées créés ne partent pas sur GitHub. S'il est construit dans le cloud par Claude, il faudra un dépôt privé séparé ou un autre moyen de le lui remettre.
@@ -408,6 +425,7 @@ public/museums/<musée>/     Un dossier par musée client
   images/web/               Versions allégées, produites par « npm run images »
   images/sources/           Photos d'origine déposées par l'éditeur (servent au recadrage)
   thumbs/                   Photos des sculptures pour la vue simplifiée (« npm run vignettes »)
+  lumiere/                  Lumière précalculée : un atlas par salle calculée, et lumiere.json (« npm run lumiere »)
 
 editeur.html                Page de l'éditeur de musée (absente de la version publiée)
 src/editeur/main.ts         Éditeur : onglets Œuvres, Salles, Musée, Contrôle ; enregistrement, aperçu, recadrage
@@ -440,15 +458,17 @@ src/engine/artworks.ts      Accrochage des tableaux, pose des sculptures
 src/engine/accrochage.ts    Accrochage automatique : répartition des œuvres sur les murs d'une salle
 src/engine/plans.ts         Plans proposés à la création d'un musée
 src/engine/world.ts         Assemblage du musée, règles de déplacement, points de vue
+src/engine/lumiere.ts       Lumière précalculée : atlas de lumière d'une salle, empreinte, export pour Blender
 src/engine/marche.ts        Règle de marche : petits pas, arrêt au ras des obstacles, glissement le long des murs, point d'appui du visiteur en casque (sans rendu, testée seule)
 src/engine/...              Contrôles, plan, mobilier, sculptures, textures, reflets, images
 
 scripts/images.mjs          Préparation des images d'un musée
 scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
+scripts/lumiere.mjs         Lumière précalculée d'une salle (« npm run lumiere »), calcul par Blender dans scripts/lumiere/
 scripts/editeur-serveur.mjs Service d'écriture de l'éditeur, ajouté au serveur de développement
-tests/unit/                 Tests unitaires (Vitest) : 194 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 81 tests
+tests/unit/                 Tests unitaires (Vitest) : 200 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 85 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration
@@ -467,6 +487,7 @@ vercel.json                 Configuration de l'hébergement (pas encore relié)
 | `?accueil=non` | Ouvre la visite 3D sans passer par l'écran d'accueil |
 | `?presentation=essentiels` | Lance ce parcours en mode présentation dès l'entrée : il se déroule seul, avec la voix |
 | `?debug` | Affiche le détail des erreurs de configuration, même dans la version publiée |
+| `?lumiere=0` | Montre le musée sans sa lumière précalculée (éclairage par formule), pour comparer |
 
 ### Configurer un musée (`museum.json`)
 
@@ -493,6 +514,7 @@ npm run build                     # version publiable, dans dist/
 npm run images -- demo --attach   # associe et prépare les images déposées dans images/
 npm run modeles -- demo           # prépare les modèles 3D déposés dans models/
 npm run vignettes -- demo         # photographie les sculptures (le musée doit tourner)
+npm run lumiere -- demo --salle horizons   # calcule la lumière d'une salle avec Blender (docs/lumiere.md)
 ```
 
 ## 8. Méthode de travail retenue

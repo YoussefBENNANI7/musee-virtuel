@@ -140,6 +140,7 @@ npx playwright install chromium
 | `npm run voix -- demo --voix Sulafat` | Produit les voix de l'audioguide avec le service de voix de Google (clé dans `GEMINI_API_KEY`, ffmpeg nécessaire) |
 | `npm run licences` | Dresse l'inventaire des licences du moteur et du musée, dans `docs/licences.md` |
 | `npm run vignettes -- demo` | Photographie les sculptures pour la vue simplifiée (le musée doit tourner) |
+| `npm run lumiere -- demo --salle horizons` | Calcule la lumière d'une salle avec Blender (rendu premium) : voir `docs/lumiere.md` |
 
 ## Mise en ligne
 

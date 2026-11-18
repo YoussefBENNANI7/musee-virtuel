@@ -14,6 +14,8 @@ export function groundShadow(width: number, depth: number): THREE.Mesh {
   mesh.rotation.x = -Math.PI / 2;
   mesh.position.y = 0.003;
   mesh.raycast = () => {};
+  // Avec la lumière précalculée, la vraie ombre est dans l'atlas : cette ombre peinte est alors retirée.
+  mesh.userData.ombrePeinte = true;
   return mesh;
 }
 
