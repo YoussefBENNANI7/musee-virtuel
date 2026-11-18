@@ -5,7 +5,8 @@ import { ALONE_LAYER } from './engine/artworks';
 import { SUN_AZIMUTH } from './engine/lighting';
 import { buildMap } from './engine/map';
 import { buildFloorReflection } from './engine/reflection';
-import { loc, tr, type RoomConfig, type TourConfig } from './engine/types';
+import { spoken } from './engine/narration';
+import { loc, tr, type ArtworkConfig, type RoomConfig, type TourConfig } from './engine/types';
 import { buildWorld, type PlacedArtwork } from './engine/world';
 import { setupAmbiance } from './ambiance';
 import { setupCarnet } from './carnet';
@@ -170,7 +171,47 @@ export function startVisit(app: App): View {
   const panel = $('panel');
   let current: PlacedArtwork | null = null;
 
+  /** Salle où se trouve le visiteur. */
+  let room: RoomConfig | null = null;
+  /** Témoignage de l'œuvre ouverte, et présentation de la salle où l'on se trouve. */
+  const witnessId = (a: ArtworkConfig) => `${a.id}#temoignage`;
+  const introId = (r: RoomConfig) => `salle:${r.id}`;
+  function renderExtras() {
+    const w = $('p-witness');
+    const t = current?.config.testimony;
+    const file = t ? (t.audio[app.lang] ?? Object.values(t.audio)[0]) : undefined;
+    w.hidden = !current || !file;
+    if (current && t && file) {
+      const playing = guide.playingId === witnessId(current.config);
+      w.textContent = playing ? ui().stopAudio : tr(t.label, app.lang);
+      w.setAttribute('aria-pressed', String(playing));
+    }
+    const ri = $('room-intro');
+    ri.hidden = !room?.intro;
+    if (room?.intro) {
+      const playing = guide.playingId === introId(room);
+      ri.textContent = playing ? ui().stopAudio : ui().roomIntro;
+      ri.setAttribute('aria-pressed', String(playing));
+    }
+  }
+  $('p-witness').addEventListener('click', () => {
+    const t = current?.config.testimony;
+    if (!current || !t) return;
+    const id = witnessId(current.config);
+    if (guide.playingId === id) return guide.stop();
+    guide.playFile(id, t.audio[app.lang] ?? Object.values(t.audio)[0], app.base);
+  });
+  $('room-intro').addEventListener('click', () => {
+    const intro = room?.intro;
+    if (!room || !intro) return;
+    const id = introId(room);
+    if (guide.playingId === id) return guide.stop();
+    const file = intro.audio?.[app.lang];
+    if (file) guide.playFile(id, file, app.base);
+    else guide.speak(id, spoken(`${tr(room.name, app.lang)}. ${tr(intro.text, app.lang)}`, app.lang), app.lang);
+  });
   function renderAudio() {
+    renderExtras();
     const btn = $('p-audio');
     btn.hidden = !current || !guide.available(current.config, app.lang);
     const playing = current !== null && guide.playingId === current.config.id;
@@ -552,9 +593,9 @@ export function startVisit(app: App): View {
   });
 
   // --- Textes --------------------------------------------------------------
-  let room: RoomConfig | null = null;
   function applyTexts() {
     $('room-name').textContent = room ? tr(room.name, app.lang) : '';
+    renderExtras();
     $('help').textContent = touch ? ui().helpTouch : ui().help;
     for (const id of ['p-close', 'map-close', 'tours-close']) $(id).setAttribute('aria-label', ui().close);
     $('map-open').textContent = ui().map;
@@ -626,6 +667,7 @@ export function startVisit(app: App): View {
     if (here && here !== room) {
       room = here;
       $('room-name').textContent = tr(room.name, app.lang);
+      renderExtras();
       map.setCurrent(room.id);
       miniMap.setCurrent(room.id);
     }

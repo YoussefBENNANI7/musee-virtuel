@@ -1,6 +1,7 @@
 import './style.css';
 import { showWelcome } from './accueil';
 import { AudioGuide } from './audio';
+import { loadMuseumList, showChooser } from './choix';
 import { withDecorOverrides } from './engine/decors';
 import { detectQuality } from './engine/quality';
 import { resolveStyle } from './engine/styles';
@@ -28,6 +29,13 @@ function hasWebGL(): boolean {
 async function start() {
   // Chaque musée client est un dossier de configuration : ?m=identifiant
   const params = new URLSearchParams(location.search);
+  // Sans aucun réglage dans l'adresse, et si plusieurs musées sont proposés, on laisse choisir.
+  const list = await loadMuseumList();
+  if (!location.search && list.length > 1) {
+    showChooser(list);
+    document.body.classList.add('ready');
+    return;
+  }
   const museumId = params.get('m') ?? 'demo';
   const base = new URL(`museums/${encodeURIComponent(museumId)}/`, document.baseURI).href;
   // ?apercu : le musée est montré dans l'éditeur, qui vient peut-être de le modifier. On relit toujours le fichier.
@@ -66,6 +74,10 @@ async function start() {
   document.body.classList.toggle('simple', simple);
   const view = simple ? startSimple(app, !webgl) : startVisit(app);
 
+  // Un lien ramène à la page de choix quand plusieurs musées sont proposés.
+  const others = $<HTMLAnchorElement>('museums-link');
+  others.hidden = list.length < 2;
+  others.textContent = app.ui().allMuseums;
   const mode = $('mode');
   mode.hidden = !webgl;
   const switchView = () => {
@@ -82,6 +94,7 @@ async function start() {
     document.title = tr(museum.name, app.lang);
     $('museum-name').textContent = tr(museum.name, app.lang);
     mode.textContent = simple ? app.ui().view3d : app.ui().simpleView;
+    others.textContent = app.ui().allMuseums;
     langSelect.setAttribute('aria-label', app.ui().lang);
     langSelect.value = app.lang;
   }

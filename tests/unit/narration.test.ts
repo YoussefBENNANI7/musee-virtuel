@@ -26,6 +26,14 @@ describe('texte lu par l’audioguide', () => {
     expect(spoken('XVIIe ou XVIIIe siècle', 'fr')).toBe('dix-septième ou dix-huitième siècle');
   });
 
+  it('lit le texte écrit pour l’audioguide plutôt que le cartel, et saute ce qui manque', () => {
+    const art = { title: { fr: 'Le Grand Livre' }, artist: 'Exposition', year: '2025', description: { fr: 'Texte du cartel.' }, narration: { fr: 'Texte dit par la voix.' } };
+    expect(narrationText(art, 'fr')).toBe('Le Grand Livre. Exposition, 2025. Texte dit par la voix.');
+    expect(narrationText({ ...art, narration: undefined }, 'fr')).toBe('Le Grand Livre. Exposition, 2025. Texte du cartel.');
+    // Une présentation de salle n'a ni auteur ni date : pas de point en trop.
+    expect(narrationText({ title: { fr: 'La Chambre forte' }, artist: '', year: '', description: { fr: 'Bienvenue.' } }, 'fr')).toBe('La Chambre forte. Bienvenue.');
+  });
+
   it('laisse les mots ordinaires tranquilles', () => {
     expect(spoken('Ce panneau. Le tableau.', 'fr')).toBe('Ce panneau. Le tableau.');
   });

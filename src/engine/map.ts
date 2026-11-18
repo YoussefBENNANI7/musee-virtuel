@@ -1,6 +1,7 @@
 import type { MuseumConfig } from './types';
 import { tr } from './types';
 import { wallFrame } from './layout';
+import { rotundaFrame, rotundaShape } from './rotonde';
 
 const NS = 'http://www.w3.org/2000/svg';
 
@@ -36,12 +37,15 @@ export function buildMap(container: HTMLElement, museum: MuseumConfig, onRoom: (
   for (const r of museum.rooms) {
     const [w, , d] = r.size;
     const g = el('g', compact ? { class: 'map-room' } : { class: 'map-room', tabindex: 0, role: 'button' }, svg);
-    el('rect', { x: r.position[0] - w / 2, y: r.position[1] - d / 2, width: w, height: d }, g);
+    // Une rotonde se dessine telle que le visiteur la parcourt : un cercle.
+    const round = rotundaShape(r);
+    if (round) el('circle', { class: 'map-shape', cx: round.cx, cy: round.cz, r: round.radius }, g);
+    else el('rect', { class: 'map-shape', x: r.position[0] - w / 2, y: r.position[1] - d / 2, width: w, height: d }, g);
     if (compact) {
       labels.set(r.id, { group: g, text: null });
       continue;
     }
-    const text = el('text', { x: r.position[0], y: r.position[1] - d / 2 + 1.1, 'text-anchor': 'middle', 'font-size': 0.62 }, g);
+    const text = el('text', { x: r.position[0], y: r.position[1] - d / 2 + (round ? 2.9 : 1.1), 'text-anchor': 'middle', 'font-size': 0.62 }, g);
     labels.set(r.id, { group: g, text });
     g.addEventListener('click', () => onRoom(r.id));
     g.addEventListener('keydown', (e) => {
@@ -52,9 +56,14 @@ export function buildMap(container: HTMLElement, museum: MuseumConfig, onRoom: (
       }
     });
 
+    // Une vitrine compte pour un seul repère, quel que soit le nombre de pièces qu'elle présente.
+    for (const v of r.vitrines ?? []) el('circle', { class: 'map-art', cx: r.position[0] + v.position[0], cy: r.position[1] + v.position[1], r: 0.33 }, g);
     for (const a of r.artworks) {
       if (a.type === 'sculpture') {
-        el('circle', { class: 'map-art', cx: r.position[0] + a.position[0], cy: r.position[1] + a.position[1], r: 0.28 }, g);
+        if (!a.vitrine) el('circle', { class: 'map-art', cx: r.position[0] + a.position[0], cy: r.position[1] + a.position[1], r: 0.28 }, g);
+      } else if (a.rotunda && round) {
+        const p = rotundaFrame(round, a.rotunda.angle, 0.35).center;
+        el('circle', { class: 'map-art', cx: p.x, cy: p.z, r: 0.2 }, g);
       } else {
         const f = wallFrame(r, a.wall);
         const p = f.center.clone().addScaledVector(f.tangent, a.offset).addScaledVector(f.normal, 0.28);

@@ -235,17 +235,16 @@ test('supprimer un musée le retire de la liste et range son dossier à part', a
   await expect(page.locator('.museums li', { hasText: 'Musée des Horizons' }).locator('button')).toHaveCount(0);
 
   // On change d'avis : rien ne bouge.
-  page.once('dialog', (dialog) => dialog.dismiss());
   await row.locator('button', { hasText: 'Supprimer' }).click();
+  await page.locator('dialog.confirm button.cancel').click();
+  await expect(page.locator('dialog.confirm')).toHaveCount(0);
   await expect(row).toBeVisible();
   expect(existsSync(`${museums}${id}/museum.json`)).toBe(true);
 
   // On confirme : le musée quitte la liste et le site, son dossier est gardé à part.
-  page.once('dialog', (dialog) => {
-    expect(dialog.message()).toContain(name);
-    void dialog.accept();
-  });
   await row.locator('button', { hasText: 'Supprimer' }).click();
+  await expect(page.locator('dialog.confirm')).toContainText(name);
+  await page.locator('dialog.confirm button.accept').click();
   await expect(page.locator('#notice')).toContainText(`« ${name} » est supprimé`);
   await expect(page.locator('.museums li', { hasText: name })).toHaveCount(0);
   expect(existsSync(`${museums}${id}`)).toBe(false);

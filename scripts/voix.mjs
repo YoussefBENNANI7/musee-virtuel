@@ -14,13 +14,13 @@
 //
 // Options : --modele <id> (gemini-3.8-flash-tts par défaut), --style "<consigne>" (ton de lecture, en anglais).
 //
-// Pour chaque œuvre et chaque langue du musée, le script envoie le texte lu (src/engine/narration.ts),
+// Pour chaque œuvre (et chaque présentation de salle) et chaque langue du musée, le script envoie le texte lu (src/engine/narration.ts),
 // reçoit un WAV, le compresse en MP3 (ffmpeg) dans audio/, et renseigne le champ "audio" de l'œuvre.
 // Un fichier audio/voix.json retient la voix, le ton et l'empreinte de chaque texte : relancé, le script
 // ne refait que les textes modifiés. S'il atteint la limite du jour, il s'arrête proprement ; on le relance
 // le lendemain et il reprend là où il en était.
 //
-// La clé d'accès : variable d'environnement GEMINI_API_KEY. Dans l'environnement de travail cloud,
+// La clé d'accès : variable d'environnement GEMINI_API_KEY, ou ligne GEMINI_API_KEY=... du fichier .env à la racine du projet. Dans l'environnement de travail cloud,
 // elle est ajoutée par le réseau, et la variable n'est pas nécessaire.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -29,6 +29,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { narrationText } from '../src/engine/narration.ts';
+
+// La clé peut s'écrire dans un fichier .env à la racine du projet (GEMINI_API_KEY=...) : il n'est pas suivi par git.
+const envFile = fileURLToPath(new URL('../.env', import.meta.url));
+if (existsSync(envFile) && typeof process.loadEnvFile === 'function') process.loadEnvFile(envFile);
 
 const API = 'https://generativelanguage.googleapis.com/v1beta';
 const DEFAULT_MODEL = 'gemini-3.8-flash-tts';
@@ -111,7 +115,11 @@ const model = option('modele') ?? manifest.model ?? DEFAULT_MODEL;
 const style = option('style') ?? manifest.style ?? DEFAULT_STYLE;
 
 const wanted = option('oeuvres')?.split(',');
-const artworks = museum.rooms.flatMap((r) => r.artworks).filter((a) => !wanted || wanted.includes(a.id));
+// Les présentations des salles se produisent comme des œuvres, sous le nom « salle-<identifiant> ».
+const intros = museum.rooms
+  .filter((r) => r.intro)
+  .map((r) => ({ id: `salle-${r.id}`, title: r.name, artist: '', year: '', description: r.intro.text, room: r }));
+const artworks = [...museum.rooms.flatMap((r) => r.artworks), ...intros].filter((a) => !wanted || wanted.includes(a.id));
 if (wanted) {
   for (const id of wanted) if (!artworks.some((a) => a.id === id)) console.error(`✗ œuvre inconnue : ${id}`);
 }
@@ -221,7 +229,8 @@ outer: for (const voice of voices) {
         console.log(`✓ ${essai ? `${speaker} · ` : ''}${art.id} (${lang}) : ${duration.toFixed(1)} s`);
         if (!essai) {
           manifest.files[rel] = print;
-          art.audio = { ...(art.audio ?? {}), [lang]: rel };
+          if (art.room) art.room.intro.audio = { ...(art.room.intro.audio ?? {}), [lang]: rel };
+          else art.audio = { ...(art.audio ?? {}), [lang]: rel };
           saveConfig();
         }
       } catch (error) {

@@ -356,12 +356,12 @@ input[type='color'] {
   height: 100%;
   max-height: 150px;
 }
-.map-room > rect:first-child {
+.map-room > .map-shape {
   fill: var(--paper-2);
   stroke: var(--ink);
   stroke-width: 0.25;
 }
-.map-room.current > rect:first-child {
+.map-room.current > .map-shape {
   fill: #bcd6c0;
 }
 .map-door {
@@ -655,6 +655,29 @@ input[type='color'] {
   bottom: -11px;
   right: -11px;
   cursor: nwse-resize;
+}
+
+.confirm {
+  max-width: min(480px, calc(100% - 32px));
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+.confirm::backdrop {
+  background: rgba(28, 43, 38, 0.45);
+}
+.confirm p {
+  margin: 0 0 12px;
+}
+.confirm .confirm-title {
+  font-weight: 600;
+  font-size: 1.02rem;
+}
+.confirm .row {
+  margin-top: 16px;
 }
 
 .notice {

@@ -4,6 +4,8 @@ import { FOUNTAIN_RADIUS, benchFootprint } from './furniture';
 import { ART_CENTER_Y, MIN_DOOR_WIDTH, WALLS, buildLayout, inside, roomRect, wallFrame } from './layout';
 import { isStyleId, type Style } from './styles';
 import type { ArtworkConfig, L10n, MuseumConfig, RoomConfig } from './types';
+import { SLOTS, VITRINE_RADIUS } from './vitrines';
+import { rotundaShape } from './rotonde';
 
 /**
  * Contrôle d'une configuration de musée avant de la construire.
@@ -19,6 +21,7 @@ export interface Issue {
 const PAINTING_GENERATORS = ['geometric', 'fields', 'lines', 'circles', 'mosaic', 'landscape'];
 const SCULPTURE_GENERATORS = ['knot', 'blob', 'rings', 'stack', 'ribbon'];
 const SCULPTURE_MATERIALS = ['bronze', 'marble', 'patina', 'lacquer'];
+const COIN_METALS = ['gold', 'silver', 'bronze'];
 const FLOORINGS = ['concrete', 'parquet', 'chevron', 'stone', 'zellige'];
 const WALL_FINISHES = ['paint', 'limewash'];
 const BASEBOARDS = ['skirting', 'shadow-gap', 'none'];
@@ -65,6 +68,7 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
     if (roomIds.has(room.id)) error(where, 'identifiant utilisé par plusieurs salles');
     roomIds.add(room.id);
     translated(where, 'nom', room.name);
+    if (room.intro !== undefined) translated(where, 'présentation', room.intro.text);
     const [w, h, d] = room.size;
     if (!(w > 0 && h > 0 && d > 0)) error(where, 'dimensions invalides');
     else {
@@ -80,6 +84,17 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
       if (Math.abs(bench.position[0]) + hx > w / 2 - clear || Math.abs(bench.position[1]) + hz > d / 2 - clear) {
         error(where, `banc n° ${i + 1} : posé hors de la salle ou trop près d'un mur`);
       }
+    }
+    const round = rotundaShape(room);
+    if (round && round.radius < 3) error(where, 'salle trop petite pour une rotonde (rayon minimal : 3 m)');
+    const vitrineIds = new Set<string>();
+    for (const vitrine of room.vitrines ?? []) {
+      const spot = `${where}, vitrine "${vitrine.id}"`;
+      if (vitrineIds.has(vitrine.id)) error(spot, 'identifiant utilisé par plusieurs vitrines');
+      vitrineIds.add(vitrine.id);
+      const [vx, vz]: number[] = Array.isArray(vitrine.position) ? vitrine.position : [NaN, NaN];
+      const reach = round ? round.radius - 0.5 - VITRINE_RADIUS - Math.hypot(vx, vz) : Math.min(w / 2 - Math.abs(vx), d / 2 - Math.abs(vz)) - half - VITRINE_RADIUS;
+      if (!(reach >= 0)) error(spot, 'posée hors de la salle ou trop près d\'un mur');
     }
     if (room.fountain) {
       const [fx, fz] = room.fountain.position ?? [NaN, NaN];
@@ -160,6 +175,11 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
       translated(where, 'titre', art.title);
       translated(where, 'technique', art.medium);
       translated(where, 'description', art.description);
+      if (art.narration !== undefined) translated(where, 'texte de l\'audioguide', art.narration);
+      if (art.testimony !== undefined) {
+        if (!art.testimony.audio || typeof art.testimony.audio !== 'object' || !Object.values(art.testimony.audio).some((f) => typeof f === 'string' && f)) error(where, 'témoignage : indiquez son fichier audio');
+        translated(where, 'bouton du témoignage', art.testimony.label);
+      }
       if (!art.artist) warning(where, 'artiste manquant');
       else if (typeof art.artist !== 'string') translated(where, 'artiste', art.artist);
       if (art.year && typeof art.year !== 'string') translated(where, 'date', art.year);
@@ -175,7 +195,11 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
         });
         if (art.details?.length && !('src' in art.image)) warning(where, 'les détails commentés ne s’affichent que pour une œuvre fournie en fichier image');
       }
-      if (art.type === 'painting') checkPainting(art, room, layout, decor, where, error, warning);
+      if (art.type === 'painting' && art.rotunda) {
+        if (!room.rotunda) error(where, 'placée sur un mur courbe, mais la salle n\'est pas une rotonde');
+        if (!Number.isFinite(art.rotunda.angle)) error(where, 'angle invalide (attendu : des degrés, 0 = nord)');
+        if (!(art.width > 0 && art.height > 0)) error(where, 'dimensions invalides');
+      } else if (art.type === 'painting') checkPainting(art, room, layout, decor, where, error, warning);
       else if (art.type === 'sculpture') {
         if (art.tone !== undefined && !(art.tone > 0 && art.tone <= 1)) error(where, 'réglage "tone" invalide (attendu : un nombre entre 0 et 1)');
         if (art.turn !== undefined && !Number.isFinite(art.turn)) error(where, 'réglage "turn" invalide (attendu : un angle en degrés)');
@@ -250,6 +274,8 @@ function checkPainting(
   if (!(art.width > 0 && art.height > 0)) return error(where, 'dimensions invalides');
   if (art.frame !== undefined && art.frame !== 'gilt') error(where, `cadre inconnu : "${art.frame}"`);
   if (art.mat !== undefined && !(art.mat >= 0 && art.mat <= 0.4)) error(where, 'passe-partout invalide (entre 0 et 0,4 m)');
+  if (art.turn !== undefined && !(Math.abs(art.turn) <= 60)) error(where, 'angle invalide (entre -60 et 60 degrés)');
+  if (art.thickness !== undefined && !(art.thickness > 0 && art.thickness <= 1)) error(where, 'épaisseur invalide (entre 0 et 1 m)');
   const reach = framedHalfWidth(art, decor);
   const usable = wallFrame(room, art.wall, layout.wallThickness / 2).length;
   if (Math.abs(art.offset) + reach > usable / 2) error(where, 'dépasse du mur');
@@ -286,6 +312,16 @@ function checkSculpture(
   error: Report,
 ) {
   if (!(art.height > 0 && art.plinth >= 0)) return error(where, 'dimensions invalides');
+  const coin = art.model as { coin?: unknown; metal?: unknown } | undefined;
+  if (art.vitrine || coin?.coin !== undefined) {
+    // Pièce de monnaie : elle n'a de place que dans une vitrine de sa salle.
+    if (typeof coin?.coin !== 'string') return error(where, 'pièce : indiquez l\'image de sa face dans "model.coin"');
+    if (!COIN_METALS.includes(coin.metal as string)) error(where, `métal inconnu : "${coin.metal}" (gold, silver ou bronze)`);
+    if (!(room.vitrines ?? []).some((v) => v.id === art.vitrine?.id)) return error(where, `vitrine inconnue : "${art.vitrine?.id}"`);
+    if (!(Number.isInteger(art.vitrine!.slot) && art.vitrine!.slot >= 0 && art.vitrine!.slot < SLOTS.length)) error(where, `place invalide dans la vitrine (de 0 à ${SLOTS.length - 1})`);
+    if (art.height > 0.12) error(where, 'pièce trop grande pour une vitrine (diamètre maximal : 12 cm)');
+    return;
+  }
   const [w, h, d] = room.size;
   const clear = half + 0.5;
   if (Math.abs(art.position[0]) > w / 2 - clear || Math.abs(art.position[1]) > d / 2 - clear) {
@@ -304,7 +340,7 @@ function checkSculpture(
 /** Deux tableaux qui se recouvrent sur un même mur : gênant, mais pas bloquant. */
 function checkOverlaps(room: RoomConfig, decor: Decor, warning: Report) {
   for (const wall of WALLS) {
-    const hung = room.artworks.filter((a) => a.type === 'painting' && a.wall === wall) as Extract<ArtworkConfig, { type: 'painting' }>[];
+    const hung = room.artworks.filter((a) => a.type === 'painting' && !a.rotunda && a.wall === wall) as Extract<ArtworkConfig, { type: 'painting' }>[];
     for (let i = 0; i < hung.length; i++) {
       for (let j = i + 1; j < hung.length; j++) {
         const gap = Math.abs(hung[i].offset - hung[j].offset) - framedHalfWidth(hung[i], decor) - framedHalfWidth(hung[j], decor);
