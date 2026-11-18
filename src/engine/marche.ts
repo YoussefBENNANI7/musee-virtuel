@@ -23,9 +23,10 @@ export const PRECISION = 1e-6;
  * le long de chaque axe séparément, aussi loin que possible : il vient au ras de l'obstacle, puis glisse
  * le long au lieu de s'arrêter net. Parti d'un endroit praticable, il n'en sort jamais.
  *
- * Parti d'un endroit non praticable (déplacement en douceur interrompu en chemin), il fait le déplacement
- * d'un bloc ou pas du tout, le long des deux axes puis de chacun : un grand pas a ainsi plus de chances
- * de le ramener en zone praticable.
+ * Parti d'un endroit non praticable, il fait le déplacement d'un bloc ou pas du tout, le long des deux axes
+ * puis de chacun : un grand pas a ainsi plus de chances de le ramener en zone praticable. Ce cas ne devrait
+ * plus se présenter : un déplacement en douceur interrompu ne laisse plus le visiteur en pareil endroit
+ * (voir `firstWalkable`), et en casque la règle part de son point d'appui (voir `follow`).
  */
 export function advance(walkable: Walkable, x: number, z: number, dx: number, dz: number): { x: number; z: number } {
   const inside = walkable(x, z);
@@ -102,4 +103,38 @@ function freePart(walkable: Walkable, x: number, z: number, dx: number, dz: numb
     else closed = middle;
   }
   return free;
+}
+
+/**
+ * Premier endroit praticable sur le trajet en ligne droite de (x, z) à (toX, toZ), arrivée comprise :
+ * le départ s'il est praticable, `null` si rien ne l'est sur tout le trajet.
+ *
+ * Sert à dégager le visiteur qu'un déplacement en douceur interrompu laisserait dans l'épaisseur d'un mur
+ * ou dans la zone d'un banc ou d'un socle. Le trajet est parcouru par petits pas, puis la limite est
+ * cherchée par dichotomie : l'endroit renvoyé est au ras de l'obstacle, du côté praticable.
+ */
+export function firstWalkable(walkable: Walkable, x: number, z: number, toX: number, toZ: number): { x: number; z: number } | null {
+  if (walkable(x, z)) return { x, z };
+  const length = Math.hypot(toX - x, toZ - z);
+  const steps = Math.ceil(length / MAX_STEP);
+  // L'arrivée est prise telle quelle : recalculée, elle pourrait tomber un cheveu à côté d'une limite.
+  const at = (part: number) => (part === 1 ? { x: toX, z: toZ } : { x: x + (toX - x) * part, z: z + (toZ - z) * part });
+  for (let i = 1; i <= steps; i++) {
+    let free = i / steps;
+    let spot = at(free);
+    if (!walkable(spot.x, spot.z)) continue;
+    let closed = (i - 1) / steps;
+    while ((free - closed) * length > PRECISION) {
+      const middle = (free + closed) / 2;
+      const candidate = at(middle);
+      if (walkable(candidate.x, candidate.z)) {
+        free = middle;
+        spot = candidate;
+      } else {
+        closed = middle;
+      }
+    }
+    return spot;
+  }
+  return null;
 }

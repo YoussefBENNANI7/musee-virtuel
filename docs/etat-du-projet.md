@@ -1,6 +1,6 @@
 # Musée virtuel personnalisable : état du projet
 
-Mis à jour le 17 novembre 2026. Ce document permet de reprendre le projet dans une nouvelle conversation sans rien perdre : vision, décisions prises, avancement, points en attente et organisation du code.
+Mis à jour le 18 novembre 2026. Ce document permet de reprendre le projet dans une nouvelle conversation sans rien perdre : vision, décisions prises, avancement, points en attente et organisation du code.
 
 ---
 
@@ -11,6 +11,12 @@ Une plateforme de visites virtuelles en 3D, en marque blanche, vendue à des mus
 La visite est **gratuite pour le public**, dans une logique d'inclusion : démocratiser l'accès à l'art.
 
 Le musée de démonstration sert d'abord à une **présentation interne** : le porteur le montre à sa hiérarchie pour proposer des musées virtuels gratuits et inclusifs. Il doit donc être aussi réaliste que possible, avec de **vraies œuvres** (décision du 15 novembre 2026, qui remplace l'ancienne règle des œuvres fictives).
+
+### Versions
+
+- **Version 1** (18 novembre 2026) : étiquette `v1` dans GitHub, sur la branche `main`. Elle réunit le travail de toutes les conversations jusqu'au 17 novembre 2026 (moteur, éditeur, musée de démonstration à six salles, voix de l'audioguide), plus la correction « Déplacement en douceur interrompu ». Pour la retrouver telle quelle : `git checkout v1`.
+- **Les musées créés avec l'éditeur ne sont pas dans GitHub** (voir « Outil d'administration ») : la salle des 120 ans (`120-ans`) et le musée d'essai (`musee-test`) n'existent que sur le Mac du porteur. Leur sauvegarde de la version 1 est le dossier `musees-sauvegarde-v1`, sur son Bureau (copie de `public/museums/`, faite le 18 novembre 2026). À garder aussi hors du Mac (clé USB ou iCloud Drive).
+- **Version 2** : rendu premium du même moteur (lumière précalculée, finitions, reflets, matières), toujours dans le navigateur. Décision du 18 novembre 2026, après examen d'une version sous Unreal Engine, écartée : pas de visite par simple lien, ni sur téléphone, coût de diffusion par visiteur, accessibilité à refaire, et travail surtout manuel dans l'éditeur d'Unreal. Elle commence par un pilote sur une salle, à valider par le porteur.
 
 ## 2. Décisions prises
 
@@ -232,7 +238,7 @@ Correction du 17 novembre 2026. Aperçu, avec les mesures avant et après et des
 - **La règle de marche** (`advance`, dans `src/engine/marche.ts`) sert maintenant au clavier, à la manette et au casque. Le déplacement d'une image est découpé en petits pas de 5 cm au plus. Devant un obstacle, le visiteur avance le long de chaque axe aussi loin que possible, au millième de millimètre près (recherche par dichotomie). Il arrive donc au ras de l'obstacle dans l'image même, quelle que soit la cadence ; il glisse le long des murs comme avant, et contourne un socle rond en le serrant.
 - **Mesuré** dans le navigateur des tests, vers un mur : avec des images toutes lentes, arrêt à 20 cm avant la correction, au ras après ; à la cadence des tests, le mur est atteint en 0,9 s, alors qu'il ne l'était toujours pas après 8 s.
 - **En casque**, la même règle s'applique, arrêt au ras compris. Elle n'y part pas de la tête du visiteur mais de son point d'appui : voir « Casque : le joystick répond toujours, et amène au ras des obstacles ». Le casque a d'abord gardé une marge de 5 cm devant les obstacles, retirée le jour même.
-- **Parti d'un endroit non praticable** (un déplacement en douceur interrompu, voir « Limites connues », ou une entrée en casque depuis un tel endroit), le visiteur garde l'ancienne règle, à l'identique : le pas se fait d'un bloc ou pas du tout.
+- **Parti d'un endroit non praticable**, le visiteur garde l'ancienne règle, à l'identique : le pas se fait d'un bloc ou pas du tout. Ce cas ne devrait plus se présenter : un déplacement en douceur interrompu ne laisse plus le visiteur dans un mur (voir « Déplacement en douceur interrompu »), et l'entrée en casque achève d'abord tout déplacement en cours.
 - **Le clic au sol** n'est pas concerné : le visiteur s'y arrête jusqu'à 10 cm avant un obstacle, quelle que soit la cadence (`Controls.reach`).
 - **Tests** : `tests/unit/marche.test.ts` et `tests/unit/controls.test.ts` (24 tests). Dans un navigateur, deux tests ralentissent de vraies images (`slowFrames`, dans `tests/e2e/helpers.ts`), au clavier sur ordinateur et à la manette sur téléphone.
 
@@ -262,10 +268,26 @@ Correction du 17 novembre 2026, en deux temps : d'abord le joystick qui répond 
   - *Pivot par crans* : la tête ne change pas de place dans le musée, le point d'appui non plus.
   - *Mur traversé en marchant pour de bon* : tant que la tête est dans l'épaisseur du mur, le joystick ne l'y enfonce pas, mais répond encore le long du mur et vers l'arrière. Dès qu'elle est en zone praticable de l'autre côté, le visiteur est dans la salle voisine, comme avant.
   - *Sortie du casque* : le visiteur retrouve la visite à l'écran à son point d'appui.
-  - *Entrée en casque depuis un endroit non praticable* (voir « Limites connues ») : rien ne dit où le visiteur pourrait s'appuyer ; il garde l'ancienne règle jusqu'à revenir en zone praticable.
+  - *Entrée en casque depuis un endroit non praticable* : ne devrait plus arriver, car l'entrée en casque achève d'abord tout déplacement en douceur (voir « Déplacement en douceur interrompu »). Par sécurité, rien ne disant où le visiteur pourrait s'appuyer, il garderait l'ancienne règle jusqu'à revenir en zone praticable.
 - **Tests** : 13 tests unitaires dans `tests/unit/marche.test.ts` (la règle du point d'appui, puis un visiteur en casque simulé) et 3 tests en casque émulé de plus dans `tests/e2e/casque-vr.spec.ts` (le scénario du défaut, la tête qui bouge sans cesse, les cas particuliers).
 - **Contre-épreuves** : si la règle repart de la tête, 9 de ces tests unitaires et les 3 tests en casque échouent. Si le joystick garde sa marge, 3 tests en casque échouent (arrêt à 2,5 et 3,6 cm de la limite).
 - **Point à surveiller, non corrigé : les portes.** Voir « Limites connues ».
+
+### Déplacement en douceur interrompu : le visiteur n'est plus coincé
+
+Correction du 17 novembre 2026. Aperçu, avec les mesures avant et après et des captures sur ordinateur et sur téléphone : https://claude.ai/artifact/HDZqNd4G47k2H2Byhzp424.
+
+- **Le défaut** : pour amener le visiteur devant une œuvre, le musée le déplace en ligne droite, à travers les murs et le mobilier (`Controls.glideTo`). S'il reprenait la main à cet instant (touche, glissement de la vue, doigt sur la manette), il s'arrêtait où il était, parfois dans l'épaisseur d'un mur ou dans la zone réservée autour d'un banc ou d'un socle. De là, aucune touche ne le faisait plus bouger, et le clic au sol non plus.
+- **La règle** (`Controls.interrupt`, dans `src/engine/controls.ts`) : là où le visiteur peut se tenir, il s'arrête sur place, comme avant. Ailleurs, son déplacement **se poursuit jusqu'au premier endroit praticable de sa trajectoire**, sur sa lancée et au moins à l'allure de la marche : un quart de seconde au plus. Il s'arrête alors au ras de l'obstacle, de l'autre côté, et peut marcher. Si rien n'est praticable devant lui, il revient au dernier endroit praticable qu'il a traversé.
+- **Le regard** obéit au visiteur dès qu'il reprend la main, y compris pendant ce quart de seconde : le déplacement ne le fait plus tourner. Faire glisser la vue arrête donc toujours un déplacement, comme avant : c'est le choix retenu par défaut, **à confirmer par le porteur**. L'autre possibilité : ce geste ne ferait que tourner le regard, et le visiteur irait au bout de son déplacement.
+- **L'endroit où il s'arrête ne dépend pas de la cadence des images** : il est calculé sur la trajectoire (`firstWalkable`, dans `src/engine/marche.ts`), par petits pas puis par dichotomie, au millième de millimètre.
+- **Trois cas voisins corrigés du même coup** : un clic au sol dont le trajet rase l'angle d'un banc (le trajet n'est contrôlé que tous les 10 cm) ; un déplacement mené à son terme, qui s'achève à moins d'un centimètre du but et pouvait laisser le visiteur juste avant la zone de marche ; l'entrée en casque VR pendant un déplacement, qui faisait démarrer le visiteur dans un mur (le déplacement s'achève maintenant d'un coup, `Controls.finishGlide`).
+- **Ce qui ne change pas** : un déplacement que rien n'interrompt, la marche au clavier et à la manette, le clic au sol. Parti d'un endroit non praticable, `advance` garde l'ancienne règle.
+- **Mesuré** sur le cas signalé (du hall vers le cabinet du musée de test, interruption dans le mur nord) : avant, 0,000 m de déplacement en deux secondes, dans les quatre directions ; après, le visiteur est dans le cabinet en moins d'un dixième de seconde et y marche à 2,40 m par seconde.
+- **Vérifié aussi dans le musée de démonstration**, avec un vrai clic puis un vrai glissement de la vue (de l'atrium vers la Grande Jatte, aperçue par la porte de la Cour : le trajet passe par le mur sur 1,28 m). Avant : le visiteur reste dans le mur, 0 m aux quatre touches. Après : il s'arrête 63 cm plus loin, dans la Cour, en deux centièmes de seconde, et marche. Vu de l'intérieur, un mur ne se voit pas : rien n'indiquait au visiteur où il était.
+- **L'endroit où le visiteur est emmené devant une œuvre est toujours praticable**, dans la démonstration comme dans le musée de test (mesuré dans un navigateur sur plus de 440 000 combinaisons d'œuvre, de point de départ et de recul) : il a donc toujours un endroit praticable devant lui. Le retour en arrière n'existe que par sécurité.
+- **Tests** : 21 tests unitaires (`tests/unit/marche.test.ts`, `tests/unit/controls.test.ts`), pour un mur, un banc et un socle, avec les quatre gestes (touche de déplacement, touche de rotation, glissement de la vue, manette) et trois durées d'image, plus 4 000 trajets tirés au hasard (avec l'ancien moteur, 1 748 visiteurs y restaient coincés ; aucun avec le nouveau). Quatre tests dans un navigateur, avec de vrais gestes : la souris dans un mur, le clavier près d'un socle, le doigt sur la manette près d'un banc (tablette), et l'entrée en casque émulé. Sans la correction, 12 des tests unitaires et ces quatre tests échouent.
+- **Constat au passage** : sur un téléphone tenu droit, la fiche ouverte recouvre la manette ; le visiteur ne peut donc pas la toucher pendant qu'il est emmené devant une œuvre. Il le peut sur une tablette ou un téléphone couché, où la fiche s'ouvre sur le côté.
 
 ### Autour de l'œuvre, et pack présentation
 
@@ -337,6 +359,7 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
+- **Son choix sur le glissement de la vue pendant un déplacement en douceur** (vers une œuvre ou vers un point du sol) : l'arrêter, comme aujourd'hui (retenu par défaut), ou seulement tourner le regard, le visiteur allant au bout de son déplacement. Voir « Déplacement en douceur interrompu ».
 - **Son avis sur l'éditeur à l'usage** : dépôt de photos, accrochage automatique, fiches. Et ses réponses aux trois questions restées ouvertes : la date de la présentation, qui utilisera l'outil, et si un éditeur sur ordinateur, sans compte, lui convient pour commencer.
 - **Où ranger le musée de la banque** : les musées créés ne partent pas sur GitHub. S'il est construit dans le cloud par Claude, il faudra un dépôt privé séparé ou un autre moyen de le lui remettre.
 - **Son avis sur le lot « autour de l'œuvre » et le pack présentation**, sa relecture des textes des détails commentés, et son écoute du son de la fontaine (niveau, agrément).
@@ -368,7 +391,7 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 - La voix de synthèse n'est pas garantie sur les navigateurs de casque : sans elle, le bouton d'écoute ne s'affiche pas.
 - En casque, la marche au joystick (le point d'appui et l'arrêt au ras, voir « Casque : le joystick répond toujours, et amène au ras des obstacles ») n'a été vérifiée qu'en casque émulé. L'émulateur tient le casque immobile : les mouvements naturels de la tête ont été simulés, pas observés. **À confirmer sur un vrai casque.**
 - En longeant un mur, le visiteur peut être retenu au bord d'une porte. Le passage d'une porte est plus étroit qu'elle, de 30 cm de chaque côté. Un visiteur engagé de quelques centimètres dans ce passage est arrêté par son bord s'il pousse le long du mur ; il repart en s'écartant un peu du mur. C'est la règle de marche de tous les appareils, mais en casque la tête passe la limite sans que le visiteur le veuille, et son point d'appui s'engage alors dans le passage. Par le calcul, pour un visiteur venu au mur puis qui le longe, la tête oscillant de 2 cm : joystick poussé exactement le long du mur, il est retenu puis repart dans 149 passages sur 200, et reste bloqué plus de 6 secondes dans 5 ; joystick imprécis de 5°, il reste bloqué plus de 6 secondes dans 67 passages sur 200. La marge de 5 cm ne l'évitait pas (63 passages bloqués sur 200 dans le même calcul). Non corrigé : à observer sur un vrai casque, puis à traiter, par exemple en laissant le point d'appui contourner le bord du passage.
-- Un déplacement en douceur interrompu peut coincer le visiteur. Pour l'amener devant une œuvre, le musée le déplace en ligne droite, à travers les murs et les bancs (`Controls.glideTo`). S'il appuie sur une touche de déplacement ou fait glisser la vue à cet instant, il s'arrête où il est, parfois dans l'épaisseur d'un mur, d'où il ne sort plus à pied : il lui reste le plan, un parcours ou un clic sur une œuvre. Reproduit par le calcul le 17 novembre 2026. Défaut ancien, non corrigé.
+- Hors déplacement en douceur, deux chemins pourraient encore mener le visiteur à un endroit non praticable, d'où il ne sortirait plus à pied (il lui resterait le plan, un parcours ou un clic sur une œuvre). Relevés le 17 novembre 2026, non corrigés. (1) Un banc, un socle ou une fontaine posé sur un point d'arrivée (départ, entrée d'une salle depuis le plan) : le contrôle de la configuration ne le signale pas. (2) Le modèle 3D d'une sculpture large qui finit de charger pendant que le visiteur se tient contre son socle : la zone réservée passe alors de 70 cm à 1,17 m de rayon au plus. Aucun des deux ne peut se produire dans le musée de démonstration tel qu'il est. Un troisième chemin relevé le même jour, retirer le casque la tête au-delà de la limite de marche, est corrigé par le point d'appui.
 - L'éditeur ne s'utilise que sur ordinateur, sur la machine où tourne `npm run dev`, et il n'a pas encore été essayé sur un vrai Mac. Ses limites sont listées dans « Outil d'administration ».
 - Pendant que l'aperçu de l'éditeur se recharge, l'éditeur peut marquer un temps d'arrêt sur un ordinateur sans carte graphique. `editeur.html?apercu=low` allège l'aperçu.
 
@@ -424,8 +447,8 @@ scripts/images.mjs          Préparation des images d'un musée
 scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
 scripts/editeur-serveur.mjs Service d'écriture de l'éditeur, ajouté au serveur de développement
-tests/unit/                 Tests unitaires (Vitest) : 173 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 77 tests
+tests/unit/                 Tests unitaires (Vitest) : 194 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 81 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration
@@ -477,7 +500,7 @@ npm run vignettes -- demo         # photographie les sculptures (le musée doit 
 - **Tout en français** : interface, commentaires du code, messages de commit, documentation. Les textes du musée existent en français et en anglais.
 - **Le porteur du projet n'est pas développeur** : commandes exactes à copier, explications simples, sur Mac.
 - **Avant et après chaque modification du moteur** : les tests doivent passer, puis le rendu est vérifié par des captures sur ordinateur et sur téléphone.
-- **Tests dans un navigateur** : attendre une condition que le moteur expose (par exemple `controls.gliding`, vrai tant qu'un déplacement en douceur est en cours), jamais un délai fixe ni « deux positions identiques de suite ». Le rendu des tests est calculé par le processeur : une image prend 100 ms ou plus, et sous charge celle qui suit un clic peut tarder, si bien que deux relevés rapprochés sont identiques avant même que le visiteur ait bougé. Pour savoir où un obstacle arrête le visiteur, l'aide `walkUntilBlocked` fait elle-même avancer le temps, à grands pas, au lieu d'attendre les images ; elle vérifie ensuite que de tout petits pas ne déplacent plus le visiteur, ce qui prouve à chaque appel qu'il s'est arrêté au ras de l'obstacle.
+- **Tests dans un navigateur** : attendre une condition que le moteur expose (par exemple `controls.gliding`, vrai tant qu'un déplacement en douceur est en cours), jamais un délai fixe ni « deux positions identiques de suite ». Le rendu des tests est calculé par le processeur : une image prend 100 ms ou plus, et sous charge celle qui suit un clic peut tarder, si bien que deux relevés rapprochés sont identiques avant même que le visiteur ait bougé. Pour savoir où un obstacle arrête le visiteur, l'aide `walkUntilBlocked` fait elle-même avancer le temps, à grands pas, au lieu d'attendre les images ; elle vérifie ensuite que de tout petits pas ne déplacent plus le visiteur, ce qui prouve à chaque appel qu'il s'est arrêté au ras de l'obstacle. Pour qu'un vrai geste (souris, clavier, doigt) arrive à un instant précis d'un déplacement en douceur, l'aide `holdClock` tient l'horloge de la visite : le visiteur ne bouge plus que lorsque le test fait avancer le temps.
 - **Tests en casque émulé** : l'émulateur tient le casque parfaitement immobile, et les images lentes du navigateur des tests font faire au joystick des pas de 18 cm. Ni l'un ni l'autre ne ressemble à un vrai casque, où la tête bouge sans cesse et où un pas fait 2 cm : le défaut du joystick sans effet y échappait. Les tests font donc avancer le temps eux-mêmes, à 90 images par seconde (`__museum.vrUpdate(dt)`), et déplacent la tête eux-mêmes : par `xrDevice.position` pour un vrai mouvement, pris en compte à l'image suivante, ou, image par image, par la position de la caméra dans son `rig`. `__museum.vrSupport()` donne le point d'appui du visiteur.
 - **Un aperçu à la fin de chaque lot**, et pas de lot touchant à l'identité visuelle sans l'avis du porteur.
 - **Œuvres** : Claude cherche de vraies œuvres en accès libre et vérifie la licence de chacune à la source ; le porteur valide la sélection avant toute intégration.

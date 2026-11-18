@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { openMuseum, teleport } from './helpers';
+import { holdClock, onWalkableGround, openMuseum, panel, teleport } from './helpers';
 
 // Émulateur de casque (Meta Quest 3) : il remplace l'interface WebXR du navigateur.
 const require = createRequire(import.meta.url);
@@ -438,6 +438,30 @@ test('en casque, le visiteur garde un point d’appui praticable : entrée, pivo
   });
   expect(walked).toBeCloseTo(1.2, 6);
   expect(errors).toEqual([]);
+});
+
+test('entré en VR pendant qu’il est emmené devant une œuvre, le visiteur arrive devant elle, pas dans un mur', async ({ page }) => {
+  await installHeadset(page);
+  await openMuseum(page);
+  // Dans le hall, à gauche de la porte du cabinet : par elle, on voit « Zellige imaginaire ». Le chemin
+  // qui y mène en ligne droite passe par le mur, à côté de la porte.
+  await teleport(page, -0.5, 2, Math.atan2(-5.35, 10.5));
+  await page.waitForTimeout(300);
+  const clock = await holdClock(page);
+  const p = await page.evaluate(() => (window as any).__museum.screenOf('zellige-imaginaire'));
+  await page.mouse.click(p.x, p.y);
+  await expect(panel(page)).toBeVisible();
+  await clock.untilOutside();
+  expect(await onWalkableGround(page)).toBe(false);
+
+  // À cet instant, il entre en VR : le déplacement s'achève d'un coup, et le casque démarre devant l'œuvre.
+  await page.click('#vr');
+  await expect.poll(async () => (await state(page)).presenting).toBe(true);
+  const { head } = await state(page);
+  expect(await page.evaluate(([x, z]) => (window as any).__museum.world.walkable(x, z) as boolean, [head.x, head.z])).toBe(true);
+  // Le tableau est accroché au mur est du cabinet, en (4,85 ; -8,5) : le visiteur est devant lui, à moins de 3 m.
+  expect(Math.hypot(head.x - 4.85, head.z + 8.5)).toBeLessThan(3);
+  expect(Math.abs(head.z + 8.5)).toBeLessThan(0.3);
 });
 
 test('sans casque, le bouton VR reste masqué', async ({ page }) => {
