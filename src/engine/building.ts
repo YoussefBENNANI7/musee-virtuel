@@ -252,7 +252,9 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
           const mesh = lit(new THREE.Mesh(gridGeometry(to - from, top - bottom, { u0: mid, v0: (top - bottom) / 2, tile }), material), light);
           mesh.position.set(mid, (bottom + top) / 2, 0.003);
           mesh.raycast = noRaycast;
+          // Plaquée sur le mur, la bande en partage la lumière précalculée (voir lumiere.ts).
           mesh.userData.lumiere = room.id;
+          mesh.userData.habillage = true;
           holder.add(mesh);
         };
         const edge = (y: number) => {
@@ -348,6 +350,8 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
         // La salle où la porte est déclarée se trouve du côté des z positifs du passage.
         face.position.z = i === 0 ? half + 0.002 : -half - 0.002;
         if (i === 1) face.rotation.y = Math.PI;
+        // Elle prolonge le mur de sa salle : elle en reçoit la lumière précalculée.
+        face.userData.lumiere = room.id;
         portal.add(face);
       });
       // L'intrados : l'épaisseur du mur, visible sous l'arc.
@@ -365,6 +369,10 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
       sill.position.y = 0.003;
       portal.add(sill);
     }
+    // Ce qui se trouve dans l'épaisseur du mur n'appartient à aucune des deux salles.
+    portal.traverse((o) => {
+      if ((o as THREE.Mesh).isMesh && !o.userData.lumiere) o.userData.embrasure = true;
+    });
   }
 
   // Une salle sombre reçoit, par chaque porte, la lumière de sa voisine plus claire.
@@ -443,6 +451,8 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
     const glass = new THREE.Mesh(new THREE.PlaneGeometry(ow, od), new THREE.MeshBasicMaterial({ map: skyTexture(), toneMapped: false }));
     glass.rotation.x = Math.PI / 2;
     glass.position.y = SKYLIGHT_WELL;
+    // Source de la lumière du jour, pour la lumière précalculée.
+    glass.userData.verriere = room.id;
     ceiling.add(glass);
 
     // Fines traverses du vitrage, espacées d'environ un mètre et demi.
@@ -479,6 +489,8 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
     mesh.rotation.x = -Math.PI / 2;
     mesh.position.copy(patch.center).setY(0.004);
     mesh.raycast = noRaycast;
+    // Avec la lumière précalculée, la vraie tache de soleil est dans l'atlas : celle-ci est alors retirée.
+    mesh.userData.soleil = room.id;
     group.add(mesh);
   }
 

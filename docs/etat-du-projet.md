@@ -14,9 +14,9 @@ Le musée de démonstration sert d'abord à une **présentation interne** : le p
 
 ### Versions
 
-- **Version 1** (18 novembre 2026) : la branche `main`, commit `5aeaa69`, et l'étiquette `v1` une fois créée par le porteur (voir « En attente du porteur »). Elle réunit le travail de toutes les conversations jusqu'au 17 novembre 2026 (moteur, éditeur, musée de démonstration à six salles, voix de l'audioguide), plus la correction « Déplacement en douceur interrompu ». Pour la retrouver telle quelle : `git checkout v1`.
+- **Version 1** (18 novembre 2026) : la branche `main`, commit `5aeaa69`, et l'étiquette `v1`, créée par le porteur sur GitHub le même jour (l'environnement de travail de Claude ne peut pas publier d'étiquette). Elle réunit le travail de toutes les conversations jusqu'au 17 novembre 2026 (moteur, éditeur, musée de démonstration à six salles, voix de l'audioguide), plus la correction « Déplacement en douceur interrompu ». Pour la retrouver telle quelle : `git checkout v1`.
 - **Les musées créés avec l'éditeur ne sont pas dans GitHub** (voir « Outil d'administration ») : la salle des 120 ans (`120-ans`) et le musée d'essai (`musee-test`) n'existent que sur le Mac du porteur. Leur sauvegarde de la version 1 est le dossier `musees-sauvegarde-v1`, sur son Bureau (copie de `public/museums/`, faite le 18 novembre 2026). À garder aussi hors du Mac (clé USB ou iCloud Drive).
-- **Version 2** : rendu premium du même moteur (lumière précalculée, finitions, reflets, matières), toujours dans le navigateur, sur la branche `claude/optimistic-davinci-kqpqmj` (voir « Version 2, rendu premium : pilote sur une salle »). Choix du porteur, le 18 novembre 2026, plutôt qu'une version sous Unreal Engine, dont les limites lui ont été présentées : pas de visite par simple lien, ni dans le navigateur du téléphone, coût de diffusion par visiteur, accessibilité à refaire, et travail surtout manuel dans l'éditeur d'Unreal. Elle commence par un pilote sur une salle, à valider par le porteur.
+- **Version 2** : rendu premium du même moteur (lumière précalculée, finitions, reflets, matières), toujours dans le navigateur, sur la branche `claude/optimistic-davinci-kqpqmj` (voir « Version 2, rendu premium : lumière précalculée des six salles »). Choix du porteur, le 18 novembre 2026, plutôt qu'une version sous Unreal Engine, dont les limites lui ont été présentées : pas de visite par simple lien, ni dans le navigateur du téléphone, coût de diffusion par visiteur, accessibilité à refaire, et travail surtout manuel dans l'éditeur d'Unreal. Le pilote sur une salle a été validé par le porteur, puis étendu aux six salles.
 
 ## 2. Décisions prises
 
@@ -78,19 +78,39 @@ Le 15 novembre 2026, le porteur a donné son avis sur l'ambiance : la base lui p
 | 5. Mise en ligne | Hébergement sur Vercel, puis vérification sur de vrais appareils | À faire, avec l'accord du porteur |
 | 6. Outil d'administration | L'éditeur de l'étape 2 du produit. Les réglages de décor y deviendront des options | **Première version faite**, voir « Outil d'administration ». Premier essai du porteur le 17 novembre 2026 |
 
-### Version 2, rendu premium : pilote sur une salle (18 novembre 2026)
+### Version 2, rendu premium : lumière précalculée des six salles (18 novembre 2026)
 
 Sur la branche `claude/optimistic-davinci-kqpqmj`, pas sur `main` : la version 1 reste intacte tant que le porteur n'a pas validé. Détail, réglages et installation : `docs/lumiere.md`.
 
-- **Ce qui est fait** : la lumière précalculée de la Salle des Horizons. Blender (moteur Cycles, utilisé comme module Python `bpy` 5.3, sans interface) calcule la lumière de la salle : projecteurs braqués sur chaque œuvre, gorge lumineuse, éclairage d'ambiance du plafond, lumière renvoyée par les surfaces, lumière des salles voisines par les portes, ombres de contact. Le résultat est un atlas de lumière de 512 × 2048 points (un point tous les 2,5 cm, 18 Ko en WebP), que la visite plaque sur les murs, le sol et le plafond.
-- **Le décor reste celui qui a été choisi** : chaque famille de surfaces (sol, murs, plafond) garde la clarté et la teinte que lui donne son décor (médiane, canal par canal). Le calcul n'apporte que les variations. Sans cela, le plafond devenait brun et grenu (il ne reçoit que la lumière renvoyée par le parquet).
-- **Effets peints retirés** dans la salle calculée : les halos autour des œuvres et les ombres douces sous les bancs. Ils comptaient d'abord dans le calcul comme des objets opaques, d'où de grands rectangles noirs sous les bancs : les matières transparentes sont maintenant ignorées.
-- **Ombres de contact** : sous un éclairage aussi diffus, la vraie ombre d'un banc est presque invisible, et les bancs semblaient flotter. Un second calcul (occlusion ambiante sur 80 cm) assombrit le pied des bancs, des cadres et des murs ; plus fort au sol que sur les murs.
-- **Grain** : 512 échantillons (7 min 30 de calcul sur 4 cœurs), puis un lissage surface par surface, plus fort au plafond.
-- **Sécurité** : une empreinte de la salle (surfaces, décor, œuvres, bancs, style) accompagne l'atlas. Si la salle change ensuite, par exemple un tableau déplacé dans l'éditeur, la visite garde l'éclairage par formule pour cette salle et l'écrit dans la console. `?lumiere=0` montre la salle sans l'atlas, pour comparer.
-- **Vérifié** : 6 tests unitaires (rangement de l'atlas, coordonnées, empreinte) et 4 tests dans un navigateur (salle éclairée et effets peints retirés, comparaison, salle modifiée, fichier manquant). Captures avant et après sur ordinateur et sur téléphone.
-- **Limites** : une seule salle ; les objets (cadres, bancs, sculptures) gardent leur éclairage ; le calcul se fait sur le processeur (la carte graphique du Mac irait plus vite) ; un musée créé avec l'éditeur devra être calculé sur le Mac du porteur.
-- **Suite possible**, si le porteur valide : les autres salles (le patio marocain et la cour sous verrière demanderont le soleil), puis les autres améliorations de la version 2 (finitions de l'image sur ordinateur, vrais reflets, matières plus riches).
+Déroulé : un pilote sur la Salle des Horizons, validé par le porteur le 18 novembre 2026 (« oui, l'étendre à toutes les salles, avec plus de chaleur »), puis l'extension aux six salles le même jour. Sa troisième question, la force des faisceaux, est restée sans réponse : ils gardent la force du pilote.
+
+- **Ce qui est fait** : Blender (moteur Cycles, utilisé comme module Python `bpy` 5.3, sans interface) calcule la lumière de chaque salle. Le résultat est un atlas de lumière par salle (un point tous les 2,5 cm ; 105 Ko en WebP pour les six salles, de 13 à 23 Ko chacune), que la visite plaque sur les murs, le sol et le plafond. Sur un appareil modeste, l'atlas est réduit de moitié.
+- **Ce que chaque salle y gagne** :
+
+| Salle | Ce que le calcul apporte |
+|---|---|
+| Atrium, Cour des Sculptures | Lumière du ciel par la verrière, vraie tache de soleil au sol avec l'ombre adoucie des traverses, murs d'un blanc chaud qui s'assombrissent doucement vers les angles |
+| Salle des Horizons | Faisceaux des projecteurs, gorge lumineuse, murs plus dorés que dans le pilote |
+| Cabinet des Couleurs | Faisceaux chauds sur la terre cuite, lumière du patio qui entre par l'arc |
+| Galerie des Lignes | Vrais faisceaux allongés sur les murs bleu nuit, à la place des halos ronds |
+| Patio marocain | Lumière chaude des quatre lanternes sur les murs, soleil, ombres des objets accrochés et de la fontaine ; les bandes de zellige et de plâtre lisent la lumière du mur |
+
+- **Plus de chaleur** (demande du porteur) : la lumière des murs est réchauffée (réglage `--chaleur`, 0,07 par défaut ; moitié au plafond, rien au sol), et les projecteurs ont une lumière plus dorée. Sous une verrière, les murs n'en reçoivent que 60 % : le soleil réchauffe déjà la salle. La Galerie des Lignes, à lumière froide par choix du décor, n'est pas réchauffée.
+- **Le décor reste celui qui a été choisi** : chaque famille de surfaces (sol, murs, plafond) garde la clarté et la teinte que lui donne son décor. Le calcul n'apporte que les variations. Les murs sont 6 % plus clairs, pour compenser les halos peints disparus.
+- **Un plan, une place dans l'atlas** : les pans d'un mur, le linteau, l'arc outrepassé et les bandes de revêtement partagent une place, côte à côte comme dans le musée. Le pilote rangeait chaque pan à part, d'où une couture visible au-dessus des portes : elle a disparu.
+- **Quatre passes** calculées à part, puis réunies : la base (ambiance, gorge, ciel, lanternes), l'accent (projecteurs, ou soleil), la lumière des salles voisines par les portes, les ombres de contact. La force d'un faisceau se règle ainsi par rapport à la clarté du mur, celle de la tache de soleil par rapport à celle du sol, quelle que soit la salle. Les passes sont gardées hors du projet (`~/.cache/musee-virtuel/lumiere/`) : changer la chaleur ou la force d'un faisceau se refait en 3 à 20 secondes par salle, au lieu de plusieurs minutes.
+- **Défauts rencontrés et corrigés** en étendant le pilote, tous visibles sur les captures d'essai :
+  - *Gorge rouge vif sur la terre cuite* : la lumière renvoyée par des murs colorés sature. On ne garde qu'un tiers de la couleur propre au calcul.
+  - *Liseré clair au bord du plafond de la salle sombre* : le plafond va jusqu'aux limites de la salle, dans l'épaisseur des murs, où le dos des murs voisins l'éclairait. Les surfaces voisines n'éclairent plus que du côté où elles sont tournées, et la partie cachée du sol et du plafond ne compte plus.
+  - *Tache de soleil trop pâle* au premier essai (42 % de la clarté du sol, contre 77 % pour la tache peinte de la version 1) : portée à 75 %.
+  - *Murs tachetés* dans les salles blanches : lissage plus large là où aucun faisceau n'est à garder net.
+  - *Salle sombre* : ses faisceaux sont huit fois plus clairs que ses murs. L'image garde donc la lumière divisée par 2, 4 ou 8 selon la salle, et les lumières les plus fortes sont arrondies en douceur.
+- **Effets peints retirés** dans une salle calculée : les halos autour des œuvres, les ombres douces sous les bancs, les socles et la fontaine, et la tache de soleil dessinée. L'ombre que le soleil de la visite fait porter aux sculptures est gardée : sans elle, les statues paraissaient moins posées.
+- **Sécurité** : une empreinte de la salle (surfaces, décor, œuvres, mobilier, style) accompagne l'atlas. Si la salle change ensuite, par exemple un tableau déplacé dans l'éditeur, la visite garde l'éclairage par formule pour cette salle et l'écrit dans la console. `npm run lumiere -- demo` ne recalcule que les salles modifiées. `?lumiere=0` montre le musée sans les atlas, pour comparer.
+- **Durée du calcul** : 27 minutes pour les six salles (de 1 min 30 pour la Galerie des Lignes à 7 minutes pour l'Atrium), à 256 échantillons, sur les 4 cœurs de l'environnement de travail. Les passes gardées occupent 49 Mo hors du projet.
+- **Vérifié** : 9 tests unitaires (rangement de l'atlas, plans partagés, coordonnées, empreinte, force des faisceaux) et 6 tests dans un navigateur (les six salles éclairées et leurs effets peints retirés, comparaison, salle modifiée, atlas réduit sur appareil modeste, scène exportée pour Blender, fichier manquant). Captures avant et après de chaque salle, sur ordinateur et sur téléphone.
+- **Limites** : les objets (cadres, bancs, socles, sculptures, fontaine) et les embrasures des portes gardent leur éclairage d'avant ; le calcul se fait sur le processeur (la carte graphique du Mac irait plus vite) ; un musée créé avec l'éditeur se calcule sur le Mac du porteur, et l'éditeur ne signale pas encore qu'une salle modifiée est à recalculer.
+- **Suite possible** : l'avertissement « lumière à recalculer » dans l'éditeur, puis les autres améliorations de la version 2 (finitions de l'image sur ordinateur, vrais reflets, matières plus riches, objets éclairés par la lumière calculée).
 
 ### Voix de l'audioguide : décisions prises, production à venir
 
@@ -368,13 +388,13 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 - **Le musée de démonstration** ne fait pas partie du moteur. Sur ses 47 œuvres, 46 sont du domaine public ; seule la *Danseuse* de la Cour est réservée à un usage non commercial. Elle peut rester dans une démonstration, mais pas dans un musée vendu.
 - **Titularité du code** : le porteur indique avoir développé le projet avec son abonnement Anthropic personnel (17 novembre 2026). C'est un indice en sa faveur, mais la propriété dépend aussi du temps (hors heures de travail), du matériel (personnel), de la mission (initiative personnelle ou demande de l'employeur) et de son contrat de travail : à faire confirmer par un juriste. Précautions convenues : garder les factures et l'historique du dépôt, dire dès la présentation que le projet est personnel, et **construire le contenu de la banque dans un musée séparé** (`public/museums/attijariwafa/`), jamais dans le moteur.
 - **Autres points ouverts, pour un juriste** : la protection d'un code écrit avec l'aide d'une IA ; la forme de la cession (licence libre, licence d'utilisation, cession des droits) ; le nom du produit.
+- **Blender et la lumière précalculée** (18 novembre 2026) : Blender est sous licence GPL. Il n'est pas livré avec le moteur, et les atlas de lumière qu'il produit appartiennent à qui les calcule. Un seul fichier est concerné : `scripts/lumiere/calcul.py`, qui utilise l'interface de programmation de Blender et doit donc, s'il est distribué, l'être sous une licence compatible avec la GPL (la licence MIT l'est). Le reste du moteur ne lui parle que par des fichiers. Noté dans `docs/licences.md` ; à faire confirmer par le juriste avec les autres points.
 - **Conditions de Google sur les voix** : non lues (le site n'est plus joignable depuis l'environnement de travail). Elles ne concernent pas le moteur, qui ne contient que la commande de production : chaque musée produit ses voix avec son propre compte.
 - **Ce qui manque pour livrer le moteur seul** : retirer ou remplacer le musée de démonstration (l'éditeur sait maintenant créer un musée vide), et ajouter un fichier de licence à la racine du dépôt. L'outil d'administration existe en première version.
 
 ## 4. En attente du porteur du projet
 
-- **Son avis sur le pilote du rendu premium** (Salle des Horizons) : l'étendre aux autres salles ? plus de chaleur sur les murs ? faisceaux plus ou moins marqués ?
-- **L'étiquette `v1` dans GitHub** : l'environnement de travail de Claude ne peut pas la publier (refus du serveur). Le porteur la crée depuis son Mac (commandes données le 18 novembre 2026). En attendant, `main` est la version 1.
+- **Son avis sur le rendu premium des six salles** : la chaleur convient-elle (réglage `--chaleur`, salle par salle) ? faisceaux plus ou moins marqués ? tache de soleil plus ou moins forte ? Puis sa décision : faire de cette version la nouvelle branche principale, ou continuer la version 2 d'abord.
 
 - **Son choix sur le glissement de la vue pendant un déplacement en douceur** (vers une œuvre ou vers un point du sol) : l'arrêter, comme aujourd'hui (retenu par défaut), ou seulement tourner le regard, le visiteur allant au bout de son déplacement. Voir « Déplacement en douceur interrompu ».
 - **Son avis sur l'éditeur à l'usage** : dépôt de photos, accrochage automatique, fiches. Et ses réponses aux trois questions restées ouvertes : la date de la présentation, qui utilisera l'outil, et si un éditeur sur ordinateur, sans compte, lui convient pour commencer.
@@ -458,17 +478,17 @@ src/engine/artworks.ts      Accrochage des tableaux, pose des sculptures
 src/engine/accrochage.ts    Accrochage automatique : répartition des œuvres sur les murs d'une salle
 src/engine/plans.ts         Plans proposés à la création d'un musée
 src/engine/world.ts         Assemblage du musée, règles de déplacement, points de vue
-src/engine/lumiere.ts       Lumière précalculée : atlas de lumière d'une salle, empreinte, export pour Blender
+src/engine/lumiere.ts       Lumière précalculée : atlas de lumière de chaque salle, empreinte, export pour Blender
 src/engine/marche.ts        Règle de marche : petits pas, arrêt au ras des obstacles, glissement le long des murs, point d'appui du visiteur en casque (sans rendu, testée seule)
 src/engine/...              Contrôles, plan, mobilier, sculptures, textures, reflets, images
 
 scripts/images.mjs          Préparation des images d'un musée
 scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
-scripts/lumiere.mjs         Lumière précalculée d'une salle (« npm run lumiere »), calcul par Blender dans scripts/lumiere/
+scripts/lumiere.mjs         Lumière précalculée des salles (« npm run lumiere »), calcul par Blender dans scripts/lumiere/
 scripts/editeur-serveur.mjs Service d'écriture de l'éditeur, ajouté au serveur de développement
-tests/unit/                 Tests unitaires (Vitest) : 200 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 85 tests
+tests/unit/                 Tests unitaires (Vitest) : 203 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 87 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration
@@ -514,7 +534,7 @@ npm run build                     # version publiable, dans dist/
 npm run images -- demo --attach   # associe et prépare les images déposées dans images/
 npm run modeles -- demo           # prépare les modèles 3D déposés dans models/
 npm run vignettes -- demo         # photographie les sculptures (le musée doit tourner)
-npm run lumiere -- demo --salle horizons   # calcule la lumière d'une salle avec Blender (docs/lumiere.md)
+npm run lumiere -- demo           # calcule la lumière des salles modifiées, avec Blender (docs/lumiere.md)
 ```
 
 ## 8. Méthode de travail retenue

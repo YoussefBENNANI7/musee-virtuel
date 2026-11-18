@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
-import { DENSITY, PAD, layoutLightmap, packAtlas, roomContext } from '../../src/engine/lumiere';
+import { DENSITY, PAD, chartsOf, layoutLightmap, packAtlas, roomContext, spotGain } from '../../src/engine/lumiere';
 import { DECORS } from '../../src/engine/decors';
 import { fixture } from './helpers';
 
@@ -80,6 +80,66 @@ describe('atlas de lumière', () => {
         if (i < j) expect(p.u1 <= q.u0 || q.u1 <= p.u0 || p.v1 <= q.v0 || q.v1 <= p.v0).toBe(true);
       }),
     );
+  });
+
+  it('les surfaces d’un même plan partagent une place dans l’atlas, et la lumière passe de l’une à l’autre sans couture', () => {
+    // Un mur de 6 m percé d'une porte : un pan de chaque côté, et le linteau au-dessus. Dans le repère du mur.
+    const panel = (width: number, height: number, x: number, y: number, z = 0) => {
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height));
+      mesh.position.set(x, y, z);
+      return mesh;
+    };
+    const left = panel(2, 4, -2, 2);
+    const lintel = panel(2, 1, 0, 3.5);
+    const right = panel(2, 4, 2, 2);
+    // Une bande de zellige plaquée 3 mm devant le pan de gauche, et le mur d'en face, tourné vers le premier.
+    const band = panel(2, 1.2, -2, 0.6, 0.003);
+    const opposite = panel(6, 4, 0, 2, 5);
+    opposite.rotation.y = Math.PI;
+    const charts = chartsOf([left, lintel, right, band, opposite]);
+    expect(charts.map((c) => c.meshes.length)).toEqual([4, 1]);
+    // Le repère du plan est celui de sa première surface : le pan de gauche, centré en (-2 ; 2) sur le mur.
+    expect(charts[0].family).toBe('murs');
+    expect(charts[0].minX).toBeCloseTo(-1, 6);
+    expect(charts[0].minY).toBeCloseTo(-2, 6);
+    expect(charts[0].width).toBeCloseTo(6, 6);
+    expect(charts[0].height).toBeCloseTo(4, 6);
+
+    const { width, height } = layoutLightmap([left, lintel, right, band, opposite], '');
+    const uvAt = (mesh: THREE.Mesh, x: number, y: number) => {
+      const pos = mesh.geometry.attributes.position;
+      for (let k = 0; k < pos.count; k++) {
+        if (Math.abs(pos.getX(k) + mesh.position.x - x) < 1e-6 && Math.abs(pos.getY(k) + mesh.position.y - y) < 1e-6) {
+          return [mesh.geometry.attributes.uv1.getX(k) * width, mesh.geometry.attributes.uv1.getY(k) * height];
+        }
+      }
+      throw new Error(`pas de sommet en (${x}, ${y})`);
+    };
+    // Au bord commun de deux pans, les coordonnées sont les mêmes des deux côtés.
+    const seam = uvAt(left, -1, 4);
+    expect(uvAt(lintel, -1, 4)[0]).toBeCloseTo(seam[0], 4);
+    expect(uvAt(lintel, -1, 4)[1]).toBeCloseTo(seam[1], 4);
+    // La bande lit la lumière du mur qu'elle recouvre.
+    expect(uvAt(band, -3, 0)[0]).toBeCloseTo(uvAt(left, -3, 0)[0], 4);
+    expect(uvAt(band, -3, 0)[1]).toBeCloseTo(uvAt(left, -3, 0)[1], 4);
+    // Un mètre de mur occupe autant de points partout dans le plan.
+    expect(uvAt(right, 3, 0)[0] - uvAt(left, -3, 0)[0]).toBeCloseTo(6 * DENSITY, 0);
+  });
+
+  it('reconnaît le sol, les murs et le plafond à leur orientation', () => {
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(4, 4));
+    floor.rotation.x = -Math.PI / 2;
+    const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(4, 4));
+    ceiling.rotation.x = Math.PI / 2;
+    ceiling.position.y = 3;
+    expect(chartsOf([floor, ceiling, plane(4, 3)]).map((c) => c.family)).toEqual(['sol', 'plafond', 'murs']);
+  });
+
+  it('le faisceau d’un projecteur reste discret dans une salle claire et domine dans une salle sombre', () => {
+    const gain = (preset: string) => spotGain(DECORS[preset].settings as never);
+    expect(gain('argile-claire')).toBeCloseTo(0.42, 6);
+    expect(gain('terre-cuite')).toBeGreaterThan(1);
+    expect(gain('nuit')).toBeGreaterThan(4);
   });
 
   it('l’empreinte d’une salle change quand une surface bouge ou que son contexte change, et seulement alors', () => {

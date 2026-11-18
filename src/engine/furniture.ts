@@ -41,13 +41,23 @@ export function buildLantern(position: [number, number], room: RoomConfig, top: 
   const chain = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, top - y - 0.4, 6), brass);
   chain.position.y = 0.4 + (top - y - 0.4) / 2;
   // Halo de lumière autour de la lanterne, toujours tourné vers le visiteur.
-  lanternGlow ??= new THREE.SpriteMaterial({ map: blobTextureLight(), color: '#ffc880', opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+  lanternGlow ??= new THREE.SpriteMaterial({ map: blobTextureLight(), color: LANTERN_COLOR, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
   const halo = new THREE.Sprite(lanternGlow as THREE.SpriteMaterial);
   halo.scale.set(1.5, 1.5, 1);
   halo.raycast = () => {};
   group.add(body, cage, dome, foot, chain, halo);
+  // Pour la lumière précalculée, la lanterne est une lampe : son corps ne lui fait pas d'ombre.
+  group.traverse((o) => {
+    o.userData.lanterne = true;
+  });
   return group;
 }
+
+/** Hauteur à laquelle pendent les lanternes d'une salle. */
+export const lanternHeight = (room: RoomConfig): number => Math.min(3.4, room.size[1] - 0.9);
+
+/** Couleur de la lumière d'une lanterne. */
+export const LANTERN_COLOR = '#ffc880';
 
 /** Rayon au sol de la fontaine, pointes de l'étoile comprises. */
 export const FOUNTAIN_RADIUS = 1.3;

@@ -1,29 +1,106 @@
 {
-  "version": 1,
+  "version": 2,
   "rooms": {
     "horizons": {
       "image": "horizons.webp",
-      "fingerprint": "7451da24",
+      "fingerprint": "50274b94",
       "width": 512,
       "height": 2048,
-      "samples": 512,
+      "encode": 2,
+      "soleil": false,
+      "samples": 256,
       "scale": {
-        "sol": [
-          1.1198,
-          1.2702,
-          1.3899
-        ],
-        "plafond": [
-          3.6188,
-          5.1302,
-          6.8852
-        ],
-        "murs": [
-          1.4815,
-          1.7402,
-          1.9682
-        ]
+        "sol": 0.9746,
+        "plafond": 0.9839,
+        "murs": 0.9861
       },
+      "accent": 0.47469,
+      "peak": 1.941,
+      "settings": {}
+    },
+    "atrium": {
+      "image": "atrium.webp",
+      "fingerprint": "ee369b33",
+      "width": 512,
+      "height": 2048,
+      "encode": 2,
+      "soleil": true,
+      "samples": 256,
+      "scale": {
+        "sol": 0.8982,
+        "plafond": 0.9707,
+        "murs": 0.9676
+      },
+      "accent": 0.57265,
+      "peak": 1.37,
+      "settings": {}
+    },
+    "cabinet": {
+      "image": "cabinet.webp",
+      "fingerprint": "6f859492",
+      "width": 512,
+      "height": 2048,
+      "encode": 2,
+      "soleil": false,
+      "samples": 256,
+      "scale": {
+        "sol": 0.9556,
+        "plafond": 0.9939,
+        "murs": 0.9874
+      },
+      "accent": 0.97601,
+      "peak": 1.907,
+      "settings": {}
+    },
+    "galerie": {
+      "image": "galerie.webp",
+      "fingerprint": "d3190b17",
+      "width": 512,
+      "height": 2048,
+      "encode": 4,
+      "soleil": false,
+      "samples": 256,
+      "scale": {
+        "sol": 0.9801,
+        "plafond": 0.9916,
+        "murs": 0.9866
+      },
+      "accent": 5.62934,
+      "peak": 3.858,
+      "settings": {}
+    },
+    "cour": {
+      "image": "cour.webp",
+      "fingerprint": "63350cd1",
+      "width": 512,
+      "height": 2048,
+      "encode": 2,
+      "soleil": true,
+      "samples": 256,
+      "scale": {
+        "sol": 0.9646,
+        "plafond": 0.9819,
+        "murs": 0.9799
+      },
+      "accent": 0.63344,
+      "peak": 1.692,
+      "settings": {}
+    },
+    "riad": {
+      "image": "riad.webp",
+      "fingerprint": "bd564d29",
+      "width": 512,
+      "height": 2048,
+      "encode": 2,
+      "soleil": true,
+      "samples": 256,
+      "scale": {
+        "sol": 0.9902,
+        "plafond": 0.9951,
+        "murs": 0.9914
+      },
+      "accent": 0.55327,
+      "peak": 1.271,
       "settings": {}
     }
   }

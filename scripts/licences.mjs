@@ -68,6 +68,24 @@ la commande \`npm install\` les télécharge chez qui reprend le projet.
 
 ${table(['Outil', 'Version', 'Licence'], tools.map((d) => [d.name, d.version, d.licence]))}
 
+### Programmes à installer à part
+
+Deux commandes appellent un programme qui n'est ni livré avec le moteur, ni téléchargé par \`npm install\` :
+chacun l'installe lui-même sur son ordinateur.
+
+${table(
+  ['Programme', 'Commande', 'Licence', 'Ce que cela implique'],
+  [
+    ['ffmpeg', '`npm run voix`', 'LGPL ou GPL, selon la version installée', 'Rien pour le moteur : le programme est appelé tel quel, il n\'est pas redistribué.'],
+    [
+      'Blender (module Python `bpy`)',
+      '`npm run lumiere`',
+      'GNU GPL',
+      'Les atlas de lumière qu\'il produit appartiennent à qui les calcule. Le script `scripts/lumiere/calcul.py`, lui, utilise l\'interface de programmation de Blender : s\'il est distribué, il doit l\'être sous une licence compatible avec la GPL (la licence MIT l\'est). Le reste du moteur ne lui parle que par des fichiers. Voir https://www.blender.org/about/license/',
+    ],
+  ],
+)}
+
 ## 4. Sons livrés avec le moteur
 
 ${sounds.length ? `${row(['Fichier', 'Origine', 'Licence'])}\n${row(['---', '---', '---'])}\n${sounds.join('\n')}` : 'Aucun.'}
@@ -110,6 +128,7 @@ d'une IA, d'après les notices des musées. Ils n'ont pas été comparés un par
 - **Le code a été écrit avec l'aide d'une IA** : les conditions du fournisseur attribuent en général les résultats à l'utilisateur, mais la protection par le droit d'auteur d'un contenu produit par une IA varie selon les pays.
 - **La forme de la cession** : licence libre, licence d'utilisation, ou cession des droits ; garanties et limites de responsabilité.
 - **Le nom du produit** : vérifier qu'il n'est pas déjà déposé comme marque.
+- **Le script de calcul de la lumière** (\`scripts/lumiere/calcul.py\`) : il utilise l'interface de Blender, logiciel sous licence GPL. Confirmer sous quelle licence le distribuer avec le moteur, ou le livrer à part.
 `;
 
 writeFileSync(new URL('docs/licences.md', root), out);
