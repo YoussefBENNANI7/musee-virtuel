@@ -109,6 +109,7 @@ Déroulé : un pilote sur la Salle des Horizons, validé par le porteur le 18 no
 - **Sécurité** : une empreinte de la salle (surfaces, décor, œuvres, mobilier, style) accompagne l'atlas. Si la salle change ensuite, par exemple un tableau déplacé dans l'éditeur, la visite garde l'éclairage par formule pour cette salle et l'écrit dans la console. `npm run lumiere -- demo` ne recalcule que les salles modifiées. `?lumiere=0` montre le musée sans les atlas, pour comparer.
 - **Durée du calcul** : 27 minutes pour les six salles (de 1 min 30 pour la Galerie des Lignes à 7 minutes pour l'Atrium), à 256 échantillons, sur les 4 cœurs de l'environnement de travail. Les passes gardées occupent 49 Mo hors du projet.
 - **Vérifié** : 9 tests unitaires (rangement de l'atlas, plans partagés, coordonnées, empreinte, force des faisceaux) et 6 tests dans un navigateur (les six salles éclairées et leurs effets peints retirés, comparaison, salle modifiée, atlas réduit sur appareil modeste, scène exportée pour Blender, fichier manquant). Captures avant et après de chaque salle, sur ordinateur et sur téléphone.
+- **Musées créés avec l'éditeur** : ils restent sur l'ordinateur du porteur, leur lumière s'y calcule donc aussi. `npm run lumiere:installer` y installe ce qu'il faut, une fois (Python 3.13, Blender comme module Python, navigateur de calcul), hors du projet ; puis `npm run lumiere -- <dossier du musée>`. Vérifié dans l'environnement de travail sur des musées fabriqués comme le fait l'éditeur : les quatre plans proposés, douze salles, se calculent sans erreur (essai rapide à 16 échantillons, puis contrôle à l'œil). **Le calcul n'a pas encore tourné sur un Mac** : le musée des 120 ans sera le premier essai, guidé pas à pas le 18 novembre 2026. La commande essaie plusieurs façons d'ouvrir la 3D dans le navigateur sans fenêtre, et affiche un message à recopier en cas d'échec.
 - **Limites** : les objets (cadres, bancs, socles, sculptures, fontaine) et les embrasures des portes gardent leur éclairage d'avant ; le calcul se fait sur le processeur (la carte graphique du Mac irait plus vite) ; un musée créé avec l'éditeur se calcule sur le Mac du porteur, et l'éditeur ne signale pas encore qu'une salle modifiée est à recalculer.
 - **Suite possible** : l'avertissement « lumière à recalculer » dans l'éditeur, puis les autres améliorations de la version 2 (finitions de l'image sur ordinateur, vrais reflets, matières plus riches, objets éclairés par la lumière calculée).
 
@@ -394,6 +395,7 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
+- **Le rendu premium du musée des 120 ans, sur son Mac** : installer (`npm run lumiere:installer`), calculer (`npm run lumiere -- 120-ans`), puis dire ce que cela donne. C'est le premier calcul sur un Mac : toute erreur affichée est à recopier à Claude.
 - **Son avis sur le rendu premium des six salles** : la chaleur convient-elle (réglage `--chaleur`, salle par salle) ? faisceaux plus ou moins marqués ? tache de soleil plus ou moins forte ? Puis sa décision : faire de cette version la nouvelle branche principale, ou continuer la version 2 d'abord.
 
 - **Son choix sur le glissement de la vue pendant un déplacement en douceur** (vers une œuvre ou vers un point du sol) : l'arrêter, comme aujourd'hui (retenu par défaut), ou seulement tourner le regard, le visiteur allant au bout de son déplacement. Voir « Déplacement en douceur interrompu ».
@@ -486,6 +488,7 @@ scripts/images.mjs          Préparation des images d'un musée
 scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
 scripts/lumiere.mjs         Lumière précalculée des salles (« npm run lumiere »), calcul par Blender dans scripts/lumiere/
+scripts/lumiere-installer.mjs  Prépare un ordinateur pour ce calcul (« npm run lumiere:installer »)
 scripts/editeur-serveur.mjs Service d'écriture de l'éditeur, ajouté au serveur de développement
 tests/unit/                 Tests unitaires (Vitest) : 203 tests
 tests/e2e/                  Tests dans un navigateur (Playwright) : 87 tests
@@ -534,6 +537,7 @@ npm run build                     # version publiable, dans dist/
 npm run images -- demo --attach   # associe et prépare les images déposées dans images/
 npm run modeles -- demo           # prépare les modèles 3D déposés dans models/
 npm run vignettes -- demo         # photographie les sculptures (le musée doit tourner)
+npm run lumiere:installer        # une fois par ordinateur : installe Blender pour le calcul de la lumière
 npm run lumiere -- demo           # calcule la lumière des salles modifiées, avec Blender (docs/lumiere.md)
 ```
 

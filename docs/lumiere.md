@@ -68,23 +68,34 @@ Changer la chaleur, l'exposition, les faisceaux, le soleil ou les salles voisine
 npm run lumiere -- demo --salle horizons --chaleur 0.1
 ```
 
-## Installer Blender pour le calcul (une seule fois, sur Mac)
+## Installer Blender pour le calcul (une seule fois par ordinateur)
 
-Le calcul utilise Blender comme module Python, sans son interface. Il faut un Mac à puce Apple (M1 ou plus récent) et Python 3.13 :
-
-```bash
-brew install python@3.13
-```
+Le calcul utilise Blender comme module Python, sans son interface. Une commande prépare tout :
 
 ```bash
-python3.13 -m venv ~/.cache/musee-virtuel/blender
+npm run lumiere:installer
 ```
+
+Elle vérifie l'ordinateur, puis installe ce qui manque, hors du projet :
+
+1. **L'ordinateur** : il faut un Mac à puce Apple (M1 ou plus récent) sous macOS 13 ou plus, ou un Linux 64 bits. Sur un Mac à processeur Intel, la commande le dit et s'arrête : le calcul doit alors se faire sur un autre ordinateur.
+2. **Python 3.13**, la version qu'exige ce module Blender. S'il manque, la commande l'installe avec Homebrew quand Homebrew est là ; sinon elle explique comment l'installer depuis python.org, et il suffit de la relancer ensuite.
+3. **Blender 5.3** (module `bpy`) et numpy, dans `~/.cache/musee-virtuel/blender` : environ 250 Mo à télécharger sur Mac.
+4. **Le navigateur sans fenêtre** qui ouvre le musée pour en exporter les salles (Chromium de Playwright, le même que pour les tests).
+
+Relancée, elle ne refait que ce qui manque. Pour tout désinstaller, supprimer le dossier `~/.cache/musee-virtuel`.
+
+## Calculer la lumière d'un musée créé avec l'éditeur
+
+Un musée créé avec l'éditeur reste sur l'ordinateur où il a été créé : sa lumière s'y calcule aussi. Le nom à donner est celui de son dossier dans `public/museums/` (c'est aussi ce qui suit `?m=` dans son adresse) :
 
 ```bash
-~/.cache/musee-virtuel/blender/bin/pip install bpy==5.3.0 numpy
+npm run lumiere -- 120-ans
 ```
 
-Le téléchargement fait environ 250 Mo. Le navigateur des tests doit aussi être installé (`npx playwright install chromium`), comme pour `npm run vignettes`.
+La commande donne des nouvelles chaque minute, puis indique l'adresse où voir le résultat. Elle ne touche ni aux œuvres ni aux textes du musée : elle ajoute un dossier `lumiere/` dans le dossier du musée, et une ligne `"lumiere"` dans son fichier `museum.json`. Pour revenir en arrière, supprimer ce dossier `lumiere/`.
+
+Après une modification dans l'éditeur (une photo ajoutée, déplacée ou retirée, un décor changé), la salle modifiée retrouve l'ancien éclairage : relancer la même commande, elle ne recalcule que les salles modifiées.
 
 ## Limites
 

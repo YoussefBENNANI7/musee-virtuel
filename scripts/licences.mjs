@@ -78,9 +78,9 @@ ${table(
   [
     ['ffmpeg', '`npm run voix`', 'LGPL ou GPL, selon la version installée', 'Rien pour le moteur : le programme est appelé tel quel, il n\'est pas redistribué.'],
     [
-      'Blender (module Python `bpy`)',
-      '`npm run lumiere`',
-      'GNU GPL',
+      'Blender (module Python `bpy`), avec Python 3.13',
+      '`npm run lumiere`, après `npm run lumiere:installer`',
+      'GNU GPL pour Blender ; licence PSF pour Python',
       'Les atlas de lumière qu\'il produit appartiennent à qui les calcule. Le script `scripts/lumiere/calcul.py`, lui, utilise l\'interface de programmation de Blender : s\'il est distribué, il doit l\'être sous une licence compatible avec la GPL (la licence MIT l\'est). Le reste du moteur ne lui parle que par des fichiers. Voir https://www.blender.org/about/license/',
     ],
   ],

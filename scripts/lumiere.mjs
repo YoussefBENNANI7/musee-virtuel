@@ -19,11 +19,12 @@
 //   --ciel 4             force du ciel de la verrière
 //   --defaut             oublie les réglages retenus pour les salles calculées
 //
-// Il faut Blender comme module Python, installé une fois pour toutes (voir docs/lumiere.md).
+// Il faut Blender comme module Python, installé une fois pour toutes : npm run lumiere:installer
+// (voir docs/lumiere.md).
 // Le script lance lui-même le musée, exporte les salles, fait calculer leur lumière par Blender,
 // puis range les atlas dans public/museums/<musée>/lumiere/ et déclare ce dossier dans museum.json.
 import { chromium } from '@playwright/test';
-import { spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -62,26 +63,21 @@ for (const [flag, key] of Object.entries(FLAGS)) {
   given[key] = Number(value);
 }
 
-const python = process.env.LUMIERE_PYTHON ?? join(homedir(), '.cache', 'musee-virtuel', 'blender', 'bin', 'python');
-if (!existsSync(python)) {
-  console.error(`Blender (module Python) introuvable : ${python}`);
-  console.error('Installation, une seule fois : voir docs/lumiere.md.');
+/** Arrête la commande sur un message clair, sans le détail technique réservé aux pannes inattendues. */
+const stop = (message) => {
+  console.error(`\n✗ ${message}\n`);
   process.exit(1);
-}
+};
+
+const python = process.env.LUMIERE_PYTHON ?? join(homedir(), '.cache', 'musee-virtuel', 'blender', 'bin', 'python');
+if (!existsSync(python)) stop('Blender n’est pas encore installé sur cet ordinateur. Lancez d’abord, une seule fois :\n\n    npm run lumiere:installer');
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const dir = join(root, 'public', 'museums', museumId);
 const configPath = join(dir, 'museum.json');
-if (!existsSync(configPath)) {
-  console.error(`Musée introuvable : ${configPath}`);
-  process.exit(1);
-}
-const museum = JSON.parse(readFileSync(configPath, 'utf8'));
-const all = museum.rooms.map((r) => r.id);
-if (!['toutes', 'modifiees'].includes(wanted) && !all.includes(wanted)) {
-  console.error(`Salle inconnue dans le musée « ${museumId} » : ${wanted} (salles : ${all.join(', ')}, ou « toutes »)`);
-  process.exit(1);
-}
+if (!existsSync(configPath)) stop(`Musée introuvable : il n’y a pas de dossier « ${museumId} » dans public/museums/.`);
+const all = JSON.parse(readFileSync(configPath, 'utf8')).rooms.map((r) => r.id);
+if (!['toutes', 'modifiees'].includes(wanted) && !all.includes(wanted)) stop(`Salle inconnue dans le musée « ${museumId} » : ${wanted}\n  Salles de ce musée : ${all.join(', ')} (ou « toutes »).`);
 const manifestPath = join(dir, 'lumiere', 'lumiere.json');
 const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : { version: 2, rooms: {} };
 manifest.version = 2;
@@ -95,20 +91,81 @@ const lookOf = (id) => {
 };
 const settingsOf = (id) => ({ ...lookOf(id), ...(given.samples ? { samples: given.samples } : {}) });
 
+/**
+ * Ouvre le musée, en 3D, dans un navigateur sans fenêtre. Selon l'ordinateur, la 3D y passe par la carte
+ * graphique ou par un rendu logiciel : on essaie l'un puis l'autre.
+ */
+async function openMuseum(address) {
+  const software = '--enable-unsafe-swiftshader';
+  const attempts = [
+    { args: [software] },
+    { args: ['--use-angle=swiftshader', software] },
+    { args: ['--use-gl=swiftshader', software] },
+    // Le navigateur complet, quand il est installé : il sait se servir de la carte graphique sans fenêtre.
+    { channel: 'chromium', args: [software] },
+  ];
+  let reason = '';
+  for (const [index, options] of attempts.entries()) {
+    let browser;
+    try {
+      browser = await chromium.launch(options);
+    } catch (error) {
+      if (index === 0 && /Executable doesn't exist|playwright install/i.test(String(error))) {
+        stop('Le navigateur de calcul n’est pas installé sur cet ordinateur. Lancez d’abord, une seule fois :\n\n    npm run lumiere:installer');
+      }
+      reason ||= String(error.message ?? error).split('\n')[0];
+      continue;
+    }
+    try {
+      const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
+      await page.goto(address);
+      await page.waitForSelector('body.ready, body.failed', { timeout: 120000 });
+      if (await page.evaluate(() => document.body.classList.contains('failed'))) {
+        // La configuration du musée est refusée : un autre réglage du navigateur n'y changerait rien.
+        const detail = await page.evaluate(() => (document.getElementById('config-errors')?.innerText || document.getElementById('help')?.innerText || '').trim());
+        await browser.close();
+        stop(`Le musée « ${museumId} » ne s’ouvre pas. Ouvrez-le dans l’éditeur pour voir ce qui manque.\n${detail}`);
+      }
+      if (await page.evaluate(() => Boolean(window.__museum))) return { browser, page };
+      reason = 'la visite en 3D ne démarre pas dans le navigateur de calcul';
+    } catch (error) {
+      reason = String(error.message ?? error).split('\n')[0];
+    }
+    await browser.close();
+  }
+  return stop(`Impossible d’ouvrir le musée pour l’exporter : ${reason}.\n  Copiez ce message à Claude.`);
+}
+
+/** Lance le calcul d'une salle par Blender, en donnant des nouvelles chaque minute. Vrai s'il réussit. */
+function calculate(argv) {
+  return new Promise((resolve) => {
+    const started = Date.now();
+    const child = spawn(python, argv, { stdio: ['ignore', process.env.LUMIERE_BAVARD ? 'inherit' : 'ignore', 'inherit'] });
+    const news = setInterval(() => console.log(`   … calcul en cours depuis ${Math.round((Date.now() - started) / 60000)} min`), 60000);
+    const done = (success) => {
+      clearInterval(news);
+      resolve(success);
+    };
+    child.on('error', () => done(false));
+    child.on('exit', (code) => done(code === 0));
+  });
+}
+
 // 1. Le musée, ouvert sans lumière précalculée, exporte les salles. Qualité basse : les modèles 3D
 // allégés suffisent pour les ombres, et la géométrie du bâtiment est la même à tous les niveaux.
+console.log(`Ouverture du musée « ${museumId} »…`);
 const server = await createServer({ root, logLevel: 'error', server: { port: 5196 } });
 await server.listen();
 const url = server.resolvedUrls.local[0];
-const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
 const scenes = {};
 let roomIds;
+const { browser, page } = await openMuseum(`${url}?m=${encodeURIComponent(museumId)}&q=low&accueil=non&lumiere=0`);
 try {
-  const page = await browser.newPage({ viewport: { width: 800, height: 600 } });
-  await page.goto(`${url}?m=${encodeURIComponent(museumId)}&q=low&accueil=non&lumiere=0`);
-  await page.waitForSelector('body.ready', { timeout: 120000 });
-  // Les sculptures doivent être là : elles font de l'ombre.
-  await page.waitForFunction(() => window.__museum.world.artworks.every((a) => a.ready), null, { timeout: 180000 });
+  // Les sculptures doivent être là : elles font de l'ombre. Une œuvre dont l'image ou le modèle 3D
+  // manque ne se charge jamais : passé un délai, le calcul se fait sans elle.
+  await page
+    .waitForFunction(() => window.__museum.world.artworks.every((a) => a.ready), null, { timeout: 90000 })
+    .catch(() => console.warn('   Attention : certaines œuvres ne se chargent pas (image ou modèle 3D manquant). Le calcul continue sans les attendre.'));
   if (wanted === 'modifiees') {
     // Seulement les salles jamais calculées, ou modifiées depuis (leur empreinte a changé).
     const prints = await page.evaluate((ids) => Object.fromEntries(ids.map((id) => [id, window.__museum.lumiereEmpreinte(id)])), all);
@@ -117,7 +174,7 @@ try {
   } else {
     roomIds = wanted === 'toutes' ? all : [wanted];
   }
-  if (roomIds.length) console.log(`Export : ${roomIds.join(', ')}…`);
+  if (roomIds.length) console.log(`Salles à calculer : ${roomIds.join(', ')}.`);
   for (const id of roomIds) scenes[id] = await page.evaluate(([room, s]) => window.__museum.lumiereExport(room, s), [id, settingsOf(id)]);
 } finally {
   await browser.close();
@@ -133,13 +190,11 @@ for (const roomId of roomIds) {
   const summaryPath = join(work, 'resume.json');
   writeFileSync(scenePath, scene);
   const { atlas, fingerprint, samples } = JSON.parse(scene);
-  console.log(`Salle « ${roomId} », calcul par Blender : atlas de ${atlas.width} × ${atlas.height} points, ${samples} échantillons. Compter quelques minutes…`);
+  console.log(`\nSalle « ${roomId} » (${roomIds.indexOf(roomId) + 1} sur ${roomIds.length}) : calcul par Blender, atlas de ${atlas.width} × ${atlas.height} points, ${samples} échantillons. Compter quelques minutes…`);
   // Les passes calculées sont gardées hors du projet : un simple réglage se refait alors sans nouveau calcul.
   const cachePath = join(homedir(), '.cache', 'musee-virtuel', 'lumiere', `${museumId}-${roomId}.npz`);
-  const run = spawnSync(python, [join(root, 'scripts', 'lumiere', 'calcul.py'), scenePath, pngPath, summaryPath, cachePath], { stdio: ['ignore', process.env.LUMIERE_BAVARD ? 'inherit' : 'ignore', 'inherit'] });
-  if (run.status !== 0) {
-    console.error(`Le calcul de la salle « ${roomId} » a échoué.`);
-    process.exit(1);
+  if (!(await calculate([join(root, 'scripts', 'lumiere', 'calcul.py'), scenePath, pngPath, summaryPath, cachePath]))) {
+    stop(`Le calcul de la salle « ${roomId} » a échoué. Copiez à Claude ce qui est affiché ci-dessus.`);
   }
   const summary = JSON.parse(readFileSync(summaryPath, 'utf8'));
 
@@ -162,6 +217,9 @@ for (const roomId of roomIds) {
     settings: lookOf(roomId),
   };
   writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  // Le musée déclare sa lumière précalculée. Son fichier est relu à cet instant : il a pu être
+  // modifié, dans l'éditeur par exemple, pendant les minutes qu'a duré le calcul.
+  const museum = JSON.parse(readFileSync(configPath, 'utf8'));
   if (museum.lumiere !== 'lumiere/lumiere.json') {
     museum.lumiere = 'lumiere/lumiere.json';
     writeFileSync(configPath, `${JSON.stringify(museum, null, 2)}\n`);
@@ -169,4 +227,8 @@ for (const roomId of roomIds) {
   if (process.env.LUMIERE_GARDER) console.log(`Fichiers de travail gardés : ${work}`);
   else rmSync(work, { recursive: true, force: true });
   console.log(`Lumière de la salle « ${roomId} » enregistrée (${summary.seconds.total} s${summary.seconds.repris ? ', passes reprises du calcul précédent' : ' de calcul'} ; lumière la plus forte : ${summary.peak}).`);
+}
+
+if (roomIds.length) {
+  console.log(`\nTerminé : ${roomIds.length} salle(s) calculée(s). Pour voir le résultat, lancez le musée (npm run dev) puis ouvrez :\n\n    http://localhost:5173/?m=${museumId}\n\nPour comparer avec l'ancien éclairage, ajoutez &lumiere=0 à la fin de l'adresse.`);
 }
