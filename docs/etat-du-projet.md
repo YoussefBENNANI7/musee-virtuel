@@ -415,7 +415,7 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
-- **Le rendu premium du musée des 120 ans, sur son Mac** : installation faite et réussie le 18 novembre 2026 (`npm run lumiere:installer`). Reste, après `git pull` : `npm run lumiere -- 120-ans`, puis dire ce que cela donne. C'est le premier calcul sur un Mac : toute erreur affichée est à recopier à Claude.
+- **Son avis sur le rendu premium du musée des 120 ans** : premier calcul sur son Mac réussi le 18 novembre 2026 (`npm run lumiere -- 120-ans`) : galerie, hall des guichets et chambre forte, 3 min 40 en tout à 256 échantillons (de 66 à 80 s par salle, deux à trois fois plus vite que dans l'environnement de travail). Reste à le regarder (`?m=120-ans`) et à dire ce que cela donne.
 - **Sa branche locale `claude/laughing-galileo-0mch8q`** : elle contient le musée des 120 ans et les notes détaillées de l'autre conversation. À garder, et à ne jamais envoyer sur GitHub (dépôt public).
 - **Son avis sur le rendu premium des six salles** : la chaleur convient-elle (réglage `--chaleur`, salle par salle) ? faisceaux plus ou moins marqués ? tache de soleil plus ou moins forte ? Puis sa décision : faire de cette version la nouvelle branche principale, ou continuer la version 2 d'abord.
 

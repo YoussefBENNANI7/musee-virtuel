@@ -45,7 +45,7 @@ npm run lumiere -- demo --salle horizons
 npm run lumiere -- demo --salle toutes
 ```
 
-Compter deux à dix minutes par salle sur un ordinateur récent (27 minutes pour les six salles de la démonstration, sur quatre cœurs). Le script ouvre lui-même le musée, exporte les salles, fait calculer leur lumière par Blender, puis range les atlas dans le musée et les déclare dans `museum.json` (champ `"lumiere"`).
+Compter une à dix minutes par salle (27 minutes pour les six salles de la démonstration sur les quatre cœurs de l'environnement de travail ; sur le Mac du porteur, un peu plus d'une minute par salle). Le script ouvre lui-même le musée, exporte les salles, fait calculer leur lumière par Blender, puis range les atlas dans le musée et les déclare dans `museum.json` (champ `"lumiere"`).
 
 ### Réglages
 
