@@ -212,7 +212,9 @@ Demandes du porteur, le 19 novembre 2026 : (1) fiabiliser chaque pièce de monna
 - **Réseau de l'environnement cloud** : `www.bkam.ma` et `en.numista.com` ont été ajoutés aux hôtes autorisés, avec l'accord du porteur. Numista refuse les robots : ne pas contourner. Wikimedia Commons limite fortement le débit (réponses 429) : demander les vignettes de 960 px, une requête à la fois, espacées d'une quinzaine de secondes ; les originaux passent rarement. Les sites de collectionneurs qui montrent les billets anciens ne sont pas accessibles.
 - **Droits, constats de la recherche** (à faire confirmer par la banque avant toute diffusion publique) : Bank Al-Maghrib ne publie pas de règle chiffrée de reproduction de ses billets, mais réserve tous les droits sur les images de son site ; les billets de l'essai n'ont plus cours ; une image régénérée d'après une photo protégée en reste dépendante : ne prendre pour modèles que des images libres ou celles du porteur ; le droit d'utiliser les images du film est à confirmer par le porteur.
 - **Fichiers** : tout l'essai est resté hors du dépôt (public). Le porteur a reçu la planche et une archive du dossier de l'essai (images proposées, fiches d'identification, consignes données à l'IA, petits programmes), à ranger dans son Drive, dans « Musee-120-ans » : c'est de là qu'une prochaine session les reprendra. Pour voir une image dans le moteur, on monte une copie de travail du musée dans `public/museums/120-ans` (ignoré par git), le temps des captures, puis on la retire.
-- **Retour vers son Mac** : toujours à concevoir (le musée modifié doit revenir dans `public/museums/120-ans` sur son Mac, par le Drive).
+- **Retour vers son Mac : les paquets de mise à jour** (`npm run maj`, `scripts/maj.mjs`, 19 novembre 2026). Le musée du porteur vit sur son Mac, hors du dépôt ; ce qui est préparé ici lui revient par un paquet : un dossier ou son archive `.zip`, avec un `maj.json` (musée visé, titre, fichiers à poser, retouches des œuvres) et les fichiers rangés comme dans le musée (`images/`, `models/`, `audio/`). Il le reçoit dans la conversation, puis lance `npm run maj -- 120-ans ~/Downloads/<paquet>.zip` (ajouter `--essai` pour voir sans rien écrire). La commande vérifie tout avant d'écrire (bon musée, œuvres connues, fichiers présents et déclarés, chemins sûrs, fichiers que les œuvres retouchées devront retrouver), copie l'état précédent dans `musees-sauvegardes/` (ignoré par git), pose les fichiers et ne retouche dans `museum.json` que les champs annoncés : un champ donné remplace, un objet est fusionné, `null` retire. Si une vérification échoue, le musée reste intact. La lumière déclarée est conservée ; un paquet qui change la taille ou la place d'une œuvre fera afficher « Lumière à recalculer » dans l'éditeur.
+- **Paquet n° 1, remis au porteur le 19 novembre 2026** (validé par lui : « oui ») : la monnaie d'argent agrandie d'après une photo libre du même type, avec sa mention dans la fiche (`credit`), et le billet à portrait tiré du film, avec son millésime. Les dimensions réelles des billets viendront en une fois, avec le lot des billets, pour ne recalculer la lumière qu'une fois.
+- **Réponses du porteur, le 19 novembre 2026** : il a le droit d'utiliser les images du film de l'exposition ; il ne peut pas retourner photographier les pièces ; **il ne veut utiliser que ses clés Google et OpenAI, aucun autre service payant**.
 - **Le livre** : le script qui le fabrique est resté dans sa branche locale `claude/laughing-galileo-0mch8q` ; il faudra le récupérer, avec les photos d'origine.
 
 ### Voix de l'audioguide : décisions prises, production à venir
@@ -600,6 +602,7 @@ src/engine/...              Contrôles, plan, mobilier, sculptures, textures, re
 
 scripts/images.mjs          Préparation des images d'un musée
 scripts/modeles.mjs         Préparation des modèles 3D d'un musée
+scripts/maj.mjs             Paquets de mise à jour d'un musée de l'ordinateur (« npm run maj »)
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
 scripts/lumiere.mjs         Lumière précalculée des salles (« npm run lumiere »), calcul par Blender dans scripts/lumiere/
 scripts/lumiere-installer.mjs  Prépare un ordinateur pour ce calcul (« npm run lumiere:installer »)
@@ -655,6 +658,7 @@ npm run modeles -- demo           # prépare les modèles 3D déposés dans mode
 npm run vignettes -- demo         # photographie les sculptures (le musée doit tourner)
 npm run lumiere:installer        # une fois par ordinateur : installe Blender pour le calcul de la lumière
 npm run lumiere -- demo           # calcule la lumière des salles modifiées, avec Blender (docs/lumiere.md)
+npm run maj -- 120-ans paquet.zip # applique un paquet de mise à jour à un musée de l'ordinateur
 ```
 
 ## 8. Méthode de travail retenue

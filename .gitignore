@@ -9,6 +9,8 @@ essais-voix
 public/museums/*
 !public/museums/demo/
 musees-supprimes
+# État d'un musée avant chaque mise à jour appliquée par « npm run maj » : reste sur l'ordinateur.
+musees-sauvegardes
 # Clés d'accès : jamais dans le dépôt.
 .env
 .env.*
