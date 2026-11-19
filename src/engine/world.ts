@@ -42,8 +42,8 @@ export interface WorldOptions {
   /** Appelé quand une image finit de charger, pour redessiner la scène. */
   onLoad?: () => void;
   /**
-   * Aperçu de cadres en relief (`?cadres=tableau:dore-classique,papier:baguette-noire` dans l'adresse) :
-   * modèle à donner à chaque famille de cadres, à la place du cadre habituel.
+   * Aperçu d'autres cadres (`?cadres=tableau:dore-ancien,papier:baguette-chene` dans l'adresse) :
+   * modèle à donner à chaque famille de cadres, à la place du sien, sans toucher à la configuration.
    */
   frames?: string | null;
 }

@@ -13,10 +13,13 @@ export type WallFinish = 'paint' | 'limewash';
 /** Bas des murs : plinthe rapportée, joint creux, ou rien. */
 export type Baseboard = 'skirting' | 'shadow-gap' | 'none';
 /** Cadre des tableaux : largeur du montant, épaisseur, et vide entre la toile et le cadre. */
-export interface FrameShape {
-  width: number;
-  depth: number;
-  gap: number;
+/**
+ * Modèles de cadres d'une salle (leur liste est dans cadres.ts) : celui d'une œuvre encadrée
+ * telle quelle, et celui d'une œuvre sous passe-partout.
+ */
+export interface DecorFrames {
+  plain: string;
+  mat: string;
 }
 
 export type PaintingGenerator = 'geometric' | 'fields' | 'lines' | 'circles' | 'mosaic' | 'landscape';
@@ -105,8 +108,11 @@ export interface PaintingConfig extends ArtworkBase {
    * angle dessine un escalier, comme un paravent.
    */
   turn?: number;
-  /** Cadre particulier à cette œuvre, à la place de celui de la salle : "gilt" pour un cadre doré mouluré. */
-  frame?: 'gilt';
+  /**
+   * Cadre particulier à cette œuvre, à la place de celui de la salle : "gilt" pour le cadre doré
+   * classique, ou le nom d'un modèle de cadres.ts ("noir-filet-or", "baguette-chene"…).
+   */
+  frame?: string;
   /** Détails commentés, montrés dans l'agrandissement de l'œuvre : trois ou quatre suffisent. */
   details?: DetailConfig[];
   /**
@@ -205,8 +211,6 @@ export interface DecorColors {
   ceiling?: string;
   /** Plinthes, joints creux, piétement des bancs. */
   trim?: string;
-  /** Cadres des tableaux. */
-  frame?: string;
   /** Socles des sculptures. */
   plinth?: string;
   /** Bois du mobilier. */
@@ -237,7 +241,8 @@ export interface DecorConfig {
   cedar?: boolean;
   /** Plafond proposé par le décor. Celui que la salle déclare elle-même (`ceiling`) l'emporte. */
   ceiling?: Exclude<CeilingConfig, { type: 'skylight' }>;
-  frame?: Partial<FrameShape>;
+  /** Modèles de cadres de la salle, à la place de ceux du décor ou du style. */
+  frames?: Partial<DecorFrames>;
   light?: {
     /** Niveau général : 1 = galerie claire, moins pour une salle tamisée. */
     level?: number;

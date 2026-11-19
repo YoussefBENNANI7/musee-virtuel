@@ -5,7 +5,8 @@ import { openMuseum } from './helpers';
 const portee = (page: Page) =>
   page.evaluate(() => {
     const art = (window as any).__museum.world.artworks.find((a: any) => a.config.id === 'portee');
-    const map = art.label.parent.children.find((c: any) => c.material?.map && c.geometry.parameters.width === art.config.width)?.material.map;
+    // La toile : le plan aux dimensions exactes de l'œuvre (l'ombre du cadre a sa largeur, mais pas sa hauteur).
+    const map = art.label.parent.children.find((c: any) => c.material?.map && c.geometry.parameters?.width === art.config.width && c.geometry.parameters?.height === art.config.height)?.material.map;
     return { ready: art.ready as boolean, width: (map?.image?.width ?? 0) as number, span: art.span as number };
   });
 

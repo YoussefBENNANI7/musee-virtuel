@@ -1,4 +1,4 @@
-import { GILT_FRAME } from './artworks';
+import { frameMargin as marginOf } from './cadres';
 import type { Decor } from './decors';
 import { ART_CENTER_Y, WALLS, wallFrame, type Layout } from './layout';
 import type { PaintingConfig, RoomConfig, WallId } from './types';
@@ -20,14 +20,13 @@ export const HANGING = {
   minGap: 0.3,
 };
 
-type Framed = Pick<PaintingConfig, 'mat' | 'frameless' | 'frame'>;
+type Framed = Pick<PaintingConfig, 'mat' | 'frameless' | 'frame' | 'width' | 'height'>;
 
 /** Largeur prise autour de l'œuvre par son passe-partout et son cadre. */
-export const frameMargin = (art: Framed, decor: Decor): number =>
-  art.frameless ? 0 : art.frame === 'gilt' ? (art.mat ?? 0) + GILT_FRAME.width : (art.mat ? art.mat : decor.frame.gap) + decor.frame.width;
+export const frameMargin = (art: Framed, decor: Decor): number => marginOf(art, decor.frames);
 
 /** Largeur occupée sur le mur par un tableau, cadre compris. */
-export const framedWidth = (art: Framed & { width: number }, decor: Decor): number => art.width + 2 * frameMargin(art, decor);
+export const framedWidth = (art: Framed, decor: Decor): number => art.width + 2 * frameMargin(art, decor);
 
 /** Portion de mur libre, repérée le long du mur depuis son milieu (de gauche à droite quand on lui fait face). */
 export interface Span {
@@ -98,7 +97,8 @@ export function distribute(widths: number[], spans: Span[]): (number | null)[] {
       cursor = span.from;
     }
     for (const i of group) {
-      offsets[i] = Math.round((cursor + widths[i] / 2) * 1000) / 1000;
+      // Au millimètre ; « + 0 » évite un zéro négatif quand l'œuvre tombe au milieu du mur.
+      offsets[i] = Math.round((cursor + widths[i] / 2) * 1000) / 1000 + 0;
       cursor += widths[i] + gap;
     }
   }

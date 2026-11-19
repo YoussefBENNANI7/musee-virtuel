@@ -23,7 +23,7 @@ describe('décor d’une salle', () => {
     expect(decor.colors).toEqual(colors);
     expect(decor.floor).toBe('parquet');
     expect(decor.baseboard).toBe('skirting');
-    expect(decor.frame).toEqual(classic.frame);
+    expect(decor.frames).toEqual({ plain: 'baguette-noyer', mat: 'baguette-noyer' });
     expect(decor.walls).toBe('paint');
     expect(decor.ceiling).toEqual({ type: 'flat' });
     expect(decor.light).toEqual({ level: 1, tint: '#ffffff', spots: 1 });
@@ -37,9 +37,11 @@ describe('décor d’une salle', () => {
     expect(decor.walls).toBe('limewash');
     expect(decor.colors.wall).toBe(DECORS['terre-cuite'].settings.colors!.wall);
     expect(decor.light.level).toBeLessThan(1);
-    // Ce que le décor ne précise pas vient du style : ici le bas de mur et le cadre.
+    // Ce que le décor ne précise pas vient du style : ici le bas de mur et les cadres.
     expect(decor.baseboard).toBe(contemporary.baseboard);
-    expect(decor.frame).toEqual(contemporary.frame);
+    expect(decor.frames).toEqual({ plain: 'caisse-noire', mat: 'baguette-noire' });
+    // Les décors de l'exposition des 120 ans ont leurs propres cadres, en laiton.
+    expect(resolveDecor(contemporary, room({ decor: 'nef' })).frames).toEqual({ plain: 'baguette-laiton', mat: 'baguette-laiton' });
     expect(resolveDecor(classic, room({ decor: 'terre-cuite' })).baseboard).toBe('skirting');
   });
 
@@ -47,13 +49,13 @@ describe('décor d’une salle', () => {
     const before = structuredClone(DECORS.nuit);
     const decor = resolveDecor(
       contemporary,
-      room({ decor: { preset: 'nuit', colors: { wall: '#102030' }, light: { level: 0.7 }, frame: { width: 0.05 }, floor: 'chevron' } }),
+      room({ decor: { preset: 'nuit', colors: { wall: '#102030' }, light: { level: 0.7 }, frames: { mat: 'baguette-chene' }, floor: 'chevron' } }),
     );
     expect(decor.colors.wall).toBe('#102030');
     expect(decor.colors.ceiling).toBe(DECORS.nuit.settings.colors!.ceiling);
     expect(decor.light.level).toBe(0.7);
     expect(decor.light.spots).toBe(DECORS.nuit.settings.light!.spots);
-    expect(decor.frame).toEqual({ ...contemporary.frame, width: 0.05 });
+    expect(decor.frames).toEqual({ plain: 'caisse-noire', mat: 'baguette-chene' });
     expect(decor.floor).toBe('chevron');
     expect(decor.labels).toBe('dark');
     expect(DECORS.nuit).toEqual(before);

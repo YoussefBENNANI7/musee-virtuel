@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { DecorFrames, PaintingConfig } from './types';
 
 /*
  * Cadres en relief. Un cadre est une moulure : une coupe (son profil, vu en tranche) promenée autour
@@ -337,11 +338,11 @@ export const FRAMES: Record<string, FrameStyle> = {
     id: 'baguette-noire',
     name: { fr: 'Baguette noire', en: 'Black moulding' },
     family: 'papier',
-    width: 0.022,
+    width: 0.02,
     depth: 0.032,
     rabbet: 0.012,
     grow: 0,
-    parts: [{ finish: 'satin', color: '#171514', patina: 0.3, section: baguette(0.022, 0.032, 0.012) }],
+    parts: [{ finish: 'satin', color: '#171514', patina: 0.3, section: baguette(0.02, 0.032, 0.012) }],
   },
   'baguette-chene': {
     id: 'baguette-chene',
@@ -408,6 +409,33 @@ export const FRAMES: Record<string, FrameStyle> = {
     parts: [{ finish: 'bois', color: '#c79a62', patina: 0.2, section: baguette(0.011, 0.046, 0.008, 0.0008) }],
   },
 };
+
+/** Le cadre doré d'une œuvre marquée « gilt » dans sa configuration. */
+export const GILT = 'dore-classique';
+/** Vrai si ce nom désigne un cadre : « gilt », ou un modèle. */
+export const isFrameId = (value: unknown): value is string => value === 'gilt' || (typeof value === 'string' && Object.hasOwn(FRAMES, value));
+
+type Framed = Pick<PaintingConfig, 'frame' | 'mat' | 'frameless' | 'width' | 'height'>;
+
+/**
+ * Modèle du cadre d'un tableau : celui que l'œuvre demande, sinon celui de sa salle (selon qu'elle est
+ * sous passe-partout ou non). Un objet accroché sans cadre n'en a pas.
+ */
+export function frameModel(art: Pick<Framed, 'frame' | 'mat' | 'frameless'>, frames: DecorFrames): FrameStyle | null {
+  if (art.frameless) return null;
+  const own = art.frame === 'gilt' ? GILT : art.frame;
+  if (own && Object.hasOwn(FRAMES, own)) return FRAMES[own];
+  return FRAMES[art.mat ? frames.mat : frames.plain] ?? FRAMES['caisse-noire'];
+}
+
+/** Largeur prise autour de l'œuvre par son passe-partout, le vide d'une caisse américaine et son cadre. */
+export function frameMargin(art: Framed, frames: DecorFrames): number {
+  const model = frameModel(art, frames);
+  if (!model) return 0;
+  // Une caisse américaine ne reçoit pas de passe-partout : la toile y flotte.
+  const mat = model.family === 'caisse' ? 0 : (art.mat ?? 0);
+  return mat + (model.gap ?? 0) + model.width * frameScale(model, Math.max(art.width, art.height));
+}
 
 /** Agrandissement de la moulure pour une œuvre de cette taille : 1 jusqu'à 1 m, 1,6 au-delà de 3 m. */
 export function frameScale(style: FrameStyle, size: number): number {

@@ -1,5 +1,6 @@
 import './editeur.css';
 import { freeLength } from '../engine/accrochage';
+import { FRAMES, GILT } from '../engine/cadres';
 import { DECORS, resolveDecor } from '../engine/decors';
 import { imageUrl } from '../engine/images';
 import { WALLS, buildLayout } from '../engine/layout';
@@ -989,7 +990,9 @@ function workForm(): Child[] {
   widthInput?.addEventListener('change', () => resize('width'));
 
   const credit: L10n = { ...(art.credit ?? {}) };
-  const frameValue = painting?.frameless ? 'none' : painting?.frame === 'gilt' ? 'gilt' : 'room';
+  // « gilt » est l'ancien nom du cadre doré classique : les musées déjà créés le gardent.
+  const frameValue = painting?.frameless ? 'none' : painting?.frame === 'gilt' ? GILT : painting?.frame && FRAMES[painting.frame] ? painting.frame : 'room';
+  const frameOptions = (family: string) => Object.values(FRAMES).filter((f) => f.family === family).map((f) => h('option', { value: f.id, selected: frameValue === f.id }, f.name.fr));
   return [
     h('button', { type: 'button', class: 'back', onclick: () => ((editing = null), renderPane()) }, '← Toutes les œuvres de la salle'),
     h('h2', { id: 'work-title' }, titleOf(art)),
@@ -1024,14 +1027,17 @@ function workForm(): Child[] {
                 const value = (e.target as HTMLSelectElement).value;
                 delete painting.frame;
                 delete painting.frameless;
-                if (value === 'gilt') painting.frame = 'gilt';
                 if (value === 'none') painting.frameless = true;
+                else if (value !== 'room') painting.frame = value === GILT ? 'gilt' : value;
               }, false),
           },
             h('option', { value: 'room', selected: frameValue === 'room' }, 'Cadre de la salle'),
-            h('option', { value: 'gilt', selected: frameValue === 'gilt' }, 'Cadre doré mouluré'),
+            h('optgroup', { label: 'Tableaux' }, ...frameOptions('tableau')),
+            h('optgroup', { label: 'Baguettes (photographies, estampes, documents)' }, ...frameOptions('papier')),
+            h('optgroup', { label: 'Caisses américaines (toiles modernes)' }, ...frameOptions('caisse')),
             h('option', { value: 'none', selected: frameValue === 'none' }, 'Sans cadre (objet, textile, panneau)'),
           ),
+          h('small', {}, 'Le cadre de la salle dépend de son décor. Un grand tableau reçoit une moulure plus large.'),
         )
       : null,
     painting

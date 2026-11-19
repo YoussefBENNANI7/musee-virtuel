@@ -1,5 +1,6 @@
 import { DECORS, coveOf, isDecorId, resolveDecor, type Decor } from './decors';
 import { frameMargin } from './accrochage';
+import { FRAMES, isFrameId } from './cadres';
 import { FOUNTAIN_RADIUS, benchFootprint } from './furniture';
 import { ART_CENTER_Y, MIN_DOOR_WIDTH, WALLS, buildLayout, inside, roomRect, wallFrame } from './layout';
 import { isStyleId, type Style } from './styles';
@@ -80,7 +81,7 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
     }
     if (room.light !== undefined && !(room.light >= 0 && room.light <= 2)) error(where, 'niveau d\'éclairage invalide (entre 0 et 2)');
     if (room.wall !== undefined && !isColor(room.wall)) error(where, `couleur de mur invalide : "${room.wall}" (attendu : "#rrggbb")`);
-    checkDecor(room, style, where, error);
+    checkDecor(room, where, error);
     for (const [i, bench] of (room.benches ?? []).entries()) {
       const { hx, hz } = benchFootprint(bench);
       const clear = half + 0.3;
@@ -229,7 +230,7 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
 }
 
 /** Décor d'une salle : un nom de la bibliothèque, ou des réglages dont chacun doit être connu. */
-function checkDecor(room: RoomConfig, style: Style, where: string, error: Report) {
+function checkDecor(room: RoomConfig, where: string, error: Report) {
   if (room.decor === undefined) return;
   const config = typeof room.decor === 'string' ? { preset: room.decor } : room.decor;
   if (!config || typeof config !== 'object') return error(where, 'décor illisible');
@@ -254,15 +255,14 @@ function checkDecor(room: RoomConfig, style: Style, where: string, error: Report
   if (light?.level !== undefined && !(light.level >= 0 && light.level <= 2)) error(where, 'décor : niveau d\'éclairage invalide (entre 0 et 2)');
   if (light?.spots !== undefined && !(light.spots >= 0 && light.spots <= 4)) error(where, 'décor : force des projecteurs invalide (entre 0 et 4)');
   if (light?.tint !== undefined && !isColor(light.tint)) error(where, `décor : teinte de lumière invalide : "${light.tint}" (attendu : "#rrggbb")`);
-  const frame = resolveDecor(style, room).frame;
-  if (!(frame.width > 0 && frame.width <= 0.3 && frame.depth > 0 && frame.depth <= 0.3 && frame.gap >= 0 && frame.gap <= 0.1)) {
-    error(where, 'décor : cadre invalide (largeur et épaisseur entre 0 et 0,3 m, vide entre 0 et 0,1 m)');
+  for (const [use, id] of Object.entries(config.frames ?? {})) {
+    if (!Object.hasOwn(FRAMES, id as string)) error(where, `décor : cadre inconnu pour "${use}" : "${id}" (cadres disponibles : ${Object.keys(FRAMES).join(', ')})`);
   }
 }
 
 /** Marge occupée autour d'une œuvre par son passe-partout (ou le vide du cadre) et son cadre. */
 /** Demi-largeur occupée sur le mur par un tableau, son passe-partout et son cadre. */
-const framedHalfWidth = (art: { width: number; mat?: number; frameless?: boolean; frame?: 'gilt' }, decor: Decor) => art.width / 2 + frameMargin(art, decor);
+const framedHalfWidth = (art: Extract<ArtworkConfig, { type: 'painting' }>, decor: Decor) => art.width / 2 + frameMargin(art, decor);
 
 function checkPainting(
   art: Extract<ArtworkConfig, { type: 'painting' }>,
@@ -275,7 +275,7 @@ function checkPainting(
 ) {
   if (!WALLS.includes(art.wall)) return error(where, 'mur inconnu (north, south, east ou west)');
   if (!(art.width > 0 && art.height > 0)) return error(where, 'dimensions invalides');
-  if (art.frame !== undefined && art.frame !== 'gilt') error(where, `cadre inconnu : "${art.frame}"`);
+  if (art.frame !== undefined && !isFrameId(art.frame)) error(where, `cadre inconnu : "${art.frame}"`);
   if (art.mat !== undefined && !(art.mat >= 0 && art.mat <= 0.4)) error(where, 'passe-partout invalide (entre 0 et 0,4 m)');
   if (art.turn !== undefined && !(Math.abs(art.turn) <= 60)) error(where, 'angle invalide (entre -60 et 60 degrés)');
   if (art.thickness !== undefined && !(art.thickness > 0 && art.thickness <= 1)) error(where, 'épaisseur invalide (entre 0 et 1 m)');

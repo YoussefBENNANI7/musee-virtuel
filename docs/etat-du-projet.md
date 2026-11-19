@@ -158,16 +158,29 @@ Demande du porteur : pouvoir se déplacer après avoir cliqué sur « Écouter l
 - **Vérifié** : un test dans un navigateur (marche au clavier après le clic, fiche ouverte puis refermée, salle sans présentation, une seule voix à la fois), qui échouait avant la correction. Captures sur ordinateur et sur téléphone.
 - En passant : dans l'éditeur, la photo de couverture qui vient d'être enregistrée est redemandée si elle n'arrive pas (le serveur de développement met parfois un instant à voir un fichier tout juste écrit ; un test du lot précédent échouait pour cela une fois sur plusieurs).
 
-### Cadres en relief : planche présentée, choix du porteur attendu (19 novembre 2026)
+### Cadres en relief : choisis et appliqués (19 novembre 2026)
 
-Demande du porteur : améliorer la qualité graphique des cadres, dans les deux musées. Planche, sur ordinateur et sur téléphone : https://claude.ai/artifact/PzzVFq6FEDzb3bnzU9sKgm.
+Demande du porteur : améliorer la qualité graphique des cadres, dans les deux musées. Planche qui lui a été présentée, sur ordinateur et sur téléphone : https://claude.ai/artifact/PzzVFq6FEDzb3bnzU9sKgm. Résultat dans les six salles : https://claude.ai/artifact/7SJcd29LNhVfdLrj31EBuB.
 
-- **Le défaut** : un cadre était une boîte plate d'une couleur unie, l'œuvre collée sur sa face. Le cadre doré avait trois marches, sans matière ; le passe-partout était deux rectangles sans épaisseur ; le vide de la caisse américaine était dessiné.
-- **Ce qui est construit** (`src/engine/cadres.ts`) : un cadre est une moulure, c'est-à-dire une coupe (son profil vu en tranche) promenée autour de l'œuvre, avec des angles coupés d'onglet. L'œuvre est en retrait, au fond de la feuillure. Les matières prennent la lumière de la salle (or bruni, or ancien, laiton, aluminium, bois avec son fil, laque, peinture satinée) ; les creux d'une moulure sont assombris, là où la lumière entre moins. Le passe-partout est un vrai carton, à la fenêtre biseautée, sur lequel le cadre porte une ombre douce ; sans passe-partout, c'est sur le haut de la toile que le cadre porte son ombre. La caisse américaine a un vrai vide, et la toile y montre son chant. Un grand tableau porte une moulure plus large (jusqu'à 1,6 fois au-delà de 3 m).
-- **Dix modèles** : pour les tableaux, `dore-classique`, `dore-ancien`, `noir-filet-or` ; pour les œuvres sous passe-partout et les photographies, `baguette-noire`, `baguette-chene`, `baguette-noyer`, `baguette-laiton`, `baguette-aluminium` ; pour les toiles modernes, `caisse-noire`, `caisse-chene`.
-- **Rien n'est appliqué** : le lot touche à l'identité visuelle, le porteur choisit d'abord. Les modèles ne se montrent qu'à la demande, par l'adresse : `?cadres=tableau:dore-classique,papier:baguette-noire,caisse:caisse-noire`. Les trois familles : `tableau` (les œuvres au cadre doré), `papier` (les œuvres sous passe-partout), `caisse` (les autres œuvres encadrées, au cadre du décor). Un modèle peut servir à n'importe quelle famille. Le porteur peut ainsi les essayer sur son musée des 120 ans, par exemple `http://localhost:5173/?m=120-ans&cadres=caisse:baguette-laiton,papier:baguette-laiton`.
-- **Ce qui restera à faire après son choix** : donner le modèle choisi à chaque décor et à chaque œuvre (réglage de `museum.json`, choix dans l'éditeur), puis recalculer la lumière des salles, puisque l'ombre des cadres sur le mur change (l'empreinte des salles changera : l'éditeur le signalera). Les panneaux et totems sans cadre des 120 ans ne sont pas concernés.
-- **Vérifié** : 7 tests unitaires (géométrie de la moulure, onglets, faces et normales, arêtes vives et courbes lisses, creux, largeur selon la taille, cohérence des dix modèles) et 3 tests dans un navigateur (sans réglage rien ne change ; chaque famille dans son cadre, l'œuvre en retrait ; modèle inconnu ignoré).
+- **Le défaut d'avant** : un cadre était une boîte plate d'une couleur unie, l'œuvre collée sur sa face. Le cadre doré avait trois marches, sans matière ; le passe-partout était deux rectangles sans épaisseur ; le vide de la caisse américaine était dessiné. Ce système a été retiré.
+- **Désormais** (`src/engine/cadres.ts`) : un cadre est une moulure, c'est-à-dire une coupe (son profil vu en tranche) promenée autour de l'œuvre, avec des angles coupés d'onglet. L'œuvre est en retrait, au fond de la feuillure. Les matières prennent la lumière de la salle (or bruni, or ancien, laiton, aluminium, bois avec son fil, laque, peinture satinée) ; les creux d'une moulure sont assombris, là où la lumière entre moins. Le passe-partout est un vrai carton, à la fenêtre biseautée, sur lequel le cadre porte une ombre douce ; sans passe-partout, c'est sur le haut de la toile que le cadre porte son ombre. La caisse américaine a un vrai vide, et la toile y montre son chant. Un grand tableau porte une moulure plus large (jusqu'à 1,6 fois au-delà de 3 m).
+- **Dix modèles** : pour les tableaux, `dore-classique`, `dore-ancien`, `noir-filet-or` ; des baguettes pour les œuvres sous passe-partout, les photographies et les documents, `baguette-noire`, `baguette-chene`, `baguette-noyer`, `baguette-laiton`, `baguette-aluminium` ; pour les toiles modernes, `caisse-noire`, `caisse-chene`.
+- **Le choix du porteur** : tableaux A (doré classique), estampes D (baguette noire), toiles modernes G (caisse américaine noire), musée des 120 ans F (baguette de laiton). Il se traduit ainsi :
+
+| Œuvre | Cadre |
+|---|---|
+| Marquée `"frame": "gilt"` (les 26 tableaux dorés de la démonstration) | `dore-classique` |
+| Sous passe-partout (`mat`), dans une salle sans réglage particulier | `baguette-noire` |
+| Encadrée telle quelle, dans une salle sans réglage particulier | `caisse-noire` |
+| Dans une salle aux décors `nef`, `guichets` ou `chambre-forte` (l'exposition des 120 ans), avec ou sans passe-partout | `baguette-laiton` |
+| Dans un musée de style `classic`, sans décor | `baguette-noyer` |
+
+- **Où cela se règle** : chaque œuvre peut nommer son cadre (`"frame": "noir-filet-or"`, ou le menu « Cadre » de sa fiche dans l'éditeur, qui liste les dix modèles) ; sinon elle prend celui de sa salle, que donne son décor (`frames: { plain, mat }` : œuvre encadrée telle quelle, œuvre sous passe-partout), sinon le style du musée. Une salle peut choisir les siens : `"decor": { "preset": "riad", "frames": { "mat": "baguette-noyer" } }`. Les anciens réglages de cadre d'un décor (`frame`, couleur `frame`) n'ont plus d'effet ; un fichier qui les contient s'ouvre toujours.
+- **Essayer d'autres cadres sans rien modifier** : `?cadres=tableau:dore-ancien,papier:baguette-chene,caisse:caisse-chene` dans l'adresse. Les trois familles : `tableau` (œuvres marquées `gilt`), `papier` (œuvres sous passe-partout), `caisse` (les autres œuvres encadrées). Un modèle peut servir à n'importe quelle famille.
+- **Place prise sur le mur** : elle est comptée d'après le modèle (`frameMargin`), pour l'accrochage automatique et le contrôle de la configuration. Les baguettes et la caisse sont plus fines que les anciens cadres, ou égales : aucun musée existant ne peut devenir invalide pour cela. Seul le doré classique s'élargit, pour les tableaux de plus d'un mètre ; la démonstration reste sans erreur ni avertissement.
+- **Lumière précalculée** : l'ombre des cadres sur le mur change, donc l'empreinte de toutes les salles aussi. Les six salles de la démonstration ont été recalculées. **Sur le Mac du porteur, le musée des 120 ans affichera « Lumière à recalculer » dans l'éditeur : un clic sur « Recalculer la lumière » suffit** (ou `npm run lumiere -- 120-ans`).
+- Les panneaux et totems sans cadre des 120 ans ne sont pas concernés. Le Patio marocain a reçu la baguette noire comme la Galerie des Lignes ; une baguette de noyer s'y accorderait aussi (`"frames": { "mat": "baguette-noyer" }`), à voir avec le porteur.
+- **Vérifié** : 9 tests unitaires (géométrie de la moulure, onglets, faces et normales, arêtes vives et courbes lisses, creux, largeur selon la taille, cadre de chaque œuvre, place prise sur le mur, cohérence des dix modèles) et 3 tests dans un navigateur (cadre de chaque œuvre et réglages de salle ; `?cadres=` ; modèle inconnu ignoré). Captures des six salles sur ordinateur et sur téléphone.
 
 ### Voix de l'audioguide : décisions prises, production à venir
 
@@ -451,7 +464,7 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
-- **Son choix de cadres** : un modèle par famille (tableaux, œuvres sous passe-partout, toiles modernes, photographies des 120 ans), d'après la planche. Voir « Cadres en relief ».
+- **Recalculer la lumière du musée des 120 ans sur son Mac**, après l'arrivée des nouveaux cadres : bouton « Recalculer la lumière » de l'éditeur. Puis son avis sur les cadres dans ce musée (baguette de laiton), et sur la baguette noire dans le Patio marocain.
 
 - **Son essai du mode administrateur sur son Mac** : bouton « Mode administrateur » de la page des musées, alerte et recalcul de la lumière depuis l'éditeur, protection et rétablissement de la démonstration, couverture du musée des 120 ans (« Prendre la vue de l'aperçu »). Le lancement du calcul depuis l'éditeur n'a tourné que dans l'environnement de travail.
 
@@ -540,7 +553,7 @@ src/engine/layout.ts        Géométrie du plan : murs, portes, zones de marche 
 src/engine/lighting.ts      Calcul de l'éclairage des salles
 src/engine/building.ts      Construction du bâtiment : sols, murs, plafonds, verrières
 src/engine/artworks.ts      Accrochage des tableaux, pose des sculptures
-src/engine/cadres.ts        Cadres en relief : moulures, modèles, matières, passe-partout biseauté
+src/engine/cadres.ts        Cadres en relief : moulures, dix modèles, matières, passe-partout biseauté ; cadre et marge de chaque œuvre
 src/engine/accrochage.ts    Accrochage automatique : répartition des œuvres sur les murs d'une salle
 src/engine/plans.ts         Plans proposés à la création d'un musée
 src/engine/world.ts         Assemblage du musée, règles de déplacement, points de vue
@@ -555,7 +568,7 @@ scripts/lumiere.mjs         Lumière précalculée des salles (« npm run lumier
 scripts/lumiere-installer.mjs  Prépare un ordinateur pour ce calcul (« npm run lumiere:installer »)
 scripts/editeur-serveur.mjs Service d'écriture de l'éditeur, ajouté au serveur de développement : musées, images,
                             page de choix et couvertures, calcul de la lumière, rétablissement de la démonstration
-tests/unit/                 Tests unitaires (Vitest) : 220 tests
+tests/unit/                 Tests unitaires (Vitest) : 222 tests
 tests/e2e/                  Tests dans un navigateur (Playwright) : 98 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
@@ -576,7 +589,7 @@ vercel.json                 Configuration de l'hébergement (pas encore relié)
 | `?presentation=essentiels` | Lance ce parcours en mode présentation dès l'entrée : il se déroule seul, avec la voix |
 | `?debug` | Affiche le détail des erreurs de configuration, même dans la version publiée |
 | `?lumiere=0` | Montre le musée sans sa lumière précalculée (éclairage par formule), pour comparer |
-| `?cadres=tableau:dore-classique` | Montre les œuvres dans des cadres en relief, sans toucher à la configuration. Familles `tableau`, `papier`, `caisse` ; plusieurs demandes se séparent par des virgules. Voir « Cadres en relief » |
+| `?cadres=tableau:dore-ancien` | Montre les œuvres dans d'autres cadres, sans toucher à la configuration. Familles `tableau`, `papier`, `caisse` ; plusieurs demandes se séparent par des virgules. Voir « Cadres en relief » |
 
 ### Configurer un musée (`museum.json`)
 

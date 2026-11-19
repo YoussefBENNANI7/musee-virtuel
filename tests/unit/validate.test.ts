@@ -166,7 +166,7 @@ describe('erreurs détectées', () => {
     const [hall, galerie, cabinet, rotonde] = museum.rooms;
     hall.decor = 'rococo';
     galerie.decor = { preset: 'nuit', colors: { wall: 'bleu' }, floor: 'moquette' as never, light: { level: 5, tint: 'chaud' }, gloss: 2 };
-    cabinet.decor = { walls: 'crépi' as never, ceiling: { type: 'skylight' } as never, labels: 'fluo' as never, frame: { width: 0.8 } };
+    cabinet.decor = { walls: 'crépi' as never, ceiling: { type: 'skylight' } as never, labels: 'fluo' as never, frames: { plain: 'rococo', mat: 'baguette-chene' } };
     rotonde.wall = 'rouge';
     const errors = errorsOf(museum);
     expect(errors).toContain('Salle "hall" : décor inconnu : "rococo" (décors disponibles : pierre-claire, argile-claire, terre-cuite, riad, chambre-forte, guichets, nef, nuit)');
@@ -178,7 +178,8 @@ describe('erreurs détectées', () => {
     expect(errors).toContain('Salle "cabinet" : décor : finition de mur inconnue : "crépi"');
     expect(errors).toContain('Salle "cabinet" : décor : plafond inconnu : "skylight" (une verrière se déclare sur la salle)');
     expect(errors).toContain('Salle "cabinet" : décor : cartels inconnus : "fluo"');
-    expect(errors).toContain('Salle "cabinet" : décor : cadre invalide (largeur et épaisseur entre 0 et 0,3 m, vide entre 0 et 0,1 m)');
+    expect(errors.filter((e) => e.includes('cadre inconnu'))).toHaveLength(1);
+    expect(errors.find((e) => e.includes('cadre inconnu'))).toMatch(/^Salle "cabinet" : décor : cadre inconnu pour "plain" : "rococo" \(cadres disponibles : dore-classique, /);
     expect(errors).toContain('Salle "rotonde" : couleur de mur invalide : "rouge" (attendu : "#rrggbb")');
   });
 
@@ -196,12 +197,12 @@ describe('erreurs détectées', () => {
   it('le cadre du décor compte dans la place qu’un tableau prend sur le mur', () => {
     const museum = fixture();
     const hall = museum.rooms[0];
-    // Avec le cadre du style, deux tableaux se touchent presque ; un cadre large les fait se recouvrir.
+    // Avec la baguette du style, deux tableaux se touchent presque ; un cadre large les fait se recouvrir.
     const a = painting(museum, 'le-pays-d-avant');
     const b = painting(museum, 'carreaux-de-l-atelier');
     b.offset = a.offset + a.width / 2 + b.width / 2 + 0.16;
     expect(warningsOf(museum).filter((w) => w.includes('recouvre'))).toEqual([]);
-    hall.decor = { frame: { width: 0.12 } };
+    hall.decor = { frames: { plain: 'dore-ancien' } };
     expect(warningsOf(museum).filter((w) => w.includes('recouvre'))).toEqual([
       'Œuvre "le-pays-d-avant" : recouvre l\'œuvre "carreaux-de-l-atelier" sur le mur south',
     ]);
@@ -227,15 +228,18 @@ describe('erreurs détectées', () => {
     a.frame = 'gilt';
     b.frame = 'gilt';
     expect(warningsOf(museum).filter((w) => w.includes('recouvre'))).toHaveLength(1);
-    painting(museum, 'portee').frame = 'rococo' as never;
+    painting(museum, 'portee').frame = 'rococo';
     expect(errorsOf(museum)).toContain('Œuvre "portee" : cadre inconnu : "rococo"');
+    // Une œuvre peut aussi demander un modèle par son nom.
+    painting(museum, 'portee').frame = 'noir-filet-or';
+    expect(errorsOf(museum).filter((e) => e.includes('cadre'))).toEqual([]);
   });
 
   it('le passe-partout compte dans la place qu’une œuvre prend sur le mur', () => {
     const museum = fixture();
     const a = painting(museum, 'le-pays-d-avant');
     const b = painting(museum, 'carreaux-de-l-atelier');
-    b.offset = a.offset + a.width / 2 + b.width / 2 + 0.3;
+    b.offset = a.offset + a.width / 2 + b.width / 2 + 0.2;
     expect(warningsOf(museum).filter((w) => w.includes('recouvre'))).toEqual([]);
     // Dix centimètres de carton de chaque côté : les deux œuvres se touchent désormais.
     a.mat = 0.1;

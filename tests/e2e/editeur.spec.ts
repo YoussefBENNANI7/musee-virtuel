@@ -127,7 +127,7 @@ test('remplir un cartel, changer la taille, le mur et la salle d’une œuvre', 
   expect(art().credit).toBeUndefined();
 
   // Cadre doré, puis changement de salle depuis la fiche.
-  await input('Cadre').selectOption('gilt');
+  await input('Cadre').selectOption('dore-classique');
   await saved(page);
   expect(art().frame).toBe('gilt');
   await page.locator('label.field:has(> span:text-is("Salle")) select').selectOption('salle-2');

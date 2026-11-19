@@ -1,5 +1,5 @@
 import type { Style } from './styles';
-import type { Baseboard, CeilingConfig, DecorConfig, Flooring, FrameShape, L10n, MuseumConfig, RoomConfig, WallFinish } from './types';
+import type { Baseboard, CeilingConfig, DecorConfig, DecorFrames, Flooring, L10n, MuseumConfig, RoomConfig, WallFinish } from './types';
 
 /**
  * Décor d'une salle, tous réglages connus : c'est ce que lisent le bâtiment, l'éclairage
@@ -18,7 +18,8 @@ export interface Decor {
   cedar: boolean;
   baseboard: Baseboard;
   ceiling: Exclude<CeilingConfig, { type: 'skylight' }>;
-  frame: FrameShape;
+  /** Modèles de cadres des œuvres de la salle (voir cadres.ts). */
+  frames: DecorFrames;
   light: { level: number; tint: string; spots: number };
   labels: 'light' | 'dark';
 }
@@ -58,7 +59,7 @@ export const DECORS: Record<string, DecorPreset> = {
       en: 'A soft, bright room: pale clay limewash, light oak chevron floor, floating ceiling.',
     },
     settings: {
-      colors: { wall: '#ead7c8', ceiling: '#fbf7f1', floor: '#c7a174', trim: '#4a3a2e', frame: '#d6bf9b', plinth: '#f3ebe2', wood: '#c7a174', fixture: '#f1ece4' },
+      colors: { wall: '#ead7c8', ceiling: '#fbf7f1', floor: '#c7a174', trim: '#4a3a2e', plinth: '#f3ebe2', wood: '#c7a174', fixture: '#f1ece4' },
       floor: 'chevron',
       walls: 'limewash',
       gloss: 0.2,
@@ -73,7 +74,7 @@ export const DECORS: Record<string, DecorPreset> = {
       en: 'A bath of colour: terracotta walls and ceiling, smoked oak chevron floor, warm light gathered on the works.',
     },
     settings: {
-      colors: { wall: '#a24e37', ceiling: '#934631', floor: '#6a4a33', trim: '#1d1512', frame: '#1d1512', plinth: '#8a4330', wood: '#4d3626' },
+      colors: { wall: '#a24e37', ceiling: '#934631', floor: '#6a4a33', trim: '#1d1512', plinth: '#8a4330', wood: '#4d3626' },
       floor: 'chevron',
       walls: 'limewash',
       gloss: 0.24,
@@ -88,7 +89,7 @@ export const DECORS: Record<string, DecorPreset> = {
       en: 'A Moroccan courtyard: zellige dado, white limewashed walls, carved plaster frieze, cedar ceiling. Made for daylight.',
     },
     settings: {
-      colors: { wall: '#f4eee2', ceiling: '#7b4c2c', floor: '#efe8da', trim: '#1f4f46', frame: '#4a2e1c', plinth: '#efe7d8', wood: '#6b4226' },
+      colors: { wall: '#f4eee2', ceiling: '#7b4c2c', floor: '#efe8da', trim: '#1f4f46', plinth: '#efe7d8', wood: '#6b4226' },
       floor: 'zellige',
       walls: 'limewash',
       gloss: 0.22,
@@ -106,7 +107,8 @@ export const DECORS: Record<string, DecorPreset> = {
       en: 'A treasure room: warm half-light, polished black stone, brass and walnut. Made for coins and banknotes, lit like jewels.',
     },
     settings: {
-      colors: { wall: '#2a2018', ceiling: '#0d0a08', floor: '#1b1815', trim: '#0b0a09', frame: '#8a6a2c', plinth: '#141312', wood: '#3a2618', fixture: '#0b0a09' },
+      colors: { wall: '#2a2018', ceiling: '#0d0a08', floor: '#1b1815', trim: '#0b0a09', plinth: '#141312', wood: '#3a2618', fixture: '#0b0a09' },
+      frames: { plain: 'baguette-laiton', mat: 'baguette-laiton' },
       floor: 'stone',
       walls: 'paint',
       gloss: 0.6,
@@ -123,7 +125,8 @@ export const DECORS: Record<string, DecorPreset> = {
       en: 'A 1930s banking hall: cream walls, pale stone slabs, walnut and brass. Made for daylight and the tools of the trade.',
     },
     settings: {
-      colors: { wall: '#efe6d6', ceiling: '#f6f1e6', floor: '#d6ccb9', trim: '#8a6a2c', frame: '#3a2416', plinth: '#4a2f1c', wood: '#4a2f1c', fixture: '#3a2416' },
+      colors: { wall: '#efe6d6', ceiling: '#f6f1e6', floor: '#d6ccb9', trim: '#8a6a2c', plinth: '#4a2f1c', wood: '#4a2f1c', fixture: '#3a2416' },
+      frames: { plain: 'baguette-laiton', mat: 'baguette-laiton' },
       floor: 'stone',
       walls: 'limewash',
       gloss: 0.3,
@@ -137,7 +140,8 @@ export const DECORS: Record<string, DecorPreset> = {
       en: 'A long bright gallery: sand-coloured tadelakt walls, dark polished stone floor, warm light. Made for a frieze or a run of panels.',
     },
     settings: {
-      colors: { wall: '#e6dccb', ceiling: '#2a1d14', floor: '#2a2520', trim: '#8a6a2c', frame: '#1d1512', plinth: '#1d1a17', wood: '#4d3626', fixture: '#15120f' },
+      colors: { wall: '#e6dccb', ceiling: '#2a1d14', floor: '#2a2520', trim: '#8a6a2c', plinth: '#1d1a17', wood: '#4d3626', fixture: '#15120f' },
+      frames: { plain: 'baguette-laiton', mat: 'baguette-laiton' },
       floor: 'stone',
       walls: 'limewash',
       gloss: 0.5,
@@ -152,7 +156,7 @@ export const DECORS: Record<string, DecorPreset> = {
       en: 'A dark jewel box: midnight walls and ceiling, polished black floor, the works seem lit from within.',
     },
     settings: {
-      colors: { wall: '#222c45', ceiling: '#161c2c', floor: '#26282e', trim: '#0b0c0f', frame: '#0e0f12', plinth: '#1d2231', wood: '#2b2622' },
+      colors: { wall: '#222c45', ceiling: '#161c2c', floor: '#26282e', trim: '#0b0c0f', plinth: '#1d2231', wood: '#2b2622' },
       floor: 'concrete',
       walls: 'paint',
       gloss: 0.55,
@@ -175,7 +179,7 @@ function apply(base: Decor, over: Omit<DecorConfig, 'preset'> | undefined): Deco
     ...base,
     ...(defined({ floor: over.floor, walls: over.walls, gloss: over.gloss, dado: over.dado, frieze: over.frieze, cedar: over.cedar, baseboard: over.baseboard, ceiling: over.ceiling, labels: over.labels }) as Partial<Decor>),
     colors: { ...base.colors, ...defined(over.colors) },
-    frame: { ...base.frame, ...defined(over.frame) },
+    frames: { ...base.frames, ...defined(over.frames) },
     light: { ...base.light, ...defined(over.light) },
   };
 }
@@ -194,7 +198,7 @@ export function resolveDecor(style: Style, room: Pick<RoomConfig, 'decor' | 'wal
     cedar: false,
     baseboard: style.baseboard,
     ceiling: { type: 'flat' },
-    frame: style.frame,
+    frames: style.frames,
     light: { level: 1, tint: '#ffffff', spots: 1 },
     labels: 'light',
   };

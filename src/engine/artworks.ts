@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { buildMat, buildMoulding, frameScale, MAT_THICKNESS, shadowStrip, type FrameStyle } from './cadres';
+import { buildMat, buildMoulding, frameModel, frameScale, MAT_THICKNESS, shadowStrip, type FrameStyle } from './cadres';
 import { clearHeight, objectLight, type Decor } from './decors';
 import { groundShadow } from './furniture';
 import { ART_CENTER_Y, type WallFrame } from './layout';
@@ -47,7 +47,7 @@ export interface ArtworkContext {
   light(roomId: string): RoomLight;
   /** Décor de chaque salle. */
   decor(roomId: string): Decor;
-  /** Modèle de cadre en relief à donner à un tableau, s'il en a un ; sinon il garde son cadre d'avant. */
+  /** Aperçu d'un autre cadre (`?cadres=` dans l'adresse) : modèle à donner à ce tableau à la place du sien, s'il y en a un. */
   frameStyle?(cfg: PaintingConfig): FrameStyle | null;
 }
 
@@ -102,14 +102,6 @@ function label(decor: Decor): THREE.Mesh {
   return new THREE.Mesh(new THREE.PlaneGeometry(LABEL_W, LABEL_H), new THREE.MeshBasicMaterial({ color, toneMapped: false }));
 }
 
-/** Cadre doré mouluré : largeur du montant et saillie, en mètres. */
-export const GILT_FRAME = { width: 0.1, depth: 0.075 };
-
-/** Carton du passe-partout, et l'ombre de son biseau autour de l'œuvre. */
-const MAT_COLOR = '#f1ede3';
-const MAT_BEVEL = 0.004;
-const MAT_BEVEL_COLOR = '#cfc8b8';
-
 /** Distance de regard la plus courte : 1,20 m pour un tableau, moins pour une œuvre de petit format. */
 export const closestView = (size: number): number => THREE.MathUtils.clamp(size * 1.6, 0.55, 1.2);
 
@@ -145,16 +137,15 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
   const decor = ctx.decor(room.id);
   // Un objet accroché tel quel (porte, tapis, panneau) n'a ni cadre ni passe-partout : seulement son épaisseur.
   const bare = cfg.frameless === true;
-  // Cadre en relief : une vraie moulure, l'œuvre en retrait au fond de la feuillure.
-  const moulded = bare ? null : (ctx.frameStyle?.(cfg) ?? null);
+  // Son cadre : une moulure en relief (voir cadres.ts), l'œuvre en retrait au fond de la feuillure.
+  const moulded = bare ? null : (ctx.frameStyle?.(cfg) ?? frameModel(cfg, decor.frames));
   const scale = moulded ? frameScale(moulded, Math.max(cfg.width, cfg.height)) : 1;
-  const gilt = !bare && !moulded && cfg.frame === 'gilt';
-  const fw = bare ? 0 : moulded ? moulded.width * scale : gilt ? GILT_FRAME.width : decor.frame.width;
+  const fw = moulded ? moulded.width * scale : 0;
   // Hauteur de l'œuvre au-dessus du mur.
-  const depth = bare ? (cfg.thickness ?? 0.03) : moulded ? moulded.rabbet * scale : gilt ? 0.02 : decor.frame.depth;
-  // Sous passe-partout, pas de vide entre l'œuvre et le cadre : le carton va jusqu'au montant.
-  const mat = bare || moulded?.family === 'caisse' ? 0 : (cfg.mat ?? 0);
-  const gap = moulded ? (moulded.gap ?? 0) : bare || gilt || mat > 0 ? 0 : decor.frame.gap;
+  const depth = moulded ? moulded.rabbet * scale : (cfg.thickness ?? 0.03);
+  // Sous passe-partout, le carton va jusqu'au montant. Une caisse américaine n'en reçoit pas : la toile y flotte dans un vide.
+  const mat = !moulded || moulded.family === 'caisse' ? 0 : (cfg.mat ?? 0);
+  const gap = moulded?.gap ?? 0;
   const centerY = cfg.y ?? ART_CENTER_Y;
   const art = new THREE.Group();
   art.position.set(cfg.offset, centerY, 0);
@@ -209,55 +200,10 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
       }
     }
   } else {
-    const body = new THREE.Mesh(
-      new THREE.BoxGeometry(cfg.width + border * 2, cfg.height + border * 2, depth),
-      new THREE.MeshStandardMaterial({ color: litColor(bare ? '#2a2019' : gilt ? '#9c7a34' : decor.colors.frame, decor), roughness: 0.5 }),
-    );
+    // Sans cadre : l'objet lui-même, avec son épaisseur.
+    const body = new THREE.Mesh(new THREE.BoxGeometry(cfg.width, cfg.height, depth), new THREE.MeshStandardMaterial({ color: litColor('#2a2019', decor), roughness: 0.5 }));
     body.position.z = depth / 2;
     art.add(body);
-  }
-  if (gilt) {
-    // Cadre doré : trois moulures emboîtées, la plus haute au milieu, qui descendent vers la toile.
-    // L'or est rendu par sa teinte : sans rien à refléter, un vrai métal paraîtrait terne.
-    const gold = new THREE.MeshStandardMaterial({ color: litColor('#d8b25c', decor), roughness: 0.5 });
-    const bright = new THREE.MeshStandardMaterial({ color: litColor('#edd08a', decor), roughness: 0.4 });
-    const shadowed = new THREE.MeshStandardMaterial({ color: litColor('#9c7a34', decor), roughness: 0.6 });
-    const moulding = (from: number, to: number, height: number, material: THREE.Material) => {
-      const outer = new THREE.Shape();
-      const [ow, oh] = [cfg.width / 2 + fw * to, cfg.height / 2 + fw * to];
-      outer.moveTo(-ow, -oh);
-      outer.lineTo(ow, -oh);
-      outer.lineTo(ow, oh);
-      outer.lineTo(-ow, oh);
-      outer.closePath();
-      const [iw, ih] = [cfg.width / 2 + fw * from, cfg.height / 2 + fw * from];
-      const hole = new THREE.Path();
-      hole.moveTo(-iw, -ih);
-      hole.lineTo(-iw, ih);
-      hole.lineTo(iw, ih);
-      hole.lineTo(iw, -ih);
-      hole.closePath();
-      outer.holes.push(hole);
-      art.add(new THREE.Mesh(new THREE.ExtrudeGeometry(outer, { depth: height, bevelEnabled: false }), material));
-    };
-    moulding(0, 1, 0.04, gold);
-    moulding(0.3, 0.8, GILT_FRAME.depth, bright);
-    moulding(0.86, 1, 0.055, bright);
-    moulding(0, 0.22, 0.03, shadowed);
-  }
-  if (gap > 0 && !moulded) {
-    // Caisse américaine : un vide sombre sépare la toile du cadre.
-    const recess = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width + gap * 2, cfg.height + gap * 2), new THREE.MeshBasicMaterial({ color: 0x050505, ...inFront(1) }));
-    recess.position.z = depth + 0.001;
-    art.add(recess);
-  }
-  if (mat > 0 && !moulded) {
-    // Passe-partout : un carton crème, dont la fenêtre est taillée en biseau autour de l'œuvre.
-    const board = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width + mat * 2, cfg.height + mat * 2), new THREE.MeshBasicMaterial({ color: MAT_COLOR, toneMapped: false, ...inFront(1) }));
-    board.position.z = depth + 0.001;
-    const bevel = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width + MAT_BEVEL * 2, cfg.height + MAT_BEVEL * 2), new THREE.MeshBasicMaterial({ color: MAT_BEVEL_COLOR, toneMapped: false, ...inFront(2) }));
-    bevel.position.z = depth + 0.0015;
-    art.add(board, bevel);
   }
   // Une œuvre est toujours montrée dans ses couleurs exactes, comme sous un éclairage de musée.
   const surface = new THREE.MeshBasicMaterial({ toneMapped: false, ...inFront(3) });

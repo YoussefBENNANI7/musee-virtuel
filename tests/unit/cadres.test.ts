@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
-import { FRAMES, Section, frameScale, mouldingGeometry, sectionOpenness, type SectionPoint } from '../../src/engine/cadres';
+import { FRAMES, Section, frameMargin, frameModel, frameScale, isFrameId, mouldingGeometry, sectionOpenness, type SectionPoint } from '../../src/engine/cadres';
 
 /** Baguette de 2 cm de large et 3 cm de haut, œuvre à 1 cm du mur. */
 const BAGUETTE: SectionPoint[] = [
@@ -91,6 +91,38 @@ describe('cadres en relief', () => {
     expect(frameScale(gilt, 2)).toBeCloseTo(1.3, 6);
     expect(frameScale(gilt, 3.1)).toBeCloseTo(1.6, 6);
     expect(frameScale(FRAMES['baguette-noire'], 3)).toBe(1);
+  });
+
+  it('donne à chaque tableau le cadre qu’il demande, sinon celui de sa salle', () => {
+    const room = { plain: 'caisse-noire', mat: 'baguette-noire' };
+    const art = { width: 0.8, height: 0.6 };
+    // Sans rien demander : la caisse américaine de la salle, ou sa baguette sous passe-partout.
+    expect(frameModel(art, room)?.id).toBe('caisse-noire');
+    expect(frameModel({ ...art, mat: 0.1 }, room)?.id).toBe('baguette-noire');
+    // « gilt » est le cadre doré classique ; une œuvre peut aussi nommer un modèle.
+    expect(frameModel({ ...art, frame: 'gilt' }, room)?.id).toBe('dore-classique');
+    expect(frameModel({ ...art, frame: 'noir-filet-or', mat: 0.1 }, room)?.id).toBe('noir-filet-or');
+    // Un objet sans cadre n'en a pas ; un nom inconnu laisse le cadre de la salle.
+    expect(frameModel({ ...art, frameless: true, frame: 'gilt' }, room)).toBeNull();
+    expect(frameModel({ ...art, frame: 'rococo' }, room)?.id).toBe('caisse-noire');
+    expect(frameModel(art, { plain: 'rococo', mat: 'rococo' })?.id).toBe('caisse-noire');
+    expect(['gilt', 'dore-classique', 'baguette-laiton'].every(isFrameId)).toBe(true);
+    expect(['rococo', '', 'toString', undefined, 3].some(isFrameId)).toBe(false);
+  });
+
+  it('compte la place du cadre autour de l’œuvre : passe-partout, vide de la caisse, moulure', () => {
+    const room = { plain: 'caisse-noire', mat: 'baguette-noire' };
+    const art = { width: 0.8, height: 0.6 };
+    // Caisse américaine : 1 cm de vide et 9 mm de montant.
+    expect(frameMargin(art, room)).toBeCloseTo(0.019, 6);
+    // Baguette de 2 cm autour d'un passe-partout de 10 cm.
+    expect(frameMargin({ ...art, mat: 0.1 }, room)).toBeCloseTo(0.12, 6);
+    // Doré classique : 10 cm, et davantage pour un grand tableau.
+    expect(frameMargin({ ...art, frame: 'gilt' }, room)).toBeCloseTo(0.1, 6);
+    expect(frameMargin({ width: 3.1, height: 2.1, frame: 'gilt' }, room)).toBeCloseTo(0.16, 6);
+    // Une caisse américaine ne reçoit pas de passe-partout ; un objet sans cadre ne prend que sa place.
+    expect(frameMargin({ ...art, mat: 0.1, frame: 'caisse-chene' }, room)).toBeCloseTo(0.021, 6);
+    expect(frameMargin({ ...art, frameless: true }, room)).toBe(0);
   });
 
   it('chaque modèle est une coupe continue, de la feuillure au mur, aux mesures annoncées', () => {

@@ -3,24 +3,24 @@
   "rooms": {
     "horizons": {
       "image": "horizons.webp",
-      "fingerprint": "50274b94",
+      "fingerprint": "4e59a6e0",
       "width": 512,
       "height": 2048,
       "encode": 2,
       "soleil": false,
       "samples": 256,
       "scale": {
-        "sol": 0.9746,
-        "plafond": 0.9839,
-        "murs": 0.9861
+        "sol": 0.975,
+        "plafond": 0.9846,
+        "murs": 0.9874
       },
-      "accent": 0.47469,
+      "accent": 0.47104,
       "peak": 1.941,
       "settings": {}
     },
     "atrium": {
       "image": "atrium.webp",
-      "fingerprint": "ee369b33",
+      "fingerprint": "715bf237",
       "width": 512,
       "height": 2048,
       "encode": 2,
@@ -28,76 +28,76 @@
       "samples": 256,
       "scale": {
         "sol": 0.8982,
-        "plafond": 0.9707,
-        "murs": 0.9676
+        "plafond": 0.9708,
+        "murs": 0.9673
       },
-      "accent": 0.57265,
+      "accent": 0.57266,
       "peak": 1.37,
       "settings": {}
     },
     "cabinet": {
       "image": "cabinet.webp",
-      "fingerprint": "6f859492",
+      "fingerprint": "18c107d9",
       "width": 512,
       "height": 2048,
       "encode": 2,
       "soleil": false,
       "samples": 256,
       "scale": {
-        "sol": 0.9556,
-        "plafond": 0.9939,
-        "murs": 0.9874
+        "sol": 0.9552,
+        "plafond": 0.994,
+        "murs": 0.9815
       },
-      "accent": 0.97601,
-      "peak": 1.907,
+      "accent": 0.96749,
+      "peak": 1.905,
       "settings": {}
     },
     "galerie": {
       "image": "galerie.webp",
-      "fingerprint": "d3190b17",
+      "fingerprint": "ea3be054",
       "width": 512,
       "height": 2048,
       "encode": 4,
       "soleil": false,
       "samples": 256,
       "scale": {
-        "sol": 0.9801,
-        "plafond": 0.9916,
-        "murs": 0.9866
+        "sol": 0.9802,
+        "plafond": 0.9924,
+        "murs": 0.9886
       },
-      "accent": 5.62934,
-      "peak": 3.858,
+      "accent": 5.56036,
+      "peak": 3.837,
       "settings": {}
     },
     "cour": {
       "image": "cour.webp",
-      "fingerprint": "63350cd1",
+      "fingerprint": "15c568e3",
       "width": 512,
       "height": 2048,
       "encode": 2,
       "soleil": true,
       "samples": 256,
       "scale": {
-        "sol": 0.9646,
-        "plafond": 0.9819,
-        "murs": 0.9799
+        "sol": 0.9611,
+        "plafond": 0.982,
+        "murs": 0.9815
       },
-      "accent": 0.63344,
+      "accent": 0.63363,
       "peak": 1.692,
       "settings": {}
     },
     "riad": {
       "image": "riad.webp",
-      "fingerprint": "bd564d29",
+      "fingerprint": "a204e914",
       "width": 512,
       "height": 2048,
       "encode": 2,
       "soleil": true,
       "samples": 256,
       "scale": {
-        "sol": 0.9902,
-        "plafond": 0.9951,
-        "murs": 0.9914
+        "sol": 0.9891,
+        "plafond": 0.9952,
+        "murs": 0.9918
       },
       "accent": 0.55327,
       "peak": 1.271,

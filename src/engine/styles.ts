@@ -1,4 +1,4 @@
-import type { Baseboard, Flooring, FrameShape, MuseumConfig, StyleId } from './types';
+import type { Baseboard, DecorFrames, Flooring, MuseumConfig, StyleId } from './types';
 
 export interface Palette {
   wall: string;
@@ -6,8 +6,6 @@ export interface Palette {
   ceiling: string;
   /** Plinthes, joints creux, encadrements de portes. */
   trim: string;
-  /** Cadres des tableaux. */
-  frame: string;
   /** Socles des sculptures. */
   plinth: string;
   /** Bois du mobilier. */
@@ -35,11 +33,12 @@ export interface Style {
   baseboard: Baseboard;
   /** Encadrement en saillie autour des portes. */
   doorCasing: boolean;
-  frame: FrameShape;
+  /** Cadres des œuvres, quand ni l'œuvre ni le décor de sa salle n'en disent rien. */
+  frames: DecorFrames;
 }
 
 export const STYLES: Record<StyleId, Style> = {
-  /** Galerie contemporaine : murs blancs épais, béton clair, ouvertures nettes, cadres fins en bois clair. */
+  /** Galerie contemporaine : murs blancs épais, béton clair, ouvertures nettes, cadres fins et noirs. */
   contemporary: {
     id: 'contemporary',
     palette: {
@@ -47,7 +46,6 @@ export const STYLES: Record<StyleId, Style> = {
       floor: '#c8c5bf',
       ceiling: '#fbfbfa',
       trim: '#1b1b1a',
-      frame: '#c9b28c',
       plinth: '#f7f6f3',
       wood: '#c9b28c',
       fixture: '#161616',
@@ -58,9 +56,9 @@ export const STYLES: Record<StyleId, Style> = {
     floor: 'concrete',
     baseboard: 'shadow-gap',
     doorCasing: false,
-    frame: { width: 0.02, depth: 0.05, gap: 0.012 },
+    frames: { plain: 'caisse-noire', mat: 'baguette-noire' },
   },
-  /** Musée classique : parquet, plinthes et encadrements sombres, cadres larges. */
+  /** Musée classique : parquet, plinthes et encadrements sombres, cadres de noyer. */
   classic: {
     id: 'classic',
     palette: {
@@ -68,7 +66,6 @@ export const STYLES: Record<StyleId, Style> = {
       floor: '#9a7450',
       ceiling: '#fbfaf7',
       trim: '#2b2420',
-      frame: '#2b2420',
       plinth: '#f4f1eb',
       wood: '#6b4a2f',
       fixture: '#161616',
@@ -79,7 +76,7 @@ export const STYLES: Record<StyleId, Style> = {
     floor: 'parquet',
     baseboard: 'skirting',
     doorCasing: true,
-    frame: { width: 0.06, depth: 0.06, gap: 0 },
+    frames: { plain: 'baguette-noyer', mat: 'baguette-noyer' },
   },
 };
 
