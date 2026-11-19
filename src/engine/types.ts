@@ -159,6 +159,11 @@ export interface SculptureConfig extends ArtworkBase {
    */
   cardSide?: WallId;
   /**
+   * Côté du socle, en mètres. Sans lui, le socle suit l'emprise de la sculpture (de 50 cm à 1,30 m).
+   * À donner pour un objet posé à plat, qui ne doit pas dépasser de son socle.
+   */
+  plinthSide?: number;
+  /**
    * Photographie de l'objet réel, pour un objet reconstitué en 3D : sa fiche la montre, et le
    * visiteur peut comparer le modèle à ce qui a servi à le construire.
    */

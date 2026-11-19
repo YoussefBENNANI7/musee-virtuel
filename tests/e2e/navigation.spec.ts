@@ -382,6 +382,8 @@ test('un objet reconstitué en 3D montre la photographie de l’objet réel, et 
   // Sa voisine devient un petit objet de 30 cm, comme une machine posée sur un socle.
   const small = museum.rooms.flatMap((r: any) => r.artworks).find((a: any) => a.id === 'ruban');
   small.height = 0.3;
+  // Une troisième reçoit un socle au côté donné, comme un objet posé à plat qui ne doit pas en dépasser.
+  museum.rooms.flatMap((r: any) => r.artworks).find((a: any) => a.id === 'orbites').plinthSide = 0.7;
   const errors = await openMuseum(page, { museum });
 
   // Un petit objet s'approche de plus près qu'une statue : le visiteur est amené à moins d'un mètre de lui.
@@ -400,6 +402,22 @@ test('un objet reconstitué en 3D montre la photographie de l’objet réel, et 
   await page.keyboard.press('Escape');
   // Une grande sculpture garde sa distance de 1,20 m.
   expect((await reach('noeud-sans-fin')).closest).toBeCloseTo(1.2, 5);
+
+  // Le socle a le côté demandé ; celui de la sculpture voisine suit toujours son emprise.
+  const sides = await page.evaluate(() => {
+    const { world } = (window as any).__museum;
+    const side = (id: string) => {
+      const art = world.artworks.find((a: any) => a.config.id === id);
+      const scales: number[] = [];
+      // Le socle est la boîte du groupe qui porte aussi le cartel.
+      art.label.parent.traverse((node: any) => { if (node.isMesh && node.geometry?.type === 'BoxGeometry' && node.scale.y === 1) scales.push(node.scale.x); });
+      return scales[0];
+    };
+    return { given: side('orbites'), big: side('noeud-sans-fin') };
+  });
+  expect(sides.given).toBeCloseTo(0.7, 5);
+  expect(sides.big).toBeGreaterThanOrEqual(0.5);
+  expect(sides.big).toBeLessThanOrEqual(1.3);
 
   // Le cartel est sur la face sud du socle, et regarde vers le sud (z croissant).
   const card = await page.evaluate(() => {

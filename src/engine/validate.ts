@@ -327,6 +327,7 @@ function checkSculpture(
   }
   if (art.cardSide !== undefined && !WALLS.includes(art.cardSide)) error(where, `côté du cartel inconnu : "${art.cardSide}" (north, south, east ou west)`);
   if (art.sourcePhoto !== undefined && !(typeof art.sourcePhoto === 'string' && art.sourcePhoto.trim())) error(where, 'photographie de l\'objet réel : indiquez son fichier dans "sourcePhoto"');
+  if (art.plinthSide !== undefined && !(typeof art.plinthSide === 'number' && art.plinthSide >= 0.2 && art.plinthSide <= 2)) error(where, 'côté du socle : indiquez une longueur en mètres, de 0,2 à 2 ("plinthSide")');
   const [w, h, d] = room.size;
   const clear = half + 0.5;
   if (Math.abs(art.position[0]) > w / 2 - clear || Math.abs(art.position[1]) > d / 2 - clear) {

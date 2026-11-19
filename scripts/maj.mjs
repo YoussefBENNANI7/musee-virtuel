@@ -4,6 +4,7 @@
 //   npm run maj -- 120-ans ~/Downloads/maj-120-ans-01.zip
 //   npm run maj -- 120-ans ~/Downloads/maj-120-ans-01          (le même paquet, déjà décompressé)
 //   npm run maj -- 120-ans ~/Downloads/maj-120-ans-01.zip --essai   (montre ce qui changerait, sans rien écrire)
+//   npm run maj -- 120-ans ~/Downloads/maj-120-ans-02.zip ~/Downloads/maj-120-ans-03.zip   (plusieurs paquets, dans l'ordre)
 //
 // Un paquet est un dossier (ou son archive .zip) qui contient :
 //   - maj.json : le musée visé, un titre, la liste des fichiers à poser et les retouches des œuvres ;
@@ -209,27 +210,35 @@ const size = (bytes) => (bytes < 1024 * 1024 ? `${Math.round(bytes / 1024)} Ko` 
 function main() {
   const args = process.argv.slice(2);
   const dry = args.includes('--essai');
-  const [museumId, path] = args.filter((arg) => !arg.startsWith('--'));
-  if (!museumId || !path) {
-    console.error('Usage : npm run maj -- <musée> <paquet.zip ou dossier> [--essai]');
+  const [museumId, ...paths] = args.filter((arg) => !arg.startsWith('--'));
+  if (!museumId || !paths.length) {
+    console.error('Usage : npm run maj -- <musée> <paquet.zip ou dossier> [paquets suivants…] [--essai]');
     process.exit(1);
   }
-  let pack = null;
-  try {
-    pack = openPackage(path.replace(/^~(?=\/|$)/, process.env.HOME ?? '~'));
-    const result = dry ? planUpdate(museumId, pack.dir) : applyUpdate(museumId, pack.dir);
-    console.log(`${dry ? 'Essai, rien n’est écrit' : 'Mise à jour appliquée'} : ${result.title || 'paquet sans titre'}`);
-    for (const copy of result.copies) console.log(`  ${copy.replaces ? 'remplace' : 'ajoute  '} ${copy.path} (${size(copy.size)})`);
-    for (const art of result.artworks) console.log(`  retouche l’œuvre « ${art.id} » (${art.room}) : ${art.fields.join(', ')}`);
-    if (!dry) {
-      console.log(`Sauvegarde de l’état précédent : ${result.backup.replace(ROOT, '')}`);
-      console.log('À faire maintenant : ouvrir le musée pour voir le résultat. Si l’éditeur affiche « Lumière à recalculer », cliquer sur « Recalculer la lumière ».');
+  // Plusieurs paquets : ils sont appliqués dans l'ordre donné ; au premier refus, on s'arrête là.
+  let done = 0;
+  for (const path of paths) {
+    let pack = null;
+    try {
+      pack = openPackage(path.replace(/^~(?=\/|$)/, process.env.HOME ?? '~'));
+      const result = dry ? planUpdate(museumId, pack.dir) : applyUpdate(museumId, pack.dir);
+      console.log(`${dry ? 'Essai, rien n’est écrit' : 'Mise à jour appliquée'} : ${result.title || 'paquet sans titre'}`);
+      for (const copy of result.copies) console.log(`  ${copy.replaces ? 'remplace' : 'ajoute  '} ${copy.path} (${size(copy.size)})`);
+      for (const art of result.artworks) console.log(`  retouche l’œuvre « ${art.id} » (${art.room}) : ${art.fields.join(', ')}`);
+      if (!dry) console.log(`Sauvegarde de l’état précédent : ${result.backup.replace(ROOT, '')}`);
+      done += 1;
+    } catch (error) {
+      console.error(`✗ Mise à jour refusée (${path}), le musée n’a pas été modifié par ce paquet : ${error.message}`);
+      if (paths.length > 1) console.error(`  ${done} paquet(s) appliqué(s) avant lui ; les suivants ne sont pas appliqués.`);
+      process.exitCode = 1;
+      break;
+    } finally {
+      pack?.close();
     }
-  } catch (error) {
-    console.error(`✗ Mise à jour refusée, le musée n’a pas été modifié : ${error.message}`);
-    process.exitCode = 1;
-  } finally {
-    pack?.close();
+  }
+  if (done && !dry) {
+    if (paths.length > 1) console.log(`${done} mise(s) à jour appliquée(s) sur ${paths.length}.`);
+    console.log('À faire maintenant : ouvrir le musée pour voir le résultat. Si l’éditeur affiche « Lumière à recalculer », cliquer sur « Recalculer la lumière ».');
   }
 }
 

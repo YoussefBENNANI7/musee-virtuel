@@ -312,7 +312,8 @@ export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: T
       footprint = Math.max(size.x, size.z) * scale;
       art.add(shape);
     }
-    const side = THREE.MathUtils.clamp(footprint * 0.8, 0.5, 1.3);
+    // Une statue déborde volontiers de son socle ; un objet posé à plat reçoit un socle à sa mesure (`plinthSide`).
+    const side = cfg.plinthSide ?? THREE.MathUtils.clamp(footprint * 0.8, 0.5, 1.3);
     plinth.scale.set(side, 1, side);
     shadow.scale.set(side, side, 1);
     card.position.set(cardX * (side / 2 + 0.002), Math.min(cfg.plinth - 0.12, 0.8), cardZ * (side / 2 + 0.002));

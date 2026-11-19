@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { inspectRange } from '../../src/inspect';
+import { inspectPitch, inspectRange } from '../../src/inspect';
 
 // Caméra de la visite : champ vertical de 68°, écran 16:9.
 const tan = Math.tan((68 * Math.PI) / 360);
@@ -39,5 +39,25 @@ describe('examen d’un objet : distances', () => {
     expect(min).toBeCloseTo(before, 9);
     expect(start).toBeCloseTo(before * 1.2, 9);
     expect(max).toBeCloseTo(before * 1.2 * 1.7, 9);
+  });
+});
+
+describe('examen d’un objet : angle de départ', () => {
+  it('une statue, ou un objet aussi haut que large, se regarde presque de face, comme avant', () => {
+    expect(inspectPitch(1.7, 0.5)).toBe(0.12);
+    expect(inspectPitch(0.3, 0.3)).toBe(0.12);
+  });
+
+  it('un petit appareil posé à plat se regarde de haut : de face, on n’en verrait que la tranche', () => {
+    // 7 cm d'épaisseur pour 27 cm de long : la caméra part à une quarantaine de degrés au-dessus de l'horizontale.
+    const pitch = inspectPitch(0.07, 0.27);
+    expect(pitch).toBeGreaterThan(0.6);
+    expect(pitch).toBeLessThanOrEqual(0.8);
+  });
+
+  it('plus l’objet est plat, plus on part de haut, sans jamais passer à la verticale', () => {
+    expect(inspectPitch(0.14, 0.25)).toBeGreaterThan(inspectPitch(0.22, 0.3));
+    expect(inspectPitch(0.01, 1)).toBe(0.8);
+    expect(inspectPitch(0.2, 0)).toBe(0.12);
   });
 });

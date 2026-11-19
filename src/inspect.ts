@@ -23,6 +23,16 @@ export function inspectRange(height: number, span: number, reach: number, tan: n
   return { start, min, max: start * 1.7 };
 }
 
+/**
+ * Angle de départ de l'examen, en radians au-dessus de l'horizontale. Une statue se regarde presque de face.
+ * Un objet plus large que haut, posé à plat sur son socle, se regarde de plus haut : de face, on n'en verrait
+ * que la tranche.
+ */
+export function inspectPitch(height: number, span: number): number {
+  const ratio = span > 0 ? height / span : 1;
+  return Math.min(0.8, Math.max(0.12, 0.12 + (1 - ratio) * 0.75));
+}
+
 export interface Inspect {
   open(art: PlacedArtwork): void;
   close(): void;
@@ -162,7 +172,7 @@ export function setupInspect(options: {
       // On part du côté où se tenait le visiteur.
       home.copy(camera.position);
       yaw = Math.atan2(home.x - target.center.x, home.z - target.center.z);
-      pitch = 0.12;
+      pitch = flatCoin || !size ? 0.12 : inspectPitch(size.y, Math.max(size.x, size.z));
       setSpin(!stillMotion);
 
       background = scene.background;

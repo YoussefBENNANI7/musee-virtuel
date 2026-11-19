@@ -99,6 +99,18 @@ describe('erreurs détectées', () => {
     expect(errorsOf(museum)).toContain('Œuvre "intrus" : accrochée en travers d\'une porte');
   });
 
+  it('un socle dont le côté est donné : une longueur plausible, en mètres', () => {
+    const museum = fixture();
+    const works = museum.rooms.flatMap((r) => r.artworks);
+    const ruban = works.find((a) => a.id === 'ruban')!;
+    const orbites = works.find((a) => a.id === 'orbites')!;
+    if (ruban.type === 'sculpture') ruban.plinthSide = 12;
+    if (orbites.type === 'sculpture') orbites.plinthSide = 0.65;
+    const errors = errorsOf(museum);
+    expect(errors).toContain('Œuvre "ruban" : côté du socle : indiquez une longueur en mètres, de 0,2 à 2 ("plinthSide")');
+    expect(errors.filter((e) => e.includes('orbites'))).toEqual([]);
+  });
+
   it('un cartel de socle tourné vers un mur inconnu, ou une photographie de l’objet sans fichier', () => {
     const museum = fixture();
     const works = museum.rooms.flatMap((r) => r.artworks);
