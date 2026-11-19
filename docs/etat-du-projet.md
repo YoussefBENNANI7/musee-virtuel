@@ -184,7 +184,7 @@ Demande du porteur : améliorer la qualité graphique des cadres, dans les deux 
 - Les panneaux et totems sans cadre des 120 ans ne sont pas concernés. Le Patio marocain a reçu la baguette noire comme la Galerie des Lignes ; une baguette de noyer s'y accorderait aussi (`"frames": { "mat": "baguette-noyer" }`), à voir avec le porteur.
 - **Vérifié** : 9 tests unitaires (géométrie de la moulure, onglets, faces et normales, arêtes vives et courbes lisses, creux, largeur selon la taille, cadre de chaque œuvre, place prise sur le mur, cohérence des dix modèles) et 3 tests dans un navigateur (cadre de chaque œuvre et réglages de salle ; `?cadres=` ; modèle inconnu ignoré). Captures des six salles sur ordinateur et sur téléphone.
 
-### Jalon en cours : images et objets de l'exposition des 120 ans (essai sur six pièces fait le 19 novembre 2026, attend l'avis du porteur)
+### Jalon en cours : images et objets de l'exposition des 120 ans (essais faits le 19 novembre 2026 : six pièces, puis deux objets en 3D)
 
 Demandes du porteur, le 19 novembre 2026 : (1) fiabiliser chaque pièce de monnaie et chaque billet de l'exposition par une recherche (Bank Al-Maghrib, catalogues numismatiques) ; (2) améliorer la qualité d'image de toutes les œuvres exposées, 80 environ, dont 54 monnaies et billets ; (3) ouvrir davantage les pages du livre, comme sur ses photos d'origine. Il a aussi évoqué des objets à modéliser en 3D, à préciser.
 
@@ -216,6 +216,21 @@ Demandes du porteur, le 19 novembre 2026 : (1) fiabiliser chaque pièce de monna
 - **Paquet n° 1, remis au porteur le 19 novembre 2026** (validé par lui : « oui ») : la monnaie d'argent agrandie d'après une photo libre du même type, avec sa mention dans la fiche (`credit`), et le billet à portrait tiré du film, avec son millésime. Les dimensions réelles des billets viendront en une fois, avec le lot des billets, pour ne recalculer la lumière qu'une fois.
 - **Réponses du porteur, le 19 novembre 2026** : il a le droit d'utiliser les images du film de l'exposition ; il ne peut pas retourner photographier les pièces ; **il ne veut utiliser que ses clés Google et OpenAI, aucun autre service payant**.
 - **Le livre** : le script qui le fabrique est resté dans sa branche locale `claude/laughing-galileo-0mch8q` ; il faudra le récupérer, avec les photos d'origine.
+
+**Objets en 3D : décision du porteur et essai sur deux objets (19 novembre 2026).** Le porteur veut tous les objets de l'exposition en 3D, hors monnaies et billets (quatorze machines et objets du hall des guichets), posés sur des socles à la place des photos au mur, la photo restant dans la fiche (champ `photo`). Contrainte posée par lui en cours de route : **uniquement ses clés Google et OpenAI, aucun autre service payant**. Un service de génération « image vers 3D » avait été envisagé (fal.ai) : écarté à sa demande, rien n'y a été envoyé, l'hôte a été retiré de l'environnement.
+
+- **Ce que permettent ses deux clés** (vérifié le 19 novembre 2026) : ni Google ni OpenAI n'ont de générateur « photo vers objet 3D ». Les modèles d'image de Google ne rendent que des images ; ce qu'OpenAI montre en 3D est un modèle qui écrit un programme pour Blender. La méthode de l'essai est donc la même, faite ici : **l'objet est construit par code dans Blender, calé sur la photo**. La clé Google sert aux textures des faces cachées et à des vues de profil pour guider la forme. La clé OpenAI n'a pas servi.
+- **Méthode** (Blender en module Python, celui du calcul de lumière ; Pillow y a été ajouté) :
+  1. relever sur la photo des points de l'objet ; retrouver l'appareil photo. Pour une boîte, ses trois directions fuient vers trois points de l'image, qui donnent la focale, l'orientation et les proportions (écarts de 1 à 20 pixels sur une photo de 2000). Pour un objet complexe, on cale l'appareil sur un rectangle connu de l'objet et quelques repères, en ajustant ses cotes jusqu'à ce que le volume recouvre la photo ;
+  2. construire le volume : profil étiré sur la largeur, arrondis, cuvette creusée, pièces rapportées (touches replacées là où la photo les montre, manivelle, leviers, serrure, poignées) ;
+  3. habiller : la photo est projetée sur tout ce qu'elle montre (visibilité par lancer de rayons, une surface vue de biais compte moins) ; ailleurs, une peinture reconstituée par le modèle d'image de Google d'après un échantillon de la photo, à la teinte de celle-ci. Les grands reflets d'une face plane se retirent comme un voile (soustraction), en épargnant les parties claires, sinon les couleurs d'un logo dérivent ;
+  4. exporter en GLB, puis `npm run modeles` : de 1 300 à 5 600 triangles, de 0,2 à 0,5 Mo par objet ;
+  5. contrôler : rendu depuis le point de vue de la photo, côte à côte avec elle ; tour de l'objet en huit vues ; dans le musée, sur son socle puis dans « Examiner ».
+- **Résultats** : l'objet simple (une boîte) est fidèle sous tous les angles, faces cachées plausibles. L'objet complexe (une machine à touches et manivelle) est fidèle du côté photographié, inscriptions comprises (42 % de sa surface est habillée par la photo) ; ses flancs et son dos sont une reconstitution simplifiée, et ses leviers sont schématiques. Les vues de profil et d'arrière demandées au modèle d'image sont plausibles mais pas fiables en cotes (hauteur exagérée, un détail inventé sur un flanc) : elles guident, elles ne prouvent rien.
+- **À corriger dans le moteur au début du lot** : « Examiner » cadre de trop près un petit objet (la distance est calculée sans tenir compte de sa profondeur : 0,29 m du centre pour un cube de 32 cm, dont la face avant déborde alors de l'écran ; voir `src/inspect.ts`). Un objet clair demande `tone` vers 0,6, sinon il blanchit. Le socle fait au moins 50 cm de côté, grand pour un objet de 25 cm. Les comptoirs de la salle (1,02 m de haut, 55 cm de profondeur) pourraient porter les machines : à décider avec le porteur.
+- **Coût** : sept images Google pour les deux objets, moins d'un dollar.
+- **Fichiers** : planche et archive de l'essai (modèles GLB, cotes, programmes) remises au porteur, à ranger dans son Drive ; rien dans le dépôt.
+- **En attente** : son avis sur le niveau obtenu pour l'objet complexe, entre trois voies : l'accepter ainsi pour les machines, avec la mention « modèle reconstitué d'après photographie » ; ne passer en 3D que les objets simples et garder la photo des machines ; ou passer plus de temps par machine (profil, dos et flancs détaillés).
 
 ### Voix de l'audioguide : décisions prises, production à venir
 
@@ -500,9 +515,9 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 ## 4. En attente du porteur du projet
 
 - **Confirmer la sauvegarde `musees-sauvegarde-v2`** sur son Bureau (l'étiquette `v2`, elle, est créée et vérifiée).
+- **Son avis sur l'essai 3D des deux objets** (voir « Objets en 3D ») : le niveau obtenu pour la machine lui convient-il, et où poser les objets (socles ou comptoirs) ?
+- **Appliquer le paquet n° 1** sur son Mac (`npm run maj -- 120-ans ~/Downloads/maj-120-ans-01.zip`) et dire si le résultat lui convient.
 - **Son avis sur l'essai des six pièces** (voir « Jalon en cours : images et objets de l'exposition des 120 ans ») : les deux images à intégrer, la reconstitution à valider, les mentions à écrire dans les fiches.
-- **Peut-il rephotographier les pièces**, de face, une par une ? C'est la meilleure image de départ possible.
-- **A-t-il le droit d'utiliser les images du film de l'exposition ?** Si oui, ses gros plans servent pour une vingtaine de pièces.
 - **Un inventaire, un catalogue ou des scans** de l'exposition, s'il en existe ; à défaut, le poids ou le diamètre de la monnaie d'or à identifier.
 - **Son avis sur la baguette noire dans le Patio marocain** (une baguette de noyer s'accorderait aussi avec le plafond de cèdre).
 - **Le reste du mode administrateur à essayer sur son Mac** : protection et rétablissement de la démonstration, couverture du musée des 120 ans (« Prendre la vue de l'aperçu »).
