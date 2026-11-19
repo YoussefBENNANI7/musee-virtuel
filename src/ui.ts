@@ -63,6 +63,7 @@ export const UI: Record<string, Record<string, string>> = {
     height: 'H.',
     record: 'Voir la notice du musée',
     enlarge: 'Agrandir',
+    sourcePhoto: 'Photographie de l’objet exposé',
     examine: 'Examiner',
     explore: 'Explorer les détails',
     detailCount: 'Détail {i} sur {n}',
@@ -135,6 +136,7 @@ export const UI: Record<string, Record<string, string>> = {
     height: 'H.',
     record: 'View the museum record',
     enlarge: 'Enlarge',
+    sourcePhoto: 'Photograph of the object on display',
     examine: 'Examine',
     explore: 'Explore the details',
     detailCount: 'Detail {i} of {n}',
@@ -195,6 +197,28 @@ export function renderCredit(node: HTMLElement, app: App, a: Artwork) {
     const link = Object.assign(document.createElement('a'), { href: a.link, target: '_blank', rel: 'noopener', textContent: app.ui().record });
     node.append(link);
   }
+}
+
+/**
+ * Montre la photographie de l'objet réel dans la fiche d'un objet reconstitué en 3D.
+ * Sans elle, la figure disparaît. Renvoie l'adresse de la photographie, ou null.
+ */
+export function renderSourcePhoto(node: HTMLElement, app: App, a: Artwork): string | null {
+  const file = a.type === 'sculpture' ? a.sourcePhoto : undefined;
+  const img = node.querySelector('img')!;
+  node.hidden = !file;
+  if (!file) {
+    img.removeAttribute('src');
+    return null;
+  }
+  const src = new URL(file, app.base).href;
+  const caption = app.ui().sourcePhoto;
+  // L'adresse n'est réécrite que si elle change : rouvrir la même fiche ne recharge pas l'image.
+  if (img.src !== src) img.src = src;
+  img.alt = caption;
+  node.querySelector('button')!.setAttribute('aria-label', `${app.ui().enlarge} : ${caption}`);
+  node.querySelector('figcaption')!.textContent = caption;
+  return src;
 }
 
 /** Ligne de légende d'une œuvre : date, technique, dimensions. */

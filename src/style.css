@@ -322,6 +322,30 @@ body:not(.simple) .tools select:hover {
   font-size: 1.08rem;
   line-height: 1.75;
 }
+/* Photographie de l'objet réel, dans la fiche d'un objet reconstitué en 3D : un clic l'agrandit. */
+.panel .photo {
+  margin: 22px 0 0;
+}
+.panel .photo button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: none;
+  cursor: zoom-in;
+}
+.panel .photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.panel .photo figcaption {
+  margin-top: 8px;
+  font: 0.78rem/1.4 system-ui, sans-serif;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
 /* Mention de l'œuvre : musée qui la conserve, licence de l'image, lien vers sa notice. */
 .credit {
   margin: 16px 0 0;

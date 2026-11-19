@@ -147,6 +147,42 @@ describe('paquet de mise à jour d’un musée', () => {
     expect(() => planUpdate('../essai', pack, museums)).toThrow(/nom de musée invalide/);
   });
 
+  it('transforme un tableau en objet 3D : le modèle, ses versions pour le web et sa photographie doivent être là', () => {
+    const change = { type: 'sculpture', image: null, width: null, position: [0, 1], height: 0.3, plinth: 0.95, model: { src: 'models/tableau.glb', web: true }, photo: 'images/tableau.webp', sourcePhoto: 'images/tableau.webp' };
+    const fresh = (manifest: unknown, files: Record<string, string> = {}) => {
+      rmSync(pack, { recursive: true, force: true });
+      mkdirSync(pack, { recursive: true });
+      makePackage(manifest, files);
+    };
+    // Sans les versions préparées pour le web, le musée chercherait des fichiers absents : le paquet est refusé.
+    fresh({ musee: 'essai', fichiers: ['models/tableau.glb'], oeuvres: { tableau: change } }, { 'models/tableau.glb': 'modèle' });
+    expect(() => applyUpdate('essai', pack, options())).toThrow(/fichier qui n'existe pas : models\/web\/tableau\.glb/);
+
+    fresh(
+      { musee: 'essai', fichiers: ['models/tableau.glb', 'models/web/tableau.glb', 'models/web/tableau-leger.glb'], oeuvres: { tableau: change } },
+      { 'models/tableau.glb': 'modèle', 'models/web/tableau.glb': 'web', 'models/web/tableau-leger.glb': 'léger' },
+    );
+    applyUpdate('essai', pack, options());
+    // Les champs du tableau (image, largeur) ont disparu ; ceux qui restent valables sont gardés.
+    expect(config().rooms[0].artworks[0]).toEqual({
+      id: 'tableau',
+      type: 'sculpture',
+      title: { fr: 'Tableau' },
+      year: '',
+      position: [0, 1],
+      height: 0.3,
+      plinth: 0.95,
+      model: { src: 'models/tableau.glb', web: true },
+      photo: 'images/tableau.webp',
+      sourcePhoto: 'images/tableau.webp',
+    });
+    expect(readFileSync(join(museums, 'essai', 'models', 'web', 'tableau-leger.glb'), 'utf8')).toBe('léger');
+
+    // Une photographie annoncée mais absente du musée est refusée elle aussi.
+    fresh({ musee: 'essai', oeuvres: { tableau: { sourcePhoto: 'images/ailleurs.webp' } } });
+    expect(() => applyUpdate('essai', pack, options())).toThrow(/fichier qui n'existe pas : images\/ailleurs\.webp/);
+  });
+
   it('ouvre une archive .zip, même quand elle contient un dossier qui contient le paquet', () => {
     makePackage({ musee: 'essai', fichiers: ['images/tableau.webp'] }, { 'images/tableau.webp': 'nouvelle image' });
     const zip = join(root, 'paquet.zip');

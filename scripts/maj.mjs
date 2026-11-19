@@ -57,9 +57,15 @@ export function patchArtwork(art, patch) {
   return out;
 }
 
-/** Fichiers qu'une œuvre fait charger : son image, son modèle, la face d'une pièce, ses voix. */
+/** Fichiers qu'une œuvre fait charger : son image, son modèle, la face d'une pièce, ses photographies, ses voix. */
 function filesOf(art) {
-  const files = [art.image?.src, art.model?.src, art.model?.coin];
+  const files = [art.image?.src, art.model?.src, art.model?.coin, art.photo, art.sourcePhoto];
+  // Un modèle préparé pour le web se charge depuis models/web/, en version complète ou légère.
+  if (art.model?.web && typeof art.model.src === 'string') {
+    const slash = art.model.src.lastIndexOf('/');
+    const name = art.model.src.slice(slash + 1).replace(/\.[^.]+$/, '');
+    files.push(`${art.model.src.slice(0, slash + 1)}web/${name}.glb`, `${art.model.src.slice(0, slash + 1)}web/${name}-leger.glb`);
+  }
   for (const audio of [art.audio, art.testimony?.audio]) if (isPlain(audio)) files.push(...Object.values(audio));
   return files.filter((file) => typeof file === 'string');
 }

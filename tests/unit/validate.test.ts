@@ -99,6 +99,24 @@ describe('erreurs détectées', () => {
     expect(errorsOf(museum)).toContain('Œuvre "intrus" : accrochée en travers d\'une porte');
   });
 
+  it('un cartel de socle tourné vers un mur inconnu, ou une photographie de l’objet sans fichier', () => {
+    const museum = fixture();
+    const works = museum.rooms.flatMap((r) => r.artworks);
+    const ruban = works.find((a) => a.id === 'ruban')!;
+    const orbites = works.find((a) => a.id === 'orbites')!;
+    if (ruban.type === 'sculpture') ruban.cardSide = 'nord' as never;
+    if (orbites.type === 'sculpture') {
+      orbites.cardSide = 'north';
+      orbites.sourcePhoto = ' ';
+    }
+    const errors = errorsOf(museum);
+    expect(errors).toContain('Œuvre "ruban" : côté du cartel inconnu : "nord" (north, south, east ou west)');
+    expect(errors).toContain('Œuvre "orbites" : photographie de l\'objet réel : indiquez son fichier dans "sourcePhoto"');
+    // Un côté connu et une photographie nommée ne posent aucun problème.
+    if (orbites.type === 'sculpture') orbites.sourcePhoto = 'images/orbites.webp';
+    expect(errorsOf(museum).filter((e) => e.includes('"orbites"'))).toEqual([]);
+  });
+
   it('une sculpture posée dans un mur', () => {
     const museum = fixture();
     const sculpture = museum.rooms.flatMap((r) => r.artworks).find((a) => a.id === 'ruban')!;

@@ -325,6 +325,8 @@ function checkSculpture(
     if (art.height > 0.12) error(where, 'pièce trop grande pour une vitrine (diamètre maximal : 12 cm)');
     return;
   }
+  if (art.cardSide !== undefined && !WALLS.includes(art.cardSide)) error(where, `côté du cartel inconnu : "${art.cardSide}" (north, south, east ou west)`);
+  if (art.sourcePhoto !== undefined && !(typeof art.sourcePhoto === 'string' && art.sourcePhoto.trim())) error(where, 'photographie de l\'objet réel : indiquez son fichier dans "sourcePhoto"');
   const [w, h, d] = room.size;
   const clear = half + 0.5;
   if (Math.abs(art.position[0]) > w / 2 - clear || Math.abs(art.position[1]) > d / 2 - clear) {

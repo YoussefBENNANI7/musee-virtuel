@@ -153,6 +153,16 @@ export interface SculptureConfig extends ArtworkBase {
    * `position` et `plinth` ne servent alors plus ; `height` est le diamètre de la pièce.
    */
   vitrine?: { id: string; slot: number };
+  /**
+   * Côté du socle qui porte le cartel : celui qui regarde ce mur de la salle (« east » par défaut).
+   * À choisir du côté d'où le visiteur arrive.
+   */
+  cardSide?: WallId;
+  /**
+   * Photographie de l'objet réel, pour un objet reconstitué en 3D : sa fiche la montre, et le
+   * visiteur peut comparer le modèle à ce qui a servi à le construire.
+   */
+  sourcePhoto?: string;
   /** Matière d'une sculpture dessinée par le moteur. Un modèle numérisé porte la sienne. */
   material?: SculptureMaterial;
   color?: string;

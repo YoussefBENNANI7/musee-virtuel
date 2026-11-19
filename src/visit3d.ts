@@ -12,7 +12,7 @@ import { buildWorld, type PlacedArtwork } from './engine/world';
 import { setupAmbiance } from './ambiance';
 import { setupCarnet } from './carnet';
 import { setupInspect } from './inspect';
-import { $, metaLine, renderCredit, type App, type View } from './ui';
+import { $, metaLine, renderCredit, renderSourcePhoto, type App, type View } from './ui';
 import { setupVR } from './vr';
 import { setupZoom } from './zoom';
 
@@ -235,6 +235,8 @@ export function startVisit(app: App): View {
     btn.textContent = playing ? ui().stopAudio : ui().listen;
     btn.setAttribute('aria-pressed', String(playing));
   }
+  /** Adresse de la photographie de l'objet réel montrée dans la fiche ouverte, s'il y en a une. */
+  let sourcePhoto: string | null = null;
   function renderPanel() {
     if (!current) return;
     const a = current.config;
@@ -243,6 +245,7 @@ export function startVisit(app: App): View {
     $('p-meta').textContent = metaLine(app, a);
     $('p-desc').textContent = tr(a.description, app.lang);
     renderCredit($('p-credit'), app, a);
+    sourcePhoto = renderSourcePhoto($('p-photo'), app, a);
     // Un tableau fourni en fichier s'agrandit ; une sculpture, une fois chargée, s'examine sous tous les angles.
     $('p-zoom').hidden = a.type === 'painting' ? !('src' in a.image) : !current.shape;
     $('p-zoom').textContent = a.type === 'sculpture' ? ui().examine : a.details?.length ? ui().explore : ui().enlarge;
@@ -276,6 +279,10 @@ export function startVisit(app: App): View {
       applyViewOffset();
       invalidate();
     },
+  });
+  // La photographie de l'objet réel s'agrandit comme un tableau.
+  $('p-photo-open').addEventListener('click', () => {
+    if (current && sourcePhoto) zoom.open(sourcePhoto, `${tr(current.config.title, app.lang)} : ${ui().sourcePhoto}`);
   });
   $('p-zoom').addEventListener('click', () => {
     const a = current?.config;

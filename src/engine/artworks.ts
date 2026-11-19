@@ -7,7 +7,7 @@ import type { RoomLight } from './lighting';
 import type { Quality } from './quality';
 import { loadSculpture, sculptureMaterial, sculptureShape } from './sculptures';
 import { artworkTexture, poolTexture } from './textures';
-import type { ArtworkConfig, PaintingConfig, RoomConfig, SculptureConfig } from './types';
+import type { ArtworkConfig, PaintingConfig, RoomConfig, SculptureConfig, WallId } from './types';
 
 /** Une œuvre installée dans le musée. */
 /** Calque à part : la sculpture qu'on examine y est placée, pour la montrer seule, sans la salle ni les autres œuvres. */
@@ -102,7 +102,7 @@ function label(decor: Decor): THREE.Mesh {
   return new THREE.Mesh(new THREE.PlaneGeometry(LABEL_W, LABEL_H), new THREE.MeshBasicMaterial({ color, toneMapped: false }));
 }
 
-/** Distance de regard la plus courte : 1,20 m pour un tableau, moins pour une œuvre de petit format. */
+/** Distance de regard la plus courte : 1,20 m pour un tableau ou une sculpture, moins pour une œuvre de petit format. */
 export const closestView = (size: number): number => THREE.MathUtils.clamp(size * 1.6, 0.55, 1.2);
 
 /** Distance entre le mur et le rail des projecteurs. */
@@ -246,6 +246,9 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
   return placed;
 }
 
+/** Direction (x, z) vers laquelle regarde le cartel d'un socle, selon le mur de la salle qu'il a en face. */
+const CARD_SIDES: Record<WallId, [number, number]> = { east: [1, 0], west: [-1, 0], south: [0, 1], north: [0, -1] };
+
 /** Pose une sculpture sur son socle. */
 export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: THREE.Group, ctx: ArtworkContext): PlacedArtwork {
   const x = room.position[0] + cfg.position[0];
@@ -261,7 +264,9 @@ export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: T
   const plinth = new THREE.Mesh(new THREE.BoxGeometry(1, cfg.plinth, 1), new THREE.MeshStandardMaterial({ color: litColor(decor.colors.plinth, decor), roughness: 0.8 }));
   plinth.position.y = cfg.plinth / 2;
   const card = label(decor);
-  card.rotation.y = Math.PI / 2;
+  // Le cartel regarde le côté d'où vient le visiteur : l'est, sauf indication contraire.
+  const [cardX, cardZ] = CARD_SIDES[cfg.cardSide ?? 'east'] ?? CARD_SIDES.east;
+  card.rotation.y = Math.atan2(cardX, cardZ);
   const shadow = groundShadow(1, 1);
   art.add(plinth, card, shadow);
   if (ctx.quality.shadows) {
@@ -310,9 +315,11 @@ export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: T
     const side = THREE.MathUtils.clamp(footprint * 0.8, 0.5, 1.3);
     plinth.scale.set(side, 1, side);
     shadow.scale.set(side, side, 1);
-    card.position.set(side / 2 + 0.002, Math.min(cfg.plinth - 0.12, 0.8), 0);
+    card.position.set(cardX * (side / 2 + 0.002), Math.min(cfg.plinth - 0.12, 0.8), cardZ * (side / 2 + 0.002));
     placed.span = footprint;
     placed.depth = footprint / 2;
+    // Un petit objet se regarde de plus près qu'une statue, comme un petit tableau.
+    placed.closest = closestView(Math.max(cfg.height, footprint));
     placed.obstacle!.r = side * 0.71 + 0.25;
   };
 

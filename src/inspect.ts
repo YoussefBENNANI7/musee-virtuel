@@ -7,6 +7,22 @@ const BACKGROUND = new THREE.Color('#1c2b26');
 const SPIN = 0.35; // rad/s, rotation automatique
 const LOOK = 0.008; // rad par pixel de glissement
 
+/**
+ * Distances de l'examen d'un objet, comptées depuis son centre : celle de départ, la plus proche, la plus lointaine.
+ * `flat` cadre l'objet comme s'il était plat. Mais sa partie la plus proche de la caméra est en avant de son
+ * centre, de `reach` (son rayon vu de dessus) : sans en tenir compte, un objet aussi profond que haut, comme un
+ * coffre, déborde de l'écran, et l'on pourrait s'approcher jusqu'à entrer dedans.
+ */
+export function inspectRange(height: number, span: number, reach: number, tan: number, aspect: number): { start: number; min: number; max: number } {
+  const flat = Math.max(height / (2 * tan), span / (2 * tan * aspect));
+  const radius = Math.max(height, span) / 2;
+  // Une pièce de monnaie s'approche de plus près qu'une sculpture.
+  const min = Math.max(Math.min(radius * 0.45 + 0.12, radius * 2.5 + 0.06), reach + 0.08);
+  // Un très petit objet (une pièce de monnaie) se regarde de près, mais jamais en deçà de ce que la caméra peut montrer.
+  const start = Math.max(1.45 * flat, 1.2 * flat + reach, min * 1.2);
+  return { start, min, max: start * 1.7 };
+}
+
 export interface Inspect {
   open(art: PlacedArtwork): void;
   close(): void;
@@ -132,16 +148,17 @@ export function setupInspect(options: {
       $('inspect-spin').setAttribute('aria-label', t.inspectSpin);
       $('inspect-hint').textContent = t.inspectHint;
 
-      // Recul pour que la sculpture entière tienne à l'écran, en hauteur comme en largeur.
+      // Recul pour que la sculpture entière tienne à l'écran, en hauteur comme en largeur, d'où qu'on la regarde.
       const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
-      const fit = 1.45 * Math.max(target.config.height / (2 * tan), target.span / (2 * tan * camera.aspect));
-      const radius = Math.max(target.config.height, target.span) / 2;
-      // Une pièce de monnaie s'approche de plus près qu'une sculpture.
-      min = Math.min(radius * 0.45 + 0.12, radius * 2.5 + 0.06);
-      // Un très petit objet (une pièce de monnaie) se regarde de près, mais jamais en deçà de ce que la caméra peut montrer.
-      const start = Math.max(fit, min * 1.2);
-      max = start * 1.7;
-      distance = wanted = start;
+      target.shape?.updateWorldMatrix(true, true);
+      const size = target.shape ? new THREE.Box3().setFromObject(target.shape).getSize(new THREE.Vector3()) : null;
+      // Une pièce de monnaie est plate : elle n'avance pas vers la caméra, et se cadre comme avant.
+      const flatCoin = target.config.type === 'sculpture' && target.config.vitrine !== undefined;
+      const reach = flatCoin ? 0 : size ? Math.hypot(size.x, size.z) / 2 : target.span / 2;
+      const range = inspectRange(target.config.height, target.span, reach, tan, camera.aspect);
+      min = range.min;
+      max = range.max;
+      distance = wanted = range.start;
       // On part du côté où se tenait le visiteur.
       home.copy(camera.position);
       yaw = Math.atan2(home.x - target.center.x, home.z - target.center.z);

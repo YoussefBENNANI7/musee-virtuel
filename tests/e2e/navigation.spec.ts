@@ -375,6 +375,68 @@ test('une sculpture s’examine seule, sous tous les angles, puis la visite repr
   expect(errors).toEqual([]);
 });
 
+test('un objet reconstitué en 3D montre la photographie de l’objet réel, et son cartel regarde le côté voulu', async ({ page }) => {
+  const museum = JSON.parse(readFileSync(fileURLToPath(new URL('../fixtures/museum.json', import.meta.url)), 'utf8'));
+  const knot = museum.rooms.flatMap((r: any) => r.artworks).find((a: any) => a.id === 'noeud-sans-fin');
+  Object.assign(knot, { sourcePhoto: 'images/noeud.webp', cardSide: 'south' });
+  // Sa voisine devient un petit objet de 30 cm, comme une machine posée sur un socle.
+  const small = museum.rooms.flatMap((r: any) => r.artworks).find((a: any) => a.id === 'ruban');
+  small.height = 0.3;
+  const errors = await openMuseum(page, { museum });
+
+  // Un petit objet s'approche de plus près qu'une statue : le visiteur est amené à moins d'un mètre de lui.
+  const reach = (id: string) =>
+    page.evaluate((id) => {
+      const { world, camera } = (window as any).__museum;
+      const art = world.artworks.find((a: any) => a.config.id === id);
+      return { closest: art.closest as number, distance: Math.hypot(camera.position.x - art.center.x, camera.position.z - art.center.z) };
+    }, id);
+  await clickArtwork(page, 'ruban', 3);
+  await expect(page.locator('#p-title')).toHaveText('Ruban');
+  await settle(page);
+  const near = await reach('ruban');
+  expect(near.closest).toBeLessThan(0.8);
+  expect(near.distance).toBeLessThan(1);
+  await page.keyboard.press('Escape');
+  // Une grande sculpture garde sa distance de 1,20 m.
+  expect((await reach('noeud-sans-fin')).closest).toBeCloseTo(1.2, 5);
+
+  // Le cartel est sur la face sud du socle, et regarde vers le sud (z croissant).
+  const card = await page.evaluate(() => {
+    const art = (window as any).__museum.world.artworks.find((a: any) => a.config.id === 'noeud-sans-fin');
+    const at = art.label.getWorldPosition(art.center.clone());
+    const facing = art.label.getWorldDirection(art.center.clone());
+    return { dx: at.x - art.center.x, dz: at.z - art.center.z, nx: facing.x, nz: facing.z };
+  });
+  expect(card.dz).toBeGreaterThan(0.2);
+  expect(Math.abs(card.dx)).toBeLessThan(0.01);
+  expect(card.nz).toBeCloseTo(1, 3);
+  expect(card.nx).toBeCloseTo(0, 3);
+
+  await clickArtwork(page, 'noeud-sans-fin', 3);
+  const figure = page.locator('#p-photo');
+  await expect(figure).toBeVisible();
+  await expect(figure.locator('figcaption')).toHaveText('Photographie de l’objet exposé');
+  await expect(figure.locator('img')).toHaveAttribute('src', /\/museums\/fixture\/images\/noeud\.webp$/);
+  await expect.poll(() => figure.locator('img').evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+
+  // Elle s'agrandit comme un tableau, puis la fiche revient.
+  await figure.locator('button').click();
+  const zoom = page.locator('#zoom');
+  await expect(zoom).toBeVisible();
+  await expect(page.locator('#zoom-img')).toHaveAttribute('src', /images\/noeud\.webp$/);
+  await page.keyboard.press('Escape');
+  await expect(zoom).toBeHidden();
+  await expect(panel(page)).toBeVisible();
+
+  // Un tableau n'a pas de seconde image dans sa fiche : la figure disparaît.
+  await page.keyboard.press('Escape');
+  await clickArtwork(page, 'equilibre-no-7', 4.5);
+  await expect(page.locator('#p-title')).not.toHaveText('Nœud sans fin');
+  await expect(figure).toBeHidden();
+  expect(errors).toEqual([]);
+});
+
 test('le commentaire continue pendant qu’on examine une sculpture', async ({ page }) => {
   await openMuseum(page, { spySpeech: true });
   await clickArtwork(page, 'noeud-sans-fin', 3);
