@@ -65,6 +65,7 @@ export function startVisit(app: App): View {
     style,
     quality,
     env,
+    frames: new URLSearchParams(location.search).get('cadres'),
     onLoad() {
       // Une sculpture vient d'arriver : son ombre est à calculer.
       renderer.shadowMap.needsUpdate = true;

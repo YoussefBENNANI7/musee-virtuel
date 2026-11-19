@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { buildMat, buildMoulding, frameScale, MAT_THICKNESS, shadowStrip, type FrameStyle } from './cadres';
 import { clearHeight, objectLight, type Decor } from './decors';
 import { groundShadow } from './furniture';
 import { ART_CENTER_Y, type WallFrame } from './layout';
@@ -46,6 +47,8 @@ export interface ArtworkContext {
   light(roomId: string): RoomLight;
   /** Décor de chaque salle. */
   decor(roomId: string): Decor;
+  /** Modèle de cadre en relief à donner à un tableau, s'il en a un ; sinon il garde son cadre d'avant. */
+  frameStyle?(cfg: PaintingConfig): FrameStyle | null;
 }
 
 /** Couleur d'une matière telle qu'elle paraît dans une salle : assombrie si la salle est tamisée. */
@@ -142,12 +145,16 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
   const decor = ctx.decor(room.id);
   // Un objet accroché tel quel (porte, tapis, panneau) n'a ni cadre ni passe-partout : seulement son épaisseur.
   const bare = cfg.frameless === true;
-  const gilt = !bare && cfg.frame === 'gilt';
-  const fw = bare ? 0 : gilt ? GILT_FRAME.width : decor.frame.width;
-  const depth = bare ? (cfg.thickness ?? 0.03) : gilt ? 0.02 : decor.frame.depth;
+  // Cadre en relief : une vraie moulure, l'œuvre en retrait au fond de la feuillure.
+  const moulded = bare ? null : (ctx.frameStyle?.(cfg) ?? null);
+  const scale = moulded ? frameScale(moulded, Math.max(cfg.width, cfg.height)) : 1;
+  const gilt = !bare && !moulded && cfg.frame === 'gilt';
+  const fw = bare ? 0 : moulded ? moulded.width * scale : gilt ? GILT_FRAME.width : decor.frame.width;
+  // Hauteur de l'œuvre au-dessus du mur.
+  const depth = bare ? (cfg.thickness ?? 0.03) : moulded ? moulded.rabbet * scale : gilt ? 0.02 : decor.frame.depth;
   // Sous passe-partout, pas de vide entre l'œuvre et le cadre : le carton va jusqu'au montant.
-  const mat = bare ? 0 : (cfg.mat ?? 0);
-  const gap = bare || gilt || mat > 0 ? 0 : decor.frame.gap;
+  const mat = bare || moulded?.family === 'caisse' ? 0 : (cfg.mat ?? 0);
+  const gap = moulded ? (moulded.gap ?? 0) : bare || gilt || mat > 0 ? 0 : decor.frame.gap;
   const centerY = cfg.y ?? ART_CENTER_Y;
   const art = new THREE.Group();
   art.position.set(cfg.offset, centerY, 0);
@@ -172,12 +179,43 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
   }
 
   const border = mat + gap + fw;
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(cfg.width + border * 2, cfg.height + border * 2, depth),
-    new THREE.MeshStandardMaterial({ color: litColor(bare ? '#2a2019' : gilt ? '#9c7a34' : decor.colors.frame, decor), roughness: 0.5 }),
-  );
-  body.position.z = depth / 2;
-  art.add(body);
+  if (moulded) {
+    const [openW, openH] = [cfg.width + (mat + gap) * 2, cfg.height + (mat + gap) * 2];
+    art.add(buildMoulding(moulded, openW, openH, scale, { env: ctx.env, light: objectLight(decor), tint: decor.light.tint, anisotropy: ctx.quality.anisotropy }));
+    const relief = (moulded.depth - moulded.rabbet) * scale;
+    if (gap > 0) {
+      // Caisse américaine : la toile flotte dans le cadre. On voit son chant, et le fond sombre de la caisse.
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(openW, openH), new THREE.MeshBasicMaterial({ color: 0x070605 }));
+      floor.position.z = 0.008 * scale;
+      const stretcher = new THREE.Mesh(new THREE.BoxGeometry(cfg.width, cfg.height, depth - 0.008 * scale), new THREE.MeshStandardMaterial({ color: litColor('#d9d2c2', decor), roughness: 0.9 }));
+      stretcher.position.z = (depth + 0.008 * scale) / 2 - 0.0005;
+      art.add(floor, stretcher);
+    } else {
+      // Fond du cadre : rien ne se voit du mur entre l'œuvre et la moulure.
+      const back = new THREE.Mesh(new THREE.PlaneGeometry(openW, openH), new THREE.MeshBasicMaterial({ color: 0x0b0a09 }));
+      back.position.z = depth - MAT_THICKNESS - 0.001;
+      art.add(back);
+    }
+    if (mat > 0) {
+      const board = buildMat(cfg.width, cfg.height, mat, relief, inFront);
+      board.position.z = depth;
+      art.add(board);
+    } else if (gap === 0 && relief > 0.012) {
+      // Sans passe-partout, le cadre porte son ombre sur le haut de la toile, et un peu sur ses côtés.
+      for (const [side, reach, opacity] of [[2, relief * 0.7, 0.3], [1, relief * 0.3, 0.16], [3, relief * 0.3, 0.16]] as const) {
+        const shadow = shadowStrip(side, cfg.width, cfg.height, Math.min(reach, cfg.height * 0.12), opacity, inFront(4));
+        shadow.position.z = depth + 0.0005;
+        art.add(shadow);
+      }
+    }
+  } else {
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(cfg.width + border * 2, cfg.height + border * 2, depth),
+      new THREE.MeshStandardMaterial({ color: litColor(bare ? '#2a2019' : gilt ? '#9c7a34' : decor.colors.frame, decor), roughness: 0.5 }),
+    );
+    body.position.z = depth / 2;
+    art.add(body);
+  }
   if (gilt) {
     // Cadre doré : trois moulures emboîtées, la plus haute au milieu, qui descendent vers la toile.
     // L'or est rendu par sa teinte : sans rien à refléter, un vrai métal paraîtrait terne.
@@ -207,13 +245,13 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
     moulding(0.86, 1, 0.055, bright);
     moulding(0, 0.22, 0.03, shadowed);
   }
-  if (gap > 0) {
+  if (gap > 0 && !moulded) {
     // Caisse américaine : un vide sombre sépare la toile du cadre.
     const recess = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width + gap * 2, cfg.height + gap * 2), new THREE.MeshBasicMaterial({ color: 0x050505, ...inFront(1) }));
     recess.position.z = depth + 0.001;
     art.add(recess);
   }
-  if (mat > 0) {
+  if (mat > 0 && !moulded) {
     // Passe-partout : un carton crème, dont la fenêtre est taillée en biseau autour de l'œuvre.
     const board = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width + mat * 2, cfg.height + mat * 2), new THREE.MeshBasicMaterial({ color: MAT_COLOR, toneMapped: false, ...inFront(1) }));
     board.position.z = depth + 0.001;
@@ -224,7 +262,8 @@ export function hangPainting(cfg: PaintingConfig, room: RoomConfig, holder: THRE
   // Une œuvre est toujours montrée dans ses couleurs exactes, comme sous un éclairage de musée.
   const surface = new THREE.MeshBasicMaterial({ toneMapped: false, ...inFront(3) });
   const canvas = new THREE.Mesh(new THREE.PlaneGeometry(cfg.width, cfg.height), surface);
-  canvas.position.z = depth + 0.002;
+  // Sous un passe-partout biseauté, l'œuvre est derrière le carton, au fond de sa fenêtre.
+  canvas.position.z = moulded ? (mat > 0 ? depth - MAT_THICKNESS : depth) : depth + 0.002;
 
   const card = label(decor);
   // Le cartel reste à hauteur de lecture, même à côté d'une porte ou d'un tapis qui descend jusqu'au sol.

@@ -158,6 +158,17 @@ Demande du porteur : pouvoir se déplacer après avoir cliqué sur « Écouter l
 - **Vérifié** : un test dans un navigateur (marche au clavier après le clic, fiche ouverte puis refermée, salle sans présentation, une seule voix à la fois), qui échouait avant la correction. Captures sur ordinateur et sur téléphone.
 - En passant : dans l'éditeur, la photo de couverture qui vient d'être enregistrée est redemandée si elle n'arrive pas (le serveur de développement met parfois un instant à voir un fichier tout juste écrit ; un test du lot précédent échouait pour cela une fois sur plusieurs).
 
+### Cadres en relief : planche présentée, choix du porteur attendu (19 novembre 2026)
+
+Demande du porteur : améliorer la qualité graphique des cadres, dans les deux musées. Planche, sur ordinateur et sur téléphone : https://claude.ai/artifact/PzzVFq6FEDzb3bnzU9sKgm.
+
+- **Le défaut** : un cadre était une boîte plate d'une couleur unie, l'œuvre collée sur sa face. Le cadre doré avait trois marches, sans matière ; le passe-partout était deux rectangles sans épaisseur ; le vide de la caisse américaine était dessiné.
+- **Ce qui est construit** (`src/engine/cadres.ts`) : un cadre est une moulure, c'est-à-dire une coupe (son profil vu en tranche) promenée autour de l'œuvre, avec des angles coupés d'onglet. L'œuvre est en retrait, au fond de la feuillure. Les matières prennent la lumière de la salle (or bruni, or ancien, laiton, aluminium, bois avec son fil, laque, peinture satinée) ; les creux d'une moulure sont assombris, là où la lumière entre moins. Le passe-partout est un vrai carton, à la fenêtre biseautée, sur lequel le cadre porte une ombre douce ; sans passe-partout, c'est sur le haut de la toile que le cadre porte son ombre. La caisse américaine a un vrai vide, et la toile y montre son chant. Un grand tableau porte une moulure plus large (jusqu'à 1,6 fois au-delà de 3 m).
+- **Dix modèles** : pour les tableaux, `dore-classique`, `dore-ancien`, `noir-filet-or` ; pour les œuvres sous passe-partout et les photographies, `baguette-noire`, `baguette-chene`, `baguette-noyer`, `baguette-laiton`, `baguette-aluminium` ; pour les toiles modernes, `caisse-noire`, `caisse-chene`.
+- **Rien n'est appliqué** : le lot touche à l'identité visuelle, le porteur choisit d'abord. Les modèles ne se montrent qu'à la demande, par l'adresse : `?cadres=tableau:dore-classique,papier:baguette-noire,caisse:caisse-noire`. Les trois familles : `tableau` (les œuvres au cadre doré), `papier` (les œuvres sous passe-partout), `caisse` (les autres œuvres encadrées, au cadre du décor). Un modèle peut servir à n'importe quelle famille. Le porteur peut ainsi les essayer sur son musée des 120 ans, par exemple `http://localhost:5173/?m=120-ans&cadres=caisse:baguette-laiton,papier:baguette-laiton`.
+- **Ce qui restera à faire après son choix** : donner le modèle choisi à chaque décor et à chaque œuvre (réglage de `museum.json`, choix dans l'éditeur), puis recalculer la lumière des salles, puisque l'ombre des cadres sur le mur change (l'empreinte des salles changera : l'éditeur le signalera). Les panneaux et totems sans cadre des 120 ans ne sont pas concernés.
+- **Vérifié** : 7 tests unitaires (géométrie de la moulure, onglets, faces et normales, arêtes vives et courbes lisses, creux, largeur selon la taille, cohérence des dix modèles) et 3 tests dans un navigateur (sans réglage rien ne change ; chaque famille dans son cadre, l'œuvre en retrait ; modèle inconnu ignoré).
+
 ### Voix de l'audioguide : décisions prises, production à venir
 
 Le moteur lit déjà un enregistrement par œuvre et par langue quand on lui en fournit un (champ `audio` de l'œuvre) ; sans lui, il fait lire le texte par la voix du navigateur. Il ne manque que les fichiers.
@@ -440,6 +451,8 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
+- **Son choix de cadres** : un modèle par famille (tableaux, œuvres sous passe-partout, toiles modernes, photographies des 120 ans), d'après la planche. Voir « Cadres en relief ».
+
 - **Son essai du mode administrateur sur son Mac** : bouton « Mode administrateur » de la page des musées, alerte et recalcul de la lumière depuis l'éditeur, protection et rétablissement de la démonstration, couverture du musée des 120 ans (« Prendre la vue de l'aperçu »). Le lancement du calcul depuis l'éditeur n'a tourné que dans l'environnement de travail.
 
 - **Son avis sur le rendu premium du musée des 120 ans** : premier calcul sur son Mac réussi le 18 novembre 2026 (`npm run lumiere -- 120-ans`) : galerie, hall des guichets et chambre forte, 3 min 40 en tout à 256 échantillons (de 66 à 80 s par salle, deux à trois fois plus vite que dans l'environnement de travail). Reste à le regarder (`?m=120-ans`) et à dire ce que cela donne.
@@ -527,6 +540,7 @@ src/engine/layout.ts        Géométrie du plan : murs, portes, zones de marche 
 src/engine/lighting.ts      Calcul de l'éclairage des salles
 src/engine/building.ts      Construction du bâtiment : sols, murs, plafonds, verrières
 src/engine/artworks.ts      Accrochage des tableaux, pose des sculptures
+src/engine/cadres.ts        Cadres en relief : moulures, modèles, matières, passe-partout biseauté
 src/engine/accrochage.ts    Accrochage automatique : répartition des œuvres sur les murs d'une salle
 src/engine/plans.ts         Plans proposés à la création d'un musée
 src/engine/world.ts         Assemblage du musée, règles de déplacement, points de vue
@@ -541,8 +555,8 @@ scripts/lumiere.mjs         Lumière précalculée des salles (« npm run lumier
 scripts/lumiere-installer.mjs  Prépare un ordinateur pour ce calcul (« npm run lumiere:installer »)
 scripts/editeur-serveur.mjs Service d'écriture de l'éditeur, ajouté au serveur de développement : musées, images,
                             page de choix et couvertures, calcul de la lumière, rétablissement de la démonstration
-tests/unit/                 Tests unitaires (Vitest) : 213 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 95 tests
+tests/unit/                 Tests unitaires (Vitest) : 220 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 98 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration
@@ -562,6 +576,7 @@ vercel.json                 Configuration de l'hébergement (pas encore relié)
 | `?presentation=essentiels` | Lance ce parcours en mode présentation dès l'entrée : il se déroule seul, avec la voix |
 | `?debug` | Affiche le détail des erreurs de configuration, même dans la version publiée |
 | `?lumiere=0` | Montre le musée sans sa lumière précalculée (éclairage par formule), pour comparer |
+| `?cadres=tableau:dore-classique` | Montre les œuvres dans des cadres en relief, sans toucher à la configuration. Familles `tableau`, `papier`, `caisse` ; plusieurs demandes se séparent par des virgules. Voir « Cadres en relief » |
 
 ### Configurer un musée (`museum.json`)
 

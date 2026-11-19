@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { fixtureMaterial, hangPainting, placeSculpture, TRACK_DISTANCE, type ArtworkContext, type PlacedArtwork } from './artworks';
+import { FRAMES } from './cadres';
 import { buildBuilding } from './building';
 import { clearHeight, resolveDecor, type Decor } from './decors';
 import { COUNTER, FOUNTAIN_RADIUS, benchFootprint, buildBench, buildCounter, buildFountain, buildLantern, buildPhotoCubes, lanternHeight } from './furniture';
@@ -40,6 +41,22 @@ export interface WorldOptions {
   env: THREE.Texture;
   /** Appelé quand une image finit de charger, pour redessiner la scène. */
   onLoad?: () => void;
+  /**
+   * Aperçu de cadres en relief (`?cadres=tableau:dore-classique,papier:baguette-noire` dans l'adresse) :
+   * modèle à donner à chaque famille de cadres, à la place du cadre habituel.
+   */
+  frames?: string | null;
+}
+
+/** Lit le choix de cadres d'aperçu : « famille:modèle », séparés par des virgules. */
+function frameChooser(choice: string | null | undefined): ArtworkContext['frameStyle'] {
+  const wanted = new Map((choice ?? '').split(',').map((pair) => pair.split(':') as [string, string]));
+  if (!choice) return undefined;
+  return (cfg) => {
+    // La famille d'un tableau : cadre doré, œuvre sous passe-partout, ou toile au cadre discret du décor.
+    const family = cfg.frame === 'gilt' ? 'tableau' : cfg.mat ? 'papier' : 'caisse';
+    return FRAMES[wanted.get(family) ?? ''] ?? null;
+  };
 }
 
 export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
@@ -56,6 +73,7 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
     onLoad: options.onLoad ?? (() => {}),
     light: building.light,
     decor: (roomId) => decors.get(roomId)!,
+    frameStyle: frameChooser(options.frames),
   };
   /** Zones occupées par le mobilier et les socles : le visiteur les contourne. */
   const blocked: ((x: number, z: number) => boolean)[] = [];
