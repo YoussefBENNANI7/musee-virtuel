@@ -489,9 +489,7 @@ function showcaseSection() {
       }, { multiline: true, rows: 3, placeholder: 'Une ou deux phrases, sous le nom du musée.' }),
     ),
     h('p', { class: 'field-label' }, 'Photo de couverture'),
-    v.image
-      ? h('img', { class: 'cover', id: 'cover', src: new URL(`museums/${v.image}`, document.baseURI).href, alt: 'Couverture du musée' })
-      : h('div', { class: 'cover empty', id: 'cover' }, 'Pas encore de photo de couverture'),
+    v.image ? coverImage(v.image) : h('div', { class: 'cover empty', id: 'cover' }, 'Pas encore de photo de couverture'),
     h('div', { class: 'row' },
       h('button', { type: 'button', id: 'cover-shot', onclick: () => void coverFromPreview() }, 'Prendre la vue de l’aperçu'),
       h('button', { type: 'button', onclick: () => upload.click() }, 'Choisir une photo…'),
@@ -499,6 +497,20 @@ function showcaseSection() {
     ),
     h('small', { class: 'muted' }, 'Pour la vue de l’aperçu : dans le musée à droite, placez-vous là où il est le plus beau, puis cliquez sur «\u00a0Prendre la vue de l’aperçu\u00a0».'),
   );
+}
+
+/**
+ * Image de couverture. Le serveur de développement met parfois un instant à voir un fichier qui
+ * vient d'être écrit : si l'image n'arrive pas, on la redemande, quelques fois, de plus en plus tard.
+ */
+function coverImage(path: string) {
+  const url = new URL(`museums/${path}`, document.baseURI).href;
+  const img = h('img', { class: 'cover', id: 'cover', src: url, alt: 'Couverture du musée' });
+  let tries = 0;
+  img.addEventListener('error', () => {
+    if (++tries <= 8) window.setTimeout(() => (img.src = `${url}?essai=${tries}`), 250 * tries);
+  });
+  return img;
 }
 
 /** Photographie la vue actuelle de l'aperçu et en fait la couverture du musée. */

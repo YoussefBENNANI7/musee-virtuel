@@ -54,7 +54,10 @@ export class Controls {
     camera.position.y = EYE_HEIGHT;
 
     window.addEventListener('keydown', (e) => {
-      if ((e.target as HTMLElement).closest('input, textarea, button, [role="dialog"]')) return;
+      // Dans un champ de saisie ou une fenêtre (fiche, plan), les touches servent à autre chose. Sur un
+      // bouton de la visite qu'on vient de cliquer, elles continuent de déplacer le visiteur : aucune
+      // touche de marche n'actionne un bouton, et sans cela le clavier resterait « accroché » au bouton.
+      if ((e.target as HTMLElement).closest('input, textarea, [role="dialog"]')) return;
       this.keys.add(e.code);
       if (e.code.startsWith('Arrow')) e.preventDefault();
     });

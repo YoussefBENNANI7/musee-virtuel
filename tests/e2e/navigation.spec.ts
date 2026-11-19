@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { clickArtwork, holdClock, holdUntil, onWalkableGround, openMuseum, panel, position, roomName, slowFrames, teleport, walkUntilBlocked } from './helpers';
 
 const WEST = Math.PI / 2; // regard vers l'ouest
@@ -386,6 +388,65 @@ test('le commentaire continue pendant qu’on examine une sculpture', async ({ p
   await page.keyboard.press('Escape');
   await expect(page.locator('#inspect')).toBeHidden();
   await expect(page.locator('#p-audio')).toHaveText('Arrêter la lecture');
+});
+
+test('la présentation de la salle accompagne le visiteur : il marche, ouvre une œuvre, change de salle', async ({ page }) => {
+  // La salle de départ et le cabinet ont chacun une présentation ; le salon des sculptures n'en a pas.
+  const museum = JSON.parse(readFileSync(fileURLToPath(new URL('../fixtures/museum.json', import.meta.url)), 'utf8'));
+  museum.rooms.find((r: any) => r.id === 'hall').intro = { text: { fr: 'Ici commence la visite.', en: 'The visit starts here.' } };
+  museum.rooms.find((r: any) => r.id === 'cabinet').intro = { text: { fr: 'Un cabinet de couleurs.', en: 'A cabinet of colours.' } };
+  const errors = await openMuseum(page, { spySpeech: true, museum });
+  const intro = page.locator('#room-intro');
+  const spoken = () => page.evaluate(() => (window as any).__spoken.map((s: { text: string }) => s.text) as string[]);
+
+  await expect(intro).toHaveText('Écouter la présentation de la salle');
+  await intro.click();
+  await expect(intro).toHaveText('Arrêter la lecture');
+  expect(await spoken()).toEqual(['Salle des Horizons. Ici commence la visite.']);
+
+  // Le bouton vient d'être cliqué : les touches déplacent quand même le visiteur, sans rien couper.
+  const start = await position(page);
+  await holdUntil(page, 'ArrowUp', async () => {
+    const now = await position(page);
+    return Math.hypot(now.x - start.x, now.z - start.z) > 1;
+  });
+  await expect(intro).toHaveAttribute('aria-pressed', 'true');
+
+  // Ouvrir une œuvre, puis refermer sa fiche : la présentation continue.
+  await clickArtwork(page, 'le-pays-d-avant', 3);
+  await expect(panel(page)).toBeVisible();
+  await expect(intro).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Escape');
+  await expect(panel(page)).toBeHidden();
+  await expect(intro).toHaveAttribute('aria-pressed', 'true');
+
+  // Dans une salle sans présentation, le bouton reste là tant que la lecture dure, pour pouvoir l'arrêter.
+  await teleport(page, -10.5, 0, WEST);
+  await expect(roomName(page)).toHaveText('Salon des Sculptures');
+  await expect(intro).toHaveText('Arrêter la lecture');
+  await intro.click();
+  await expect(intro).toBeHidden();
+
+  // Une seule voix à la fois : le commentaire d'une œuvre remplace la présentation de la salle.
+  await teleport(page, 0, 2.5, NORTH);
+  await expect(roomName(page)).toHaveText('Salle des Horizons');
+  await intro.click();
+  await expect(intro).toHaveAttribute('aria-pressed', 'true');
+  await clickArtwork(page, 'le-pays-d-avant', 3);
+  await page.locator('#p-audio').click();
+  await expect(page.locator('#p-audio')).toHaveText('Arrêter la lecture');
+  await expect(intro).toHaveText('Écouter la présentation de la salle');
+  // Et la présentation d'une autre salle remplace celle qui se lit encore.
+  await page.keyboard.press('Escape');
+  await intro.click();
+  await teleport(page, 0, -8.5, NORTH);
+  await expect(roomName(page)).toHaveText('Cabinet des Couleurs');
+  await expect(intro).toHaveText('Arrêter la lecture');
+  await intro.click();
+  await expect(intro).toHaveText('Écouter la présentation de la salle');
+  await intro.click();
+  expect((await spoken()).at(-1)).toBe('Cabinet des Couleurs. Un cabinet de couleurs.');
+  expect(errors).toEqual([]);
 });
 
 test('un musée sans fontaine n’a pas de bouton de son', async ({ page }) => {

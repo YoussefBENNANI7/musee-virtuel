@@ -1,6 +1,6 @@
 # Musée virtuel personnalisable : état du projet
 
-Mis à jour le 18 novembre 2026. Ce document permet de reprendre le projet dans une nouvelle conversation sans rien perdre : vision, décisions prises, avancement, points en attente et organisation du code.
+Mis à jour le 19 novembre 2026. Ce document permet de reprendre le projet dans une nouvelle conversation sans rien perdre : vision, décisions prises, avancement, points en attente et organisation du code.
 
 ---
 
@@ -146,6 +146,17 @@ Demande du porteur, après avoir éteint par erreur la lumière de l'Atrium dans
 - **Démonstration protégée** : un badge « Démonstration protégée » dans l'en-tête. À la première modification (ou au premier dépôt, recadrage, changement de couverture, calcul de lumière), l'éditeur demande « Modifier « Musée des Horizons » ? ». « Annuler » remet le musée comme avant et n'écrit rien ; « Modifier quand même » vaut jusqu'à la fermeture de la page. L'onglet Musée de la démonstration a un bouton **« Rétablir la démonstration d'origine »** (après confirmation) : il remet ses fichiers tels qu'ils sont dans le projet (`git checkout`), salles, œuvres, décors et lumière compris.
 - **Aperçu de l'éditeur** : il n'affiche plus le lien vers la page des musées, qui ferait quitter le musée en cours de modification.
 - **Vérifié** : 8 tests unitaires de plus (page de choix, couverture, calcul lancé et suivi, deux calculs refusés, absence de Blender, lumière gardée à l'enregistrement, rétablissement par git) et 5 tests dans un navigateur de plus (aller-retour entre la page des musées et l'éditeur, page de choix tenue par l'éditeur, démonstration protégée, alerte et suivi du calcul, prise de vue pour la couverture) ; le test de la page de choix vérifie aussi que le bouton « Mode administrateur » est absent de la version publiée. Un vrai calcul a été lancé depuis l'éditeur dans l'environnement de travail, sur un musée d'essai d'une salle : 2 minutes, l'alerte s'efface une fois la lumière recalculée. Captures sur ordinateur et sur téléphone.
+
+### La présentation de la salle accompagne le visiteur (19 novembre 2026)
+
+Demande du porteur : pouvoir se déplacer après avoir cliqué sur « Écouter la présentation de la salle ».
+
+- **Le défaut** : après un clic sur un bouton de la visite (présentation de la salle, mais aussi Plan, Parcours, Carnet une fois refermés), le clavier restait « accroché » au bouton et les flèches ne déplaçaient plus le visiteur, jusqu'à un clic dans le musée. Et ouvrir ou refermer la fiche d'une œuvre coupait la présentation.
+- **La règle, désormais** : les touches de marche sont ignorées seulement dans un champ de saisie ou une fenêtre (fiche, plan, parcours, carnet, agrandissement). Sur un bouton, elles déplacent le visiteur : aucune touche de marche n'actionne un bouton (`src/engine/controls.ts`).
+- **La présentation d'une salle continue** quand on marche, quand on ouvre ou referme une fiche, quand on change de salle. Elle s'arrête quand elle est finie, quand on clique sur « Arrêter la lecture », ou quand une autre voix commence (commentaire d'une œuvre, témoignage, présentation d'une autre salle) : jamais deux voix à la fois. Tant qu'elle se lit, son bouton reste affiché, même dans une salle qui n'a pas de présentation, pour pouvoir l'arrêter.
+- Choix pris par défaut, le porteur n'ayant pas tranché : la présentation continue quand on ouvre une œuvre.
+- **Vérifié** : un test dans un navigateur (marche au clavier après le clic, fiche ouverte puis refermée, salle sans présentation, une seule voix à la fois), qui échouait avant la correction. Captures sur ordinateur et sur téléphone.
+- En passant : dans l'éditeur, la photo de couverture qui vient d'être enregistrée est redemandée si elle n'arrive pas (le serveur de développement met parfois un instant à voir un fichier tout juste écrit ; un test du lot précédent échouait pour cela une fois sur plusieurs).
 
 ### Voix de l'audioguide : décisions prises, production à venir
 
@@ -531,7 +542,7 @@ scripts/lumiere-installer.mjs  Prépare un ordinateur pour ce calcul (« npm run
 scripts/editeur-serveur.mjs Service d'écriture de l'éditeur, ajouté au serveur de développement : musées, images,
                             page de choix et couvertures, calcul de la lumière, rétablissement de la démonstration
 tests/unit/                 Tests unitaires (Vitest) : 213 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 94 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 95 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration

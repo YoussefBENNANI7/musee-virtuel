@@ -184,6 +184,15 @@ export function startVisit(app: App): View {
   /** Témoignage de l'œuvre ouverte, et présentation de la salle où l'on se trouve. */
   const witnessId = (a: ArtworkConfig) => `${a.id}#temoignage`;
   const introId = (r: RoomConfig) => `salle:${r.id}`;
+  /** Vrai tant que se lit la présentation d'une salle, celle où l'on est ou une autre. */
+  const introPlaying = () => guide.playingId?.startsWith('salle:') ?? false;
+  /**
+   * Arrête le commentaire d'une œuvre (ou son témoignage) quand on la quitte. La présentation d'une
+   * salle, elle, accompagne le visiteur : il peut marcher, ouvrir une œuvre, changer de salle.
+   */
+  const stopCommentary = () => {
+    if (!introPlaying()) guide.stop();
+  };
   function renderExtras() {
     const w = $('p-witness');
     const t = current?.config.testimony;
@@ -194,13 +203,12 @@ export function startVisit(app: App): View {
       w.textContent = playing ? ui().stopAudio : tr(t.label, app.lang);
       w.setAttribute('aria-pressed', String(playing));
     }
+    // Tant qu'une présentation se lit, le bouton reste là pour l'arrêter, même dans une salle qui n'en a pas.
     const ri = $('room-intro');
-    ri.hidden = !room?.intro;
-    if (room?.intro) {
-      const playing = guide.playingId === introId(room);
-      ri.textContent = playing ? ui().stopAudio : ui().roomIntro;
-      ri.setAttribute('aria-pressed', String(playing));
-    }
+    const playing = introPlaying();
+    ri.hidden = !room?.intro && !playing;
+    ri.textContent = playing ? ui().stopAudio : ui().roomIntro;
+    ri.setAttribute('aria-pressed', String(playing));
   }
   $('p-witness').addEventListener('click', () => {
     const t = current?.config.testimony;
@@ -210,10 +218,10 @@ export function startVisit(app: App): View {
     guide.playFile(id, t.audio[app.lang] ?? Object.values(t.audio)[0], app.base);
   });
   $('room-intro').addEventListener('click', () => {
+    if (introPlaying()) return guide.stop();
     const intro = room?.intro;
     if (!room || !intro) return;
     const id = introId(room);
-    if (guide.playingId === id) return guide.stop();
     const file = intro.audio?.[app.lang];
     if (file) guide.playFile(id, file, app.base);
     else guide.speak(id, spoken(`${tr(room.name, app.lang)}. ${tr(intro.text, app.lang)}`, app.lang), app.lang);
@@ -303,7 +311,7 @@ export function startVisit(app: App): View {
   }
   /** Ouvre la fiche et amène le visiteur devant l'œuvre, en douceur ou d'un coup. */
   function openArtwork(art: PlacedArtwork, instant = false) {
-    guide.stop();
+    stopCommentary();
     current = art;
     carnet.see(art.config.id, art.room.id);
     panel.hidden = false;
@@ -328,7 +336,7 @@ export function startVisit(app: App): View {
   }
   function closePanel() {
     stopPresentation();
-    guide.stop();
+    stopCommentary();
     current = null;
     panel.hidden = true;
     applyViewOffset();
