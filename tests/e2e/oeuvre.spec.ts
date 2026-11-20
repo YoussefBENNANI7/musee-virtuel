@@ -86,7 +86,7 @@ test('une œuvre à deux faces se retourne dans son agrandissement, au bouton co
   await expect(flip).toHaveAttribute('aria-label', 'Retourner');
   await expect(page.locator('#zoom-face')).toHaveText('Recto');
   await expect(img).toHaveAttribute('src', /images\/portee\.webp$/);
-  await expect(page.locator('#zoom-hint')).toContainText('pour retourner');
+  await expect(page.locator('#zoom-hint')).toContainText('⇄ ou touche R : retourner');
 
   await flip.click();
   await expect(page.locator('#zoom-face')).toHaveText('Verso');
