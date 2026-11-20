@@ -342,6 +342,26 @@ describe('avertissements', () => {
   });
 });
 
+describe('verso d’un objet à deux faces', () => {
+  it('accepte un verso donné en fichier, et refuse un verso sans fichier', () => {
+    const museum = fixture();
+    const portee = painting(museum, 'portee');
+    portee.back = { src: 'images/portee-verso.webp' };
+    expect(validateMuseum(museum, classic)).toEqual([]);
+    (portee as { back?: unknown }).back = { src: '  ' };
+    expect(errorsOf(museum)).toEqual(['Œuvre "portee" : le verso ("back") doit donner un fichier image : { "src": "images/….webp" }']);
+    (portee as { back?: unknown }).back = 'images/portee-verso.webp';
+    expect(errorsOf(museum)).toHaveLength(1);
+  });
+
+  it('signale un verso sur un tableau dessiné par le moteur : il ne se montrerait pas', () => {
+    const museum = fixture();
+    const fictif = museum.rooms.flatMap((r) => r.artworks).find((a) => a.type === 'painting' && 'generator' in a.image) as PaintingConfig;
+    fictif.back = { src: 'images/verso.webp' };
+    expect(warningsOf(museum)).toEqual([`Œuvre "${fictif.id}" : le verso ne se montre que pour une œuvre fournie en fichier image`]);
+  });
+});
+
 describe('audioguide : textes, témoignages et présentations de salle', () => {
   it('accepte un musée qui les déclare, et signale un témoignage sans fichier', () => {
     const museum = demo();

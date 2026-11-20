@@ -989,6 +989,41 @@ function workForm(): Child[] {
   heightInput.addEventListener('change', () => (painting ? resize('height') : commit(() => (art.height = Number(heightInput.value) / 100), false)));
   widthInput?.addEventListener('change', () => resize('width'));
 
+  // Verso d'un objet à deux faces (un billet) : sa photo se dépose comme celle du recto, sous le nom « <œuvre>-verso ».
+  const backPicker = h('input', {
+    type: 'file',
+    accept: 'image/*,.heic,.heif',
+    hidden: true,
+    id: 'back-photo',
+    onchange: async (e: Event) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file || !painting || !(await mayEdit())) return;
+      try {
+        status('Dépôt du verso…', 'busy');
+        const stored = await api.uploadImage(museum.id, `${painting.id}-verso`, file);
+        commit(() => (painting.back = { src: stored.src, width: stored.width, height: stored.height }));
+      } catch (error) {
+        notify((error as Error).message);
+      }
+    },
+  });
+  const backBlock = managed
+    ? h('div', { class: 'picture verso', id: 'back-block' },
+        h('strong', {}, 'Verso'),
+        painting!.back ? h('img', { alt: 'Verso de l’œuvre', src: new URL(painting!.back.src, base()).href }) : null,
+        h('small', { class: 'hint' }, painting!.back
+          ? 'Le mur montre le recto ; le visiteur retourne l’œuvre dans son agrandissement.'
+          : 'Pour un billet, une carte, une lettre : déposez la photo de l’autre face. Le visiteur retournera l’œuvre dans son agrandissement.'),
+        h('div', { class: 'row' },
+          h('button', { type: 'button', id: 'back-add', onclick: () => backPicker.click() }, painting!.back ? 'Changer le verso' : 'Ajouter un verso'),
+          painting!.back
+            ? h('button', { type: 'button', id: 'back-remove', onclick: async () => (await mayEdit()) && commit(() => delete painting!.back) }, 'Retirer le verso')
+            : null,
+        ),
+        backPicker,
+      )
+    : null;
+
   const credit: L10n = { ...(art.credit ?? {}) };
   // « gilt » est l'ancien nom du cadre doré classique : les musées déjà créés le gardent.
   const frameValue = painting?.frameless ? 'none' : painting?.frame === 'gilt' ? GILT : painting?.frame && FRAMES[painting.frame] ? painting.frame : 'room';
@@ -1006,6 +1041,7 @@ function workForm(): Child[] {
           ),
         )
       : h('div', { class: 'row' }, h('button', { type: 'button', onclick: () => focusPreview({ art: art.id }) }, 'Voir dans le musée')),
+    backBlock,
     ...l10nFields('Titre', art.title, { placeholder: 'Titre de l’œuvre' }, () => {
       touched();
       $('work-title').textContent = titleOf(art);

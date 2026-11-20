@@ -837,6 +837,10 @@ html:has(body.simple) {
   background: #e6e0d4;
   border: 6px solid #2b2420;
 }
+/* Vue simplifiée : un objet à deux faces montre son verso sous son recto. */
+.card figure.two-faces img + img {
+  margin-top: 10px;
+}
 .card > div:only-child {
   grid-column: 1 / -1;
 }
@@ -955,6 +959,32 @@ html:has(body.simple) {
   background: #fff;
   color: #141413;
   outline: none;
+}
+/* Une œuvre à deux faces se retourne : elle se met de profil, puis revient de face. */
+.zoom-stage {
+  perspective: 1600px;
+}
+.zoom-sheet.flip {
+  transition: transform 0.2s ease-in-out;
+}
+.zoom-btn[hidden],
+.zoom-face[hidden] {
+  display: none;
+}
+.zoom-face {
+  position: absolute;
+  top: max(14px, env(safe-area-inset-top));
+  left: max(14px, env(safe-area-inset-left));
+  margin: 0;
+  padding: 0.7em 1.1em;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  background: rgba(20, 20, 19, 0.75);
+  color: #fff;
+  font: 600 0.85rem/1 system-ui, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
 }
 .zoom-hint {
   position: absolute;

@@ -67,6 +67,67 @@ test('sans détails, le tableau s’agrandit comme avant ; la vue simplifiée li
   await expect(card.locator('.details li')).toHaveText(['La première ligne : Elle part du bord gauche.', 'Le point final : Il ferme la portée.']);
 });
 
+/** Le musée de test, où « Portée » a un verso, comme un billet de banque. */
+function withBack() {
+  const museum = fixture();
+  const portee = museum.rooms.flatMap((r: any) => r.artworks).find((a: any) => a.id === 'portee');
+  portee.back = { src: 'images/portee-verso.webp' };
+  return museum;
+}
+
+test('une œuvre à deux faces se retourne dans son agrandissement, au bouton comme au clavier', async ({ page }) => {
+  const errors = await openMuseum(page, { museum: withBack() });
+  await clickArtwork(page, 'portee', 3);
+  await expect(page.locator('#p-zoom')).toHaveText('Agrandir et retourner');
+  await page.locator('#p-zoom').click();
+  const img = page.locator('#zoom-img');
+  const flip = page.locator('#zoom-flip');
+  await expect(flip).toBeVisible();
+  await expect(flip).toHaveAttribute('aria-label', 'Retourner');
+  await expect(page.locator('#zoom-face')).toHaveText('Recto');
+  await expect(img).toHaveAttribute('src', /images\/portee\.webp$/);
+  await expect(page.locator('#zoom-hint')).toContainText('pour retourner');
+
+  await flip.click();
+  await expect(page.locator('#zoom-face')).toHaveText('Verso');
+  await expect(img).toHaveAttribute('src', /images\/portee-verso\.webp$/);
+  await expect(img).toHaveAttribute('alt', /: Verso$/);
+  await expect(flip).toHaveAttribute('aria-pressed', 'true');
+  // L'œuvre revient de face : le retournement terminé, elle n'est plus de profil.
+  const turning = () => page.locator('#zoom-sheet').evaluate((el) => el.classList.contains('flip') || el.style.transform.includes('rotateY'));
+  await expect.poll(turning).toBe(false);
+
+  // La touche R la remet au recto ; grossie, elle revient d'abord à sa taille.
+  await page.locator('#zoom-in').click();
+  await page.keyboard.press('r');
+  await expect(page.locator('#zoom-face')).toHaveText('Recto');
+  await expect(img).toHaveAttribute('src', /images\/portee\.webp$/);
+  await expect.poll(() => page.locator('#zoom-sheet').evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a)).toBeCloseTo(1, 1);
+
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#zoom')).toBeHidden();
+  expect(errors).toEqual([]);
+});
+
+test('sans verso, pas de bouton pour retourner ; la vue simplifiée montre les deux faces', async ({ page }) => {
+  await openMuseum(page);
+  await clickArtwork(page, 'portee', 3);
+  await page.locator('#p-zoom').click();
+  await expect(page.locator('#zoom')).toBeVisible();
+  await expect(page.locator('#zoom-flip')).toBeHidden();
+  await expect(page.locator('#zoom-face')).toBeHidden();
+  // La touche R ne fait rien.
+  await page.keyboard.press('r');
+  await expect(page.locator('#zoom-img')).toHaveAttribute('src', /images\/portee\.webp$/);
+
+  await openMuseum(page, { museum: withBack(), query: '&vue=simple' });
+  const faces = page.locator('#art-portee figure.two-faces img');
+  await expect(faces).toHaveCount(2);
+  await expect(faces.nth(0)).toHaveAttribute('alt', /: Recto$/);
+  await expect(faces.nth(1)).toHaveAttribute('alt', /: Verso$/);
+  await expect(faces.nth(1)).toHaveAttribute('src', /images\/portee-verso\.webp$/);
+});
+
 test('un détail mal placé est signalé à la personne qui configure le musée', async ({ page }) => {
   const museum = withDetails();
   museum.rooms.flatMap((r: any) => r.artworks).find((a: any) => a.id === 'portee').details[0].at = [1.4, 0.3];

@@ -57,6 +57,12 @@ export function startSimple(app: App, fallback: boolean): View {
           img.sizes = '(max-width: 560px) 100vw, 260px';
         }
         img.src = imageUrl(a.image, app.base, 640);
+        // Un objet à deux faces montre son verso sous son recto.
+        if (a.back) {
+          const verso = h('img', { alt: `${alt} : ${app.ui().verso}`, loading: 'lazy', src: new URL(a.back.src, app.base).href });
+          img.alt = `${alt} : ${app.ui().recto}`;
+          return h('figure', { class: 'two-faces' }, img, verso);
+        }
       } else {
         img.dataset.art = a.id;
         lazy.observe(img);

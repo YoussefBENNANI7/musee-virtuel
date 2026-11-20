@@ -139,14 +139,15 @@ export function cleanImages(folder, museum, now = Date.now()) {
   const images = join(folder, 'images');
   if (!existsSync(images)) return;
   const works = [...museum.rooms.flatMap((r) => r.artworks ?? []), ...(museum.reserve ?? [])];
-  // Une image sert à un tableau, à la face d'une pièce, à la vue simplifiée d'un objet ou à sa fiche.
+  // Une image sert à un tableau, à son verso, à la face d'une pièce, à la vue simplifiée d'un objet ou à sa fiche.
   const used = new Set(
     works
-      .flatMap((a) => [a.image?.src, a.model?.coin, a.photo, a.sourcePhoto])
+      .flatMap((a) => [a.image?.src, a.back?.src, a.model?.coin, a.photo, a.sourcePhoto])
       .filter((src) => typeof src === 'string')
       .map((src) => src.split('/').pop().replace(/\.[^.]+$/, '')),
   );
-  const ids = new Set(works.map((a) => a.id));
+  // La photo d'origine d'un verso est rangée sous le nom « <œuvre>-verso ».
+  const ids = new Set(works.flatMap((a) => (a.back?.src ? [a.id, `${a.id}-verso`] : [a.id])));
   const old = (file) => now - statSync(file).mtimeMs > DAY;
   // Seules les images déposées par l'éditeur sont concernées : il en garde la source dans images/sources/.
   const sources = join(images, 'sources');

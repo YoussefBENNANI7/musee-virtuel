@@ -116,6 +116,11 @@ export interface PaintingConfig extends ArtworkBase {
   /** Détails commentés, montrés dans l'agrandissement de l'œuvre : trois ou quatre suffisent. */
   details?: DetailConfig[];
   /**
+   * Verso d'un objet à deux faces accroché à plat : un billet de banque, une carte, une lettre.
+   * Le mur montre le recto (`image`) ; le visiteur retourne l'objet dans son agrandissement.
+   */
+  back?: Extract<ImageSource, { src: string }>;
+  /**
    * Dans une salle en rotonde : l'œuvre est présentée dans une niche du mur courbe, à cet angle
    * en degrés (0 = nord, puis dans le sens des aiguilles d'une montre vu de dessus).
    * `wall` et `offset` ne servent alors plus.

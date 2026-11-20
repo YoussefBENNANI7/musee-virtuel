@@ -12,8 +12,15 @@ export interface ZoomDetail {
   text: string;
 }
 
+/** Le verso d'un objet à deux faces (un billet, une carte) : son image et son texte de remplacement. */
+export interface ZoomBack {
+  src: string;
+  alt: string;
+}
+
 export interface Zoom {
-  open(src: string, alt: string, details?: ZoomDetail[]): void;
+  /** `back` : verso de l'œuvre, s'il y en a un ; le visiteur la retourne alors d'un bouton ou de la touche R. */
+  open(src: string, alt: string, details?: ZoomDetail[], back?: ZoomBack): void;
   close(): void;
   readonly isOpen: boolean;
 }
@@ -21,8 +28,24 @@ export interface Zoom {
 const MAX_SCALE = 8;
 /** Grossissement auquel un détail commenté est montré. */
 const DETAIL_SCALE = 3;
+/** Durée d'un demi-tour de l'œuvre que l'on retourne, en millisecondes : elle se met de profil, puis revient de face. */
+const FLIP_MS = 200;
 
-type Labels = { close: string; zoomIn: string; zoomOut: string; zoomHint: string; zoomHintDetails: string; detailCount: string; overview: string; prev: string; next: string };
+type Labels = {
+  close: string;
+  zoomIn: string;
+  zoomOut: string;
+  zoomHint: string;
+  zoomHintDetails: string;
+  zoomHintFlip: string;
+  detailCount: string;
+  overview: string;
+  prev: string;
+  next: string;
+  flip: string;
+  recto: string;
+  verso: string;
+};
 
 export function setupZoom(labels: () => Labels): Zoom {
   const box = $('zoom');
@@ -33,6 +56,14 @@ export function setupZoom(labels: () => Labels): Zoom {
   const card = $('zoom-detail');
   const img = $<HTMLImageElement>('zoom-img');
   let details: ZoomDetail[] = [];
+  /** Les détails commentés du recto : le verso n'en a pas. */
+  let rectoDetails: ZoomDetail[] = [];
+  /** Les faces de l'œuvre ouverte : le recto, puis le verso s'il y en a un. */
+  let faces: ZoomBack[] = [];
+  let face = 0;
+  /** Angle de l'œuvre pendant qu'on la retourne, en degrés : 90 = de profil. */
+  let turn = 0;
+  let flipping = false;
   let shown = -1;
   let scale = 1;
   let x = 0;
@@ -48,7 +79,7 @@ export function setupZoom(labels: () => Labels): Zoom {
     const lift = card.hidden ? 0 : card.getBoundingClientRect().height + 24;
     x = Math.min(maxX, Math.max(-maxX, x));
     y = Math.min(maxY, Math.max(-maxY - lift, y));
-    sheet.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+    sheet.style.transform = `translate(${x}px, ${y}px) scale(${scale})${turn ? ` rotateY(${turn}deg)` : ''}`;
     // Les points gardent leur taille à l'écran, quel que soit le grossissement.
     sheet.style.setProperty('--inv', String(1 / scale));
     stage.classList.toggle('zoomed', scale > 1);
@@ -88,6 +119,64 @@ export function setupZoom(labels: () => Labels): Zoom {
     sheet.classList.add('glide');
     apply();
   }
+  /** Montre la face courante : son image, son nom, et ses points de détail s'il s'agit du recto. */
+  function showFace() {
+    const t = labels();
+    const current = faces[face];
+    details = face === 0 ? rectoDetails : [];
+    dots.hidden = face !== 0;
+    $('zoom-face').textContent = face === 0 ? t.recto : t.verso;
+    $('zoom-flip').setAttribute('aria-pressed', String(face === 1));
+    const hint = details.length ? `${t.zoomHintDetails} · ${t.zoomHint}` : t.zoomHint;
+    $('zoom-hint').textContent = faces.length > 1 ? `${t.zoomHintFlip} · ${hint}` : hint;
+    box.setAttribute('aria-label', current.alt);
+    img.alt = current.alt;
+    if (img.src !== current.src) {
+      box.classList.add('loading');
+      img.src = current.src;
+    }
+  }
+  /** Retourne l'œuvre : elle se met de profil, change de face, puis revient vers le visiteur. */
+  function flip() {
+    if (faces.length < 2 || flipping) return;
+    shown = -1;
+    card.hidden = true;
+    $('zoom-hint').hidden = false;
+    for (const dot of dots.children) dot.setAttribute('aria-current', 'false');
+    scale = 1;
+    x = y = 0;
+    sheet.classList.remove('glide');
+    const swap = () => {
+      face = 1 - face;
+      showFace();
+    };
+    // Sans animation, pour qui l'a demandé à son appareil : la face change d'un coup.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      swap();
+      apply();
+      return;
+    }
+    flipping = true;
+    sheet.classList.add('flip');
+    turn = 90;
+    apply();
+    window.setTimeout(() => {
+      swap();
+      // De profil de l'autre côté, sans transition, puis retour de face en douceur.
+      sheet.classList.remove('flip');
+      turn = -90;
+      apply();
+      void sheet.offsetWidth;
+      sheet.classList.add('flip');
+      turn = 0;
+      apply();
+      window.setTimeout(() => {
+        sheet.classList.remove('flip');
+        flipping = false;
+      }, FLIP_MS);
+    }, FLIP_MS);
+  }
+  $('zoom-flip').addEventListener('click', flip);
   $('zoom-detail-prev').addEventListener('click', () => showDetail(shown - 1));
   $('zoom-detail-next').addEventListener('click', () => showDetail(shown + 1));
   $('zoom-detail-all').addEventListener('click', overview);
@@ -163,6 +252,7 @@ export function setupZoom(labels: () => Labels): Zoom {
     else if (e.key === 'ArrowRight') x -= step;
     else if (e.key === 'ArrowUp') y += step;
     else if (e.key === 'ArrowDown') y -= step;
+    else if (e.key === 'r' || e.key === 'R') flip();
     else return;
     e.preventDefault();
     apply();
@@ -177,10 +267,15 @@ export function setupZoom(labels: () => Labels): Zoom {
     get isOpen() {
       return !box.hidden;
     },
-    open(src, alt, list = []) {
+    open(src, alt, list = [], back) {
       opener = document.activeElement as HTMLElement | null;
       const t = labels();
-      details = list;
+      details = rectoDetails = list;
+      faces = back ? [{ src, alt }, back] : [{ src, alt }];
+      face = 0;
+      turn = 0;
+      flipping = false;
+      sheet.classList.remove('flip');
       shown = -1;
       card.hidden = true;
       sheet.classList.remove('glide');
@@ -204,14 +299,16 @@ export function setupZoom(labels: () => Labels): Zoom {
       $('zoom-close').setAttribute('aria-label', t.close);
       $('zoom-in').setAttribute('aria-label', t.zoomIn);
       $('zoom-out').setAttribute('aria-label', t.zoomOut);
-      $('zoom-hint').textContent = details.length ? `${t.zoomHintDetails} · ${t.zoomHint}` : t.zoomHint;
-      box.setAttribute('aria-label', alt);
+      $('zoom-flip').hidden = $('zoom-face').hidden = !back;
+      $('zoom-flip').setAttribute('aria-label', t.flip);
+      $('zoom-flip').title = t.flip;
+      // Le verso se charge d'avance : retourner l'œuvre ne fait pas attendre.
+      if (back) new Image().src = back.src;
       scale = 1;
       x = 0;
       y = 0;
-      box.classList.add('loading');
-      img.alt = alt;
-      img.src = src;
+      img.removeAttribute('src');
+      showFace();
       box.hidden = false;
       apply();
       $('zoom-close').focus();

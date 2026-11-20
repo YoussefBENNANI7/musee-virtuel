@@ -638,6 +638,21 @@ input[type='color'] {
   border: 1px solid var(--line);
   background: #fff;
 }
+/* Le verso d'un objet à deux faces : une vignette, sous la photo du recto. */
+.picture.verso {
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line, #d8d2c6);
+}
+.picture.verso img {
+  max-width: 260px;
+}
+.picture.verso strong,
+.picture.verso small {
+  display: block;
+  margin-bottom: 6px;
+}
+
 .dims {
   display: grid;
   grid-template-columns: 1fr 1fr;

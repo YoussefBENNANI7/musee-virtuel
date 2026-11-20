@@ -20,6 +20,12 @@
 // Dans "oeuvres", chaque champ donné remplace celui de l'œuvre ; un objet est fusionné avec l'existant ;
 // la valeur null retire le champ. Rien d'autre n'est touché dans le musée.
 //
+// Un paquet peut aussi retirer des œuvres et en ajouter :
+//     "retirer": ["billet-02"],
+//     "ajouter": { "chambre-forte": [ { "id": "billet-nouveau", "type": "painting", … } ] }
+// Une œuvre retirée ne doit être l'étape d'aucun parcours ; une œuvre ajoutée porte un identifiant nouveau,
+// et sa salle doit exister.
+//
 // Avant d'écrire, tout est vérifié, puis l'état précédent est copié dans musees-sauvegardes/ : si une
 // vérification échoue, le musée reste exactement comme il était.
 import { execFileSync } from 'node:child_process';
@@ -58,9 +64,9 @@ export function patchArtwork(art, patch) {
   return out;
 }
 
-/** Fichiers qu'une œuvre fait charger : son image, son modèle, la face d'une pièce, ses photographies, ses voix. */
+/** Fichiers qu'une œuvre fait charger : son image, son verso, son modèle, la face d'une pièce, ses photographies, ses voix. */
 function filesOf(art) {
-  const files = [art.image?.src, art.model?.src, art.model?.coin, art.photo, art.sourcePhoto];
+  const files = [art.image?.src, art.back?.src, art.model?.src, art.model?.coin, art.photo, art.sourcePhoto];
   // Un modèle préparé pour le web se charge depuis models/web/, en version complète ou légère.
   if (art.model?.web && typeof art.model.src === 'string') {
     const slash = art.model.src.lastIndexOf('/');
@@ -134,22 +140,59 @@ export function planUpdate(museumId, packageDir, museumsDir = MUSEUMS_DIR) {
     if (!isPlain(patch)) throw new Error(`retouche illisible pour l'œuvre « ${id} »`);
     if ('id' in patch) throw new Error(`une mise à jour ne change pas l'identifiant d'une œuvre (« ${id} »)`);
   }
-  if (!copies.length && !Object.keys(patches).length) throw new Error('ce paquet ne contient rien à appliquer');
 
+  // Œuvres à retirer : chacune doit exister, sans être retouchée par le même paquet ni servir d'étape à un parcours.
+  const removals = manifest.retirer ?? [];
+  if (!Array.isArray(removals) || removals.some((id) => typeof id !== 'string')) throw new Error('maj.json : « retirer » doit être une liste d’identifiants d’œuvres');
+  if (new Set(removals).size !== removals.length) throw new Error('maj.json : une œuvre est à retirer deux fois');
+  for (const id of removals) {
+    if (!known.has(id)) throw new Error(`œuvre à retirer inconnue dans ce musée : « ${id} »`);
+    if (patches[id]) throw new Error(`l'œuvre « ${id} » est à la fois retouchée et retirée`);
+    const tour = (museum.tours ?? []).find((t) => (t.stops ?? []).includes(id));
+    if (tour) throw new Error(`l'œuvre « ${id} » est une étape du parcours « ${tour.id} » : elle ne peut pas être retirée`);
+  }
+
+  // Œuvres à ajouter, salle par salle : la salle existe, l'identifiant est nouveau.
+  const additions = manifest.ajouter ?? {};
+  if (!isPlain(additions)) throw new Error('maj.json : « ajouter » doit être un objet : { "salle": [œuvres] }');
+  const roomIds = new Set(museum.rooms.map((room) => room.id));
+  const taken = new Set([...known.keys(), ...(museum.reserve ?? []).map((art) => art.id)]);
+  const added = [];
+  for (const [roomId, list] of Object.entries(additions)) {
+    if (!roomIds.has(roomId)) throw new Error(`salle inconnue dans ce musée : « ${roomId} »`);
+    if (!Array.isArray(list)) throw new Error(`maj.json : les œuvres à ajouter dans la salle « ${roomId} » doivent former une liste`);
+    for (const art of list) {
+      if (!isPlain(art) || !isSlug(art.id)) throw new Error(`œuvre à ajouter illisible dans la salle « ${roomId} » : un identifiant simple est attendu`);
+      if (taken.has(art.id)) throw new Error(`l'œuvre à ajouter « ${art.id} » existe déjà dans ce musée`);
+      taken.add(art.id);
+      added.push({ id: art.id, room: roomId });
+    }
+  }
+  if (!copies.length && !Object.keys(patches).length && !removals.length && !added.length) throw new Error('ce paquet ne contient rien à appliquer');
+
+  const gone = new Set(removals);
+  const fresh = new Set(added.map((art) => art.id));
   const updated = {
     ...museum,
-    rooms: museum.rooms.map((room) => ({ ...room, artworks: (room.artworks ?? []).map((art) => (patches[art.id] ? patchArtwork(art, patches[art.id]) : art)) })),
+    rooms: museum.rooms.map((room) => ({
+      ...room,
+      artworks: [
+        ...(room.artworks ?? []).filter((art) => !gone.has(art.id)).map((art) => (patches[art.id] ? patchArtwork(art, patches[art.id]) : art)),
+        ...(additions[room.id] ?? []).map((art) => JSON.parse(JSON.stringify(art))),
+      ],
+    })),
   };
-  // Après la mise à jour, chaque œuvre retouchée doit encore trouver ses fichiers.
+  // Après la mise à jour, chaque œuvre retouchée ou ajoutée doit trouver ses fichiers.
   const arriving = new Set(copies.map((copy) => copy.path));
   for (const room of updated.rooms)
     for (const art of room.artworks)
-      if (patches[art.id])
+      if (patches[art.id] || fresh.has(art.id))
         for (const file of filesOf(art))
           if (!arriving.has(file) && !existsSync(join(folder, file))) throw new Error(`l'œuvre « ${art.id} » attendrait un fichier qui n'existe pas : ${file}`);
 
   const artworks = Object.entries(patches).map(([id, patch]) => ({ id, room: known.get(id), fields: Object.keys(patch) }));
-  return { museumId, title: typeof manifest.titre === 'string' ? manifest.titre : '', folder, configPath, copies, artworks, museum: updated, changed: JSON.stringify(updated) !== JSON.stringify(museum) };
+  const removed = removals.map((id) => ({ id, room: known.get(id) }));
+  return { museumId, title: typeof manifest.titre === 'string' ? manifest.titre : '', folder, configPath, copies, artworks, added, removed, museum: updated, changed: JSON.stringify(updated) !== JSON.stringify(museum) };
 }
 
 /**
@@ -225,6 +268,8 @@ function main() {
       console.log(`${dry ? 'Essai, rien n’est écrit' : 'Mise à jour appliquée'} : ${result.title || 'paquet sans titre'}`);
       for (const copy of result.copies) console.log(`  ${copy.replaces ? 'remplace' : 'ajoute  '} ${copy.path} (${size(copy.size)})`);
       for (const art of result.artworks) console.log(`  retouche l’œuvre « ${art.id} » (${art.room}) : ${art.fields.join(', ')}`);
+      for (const art of result.removed) console.log(`  retire l’œuvre « ${art.id} » (${art.room})`);
+      for (const art of result.added) console.log(`  ajoute l’œuvre « ${art.id} » (${art.room})`);
       if (!dry) console.log(`Sauvegarde de l’état précédent : ${result.backup.replace(ROOT, '')}`);
       done += 1;
     } catch (error) {

@@ -248,7 +248,7 @@ export function startVisit(app: App): View {
     sourcePhoto = renderSourcePhoto($('p-photo'), app, a);
     // Un tableau fourni en fichier s'agrandit ; une sculpture, une fois chargée, s'examine sous tous les angles.
     $('p-zoom').hidden = a.type === 'painting' ? !('src' in a.image) : !current.shape;
-    $('p-zoom').textContent = a.type === 'sculpture' ? ui().examine : a.details?.length ? ui().explore : ui().enlarge;
+    $('p-zoom').textContent = a.type === 'sculpture' ? ui().examine : a.details?.length ? ui().explore : a.back ? ui().enlargeFlip : ui().enlarge;
     renderAudio();
   }
   guide.onChange = () => {
@@ -290,7 +290,10 @@ export function startVisit(app: App): View {
     if (a.type === 'sculpture') inspect.open(current);
     else if ('src' in a.image) {
       const details = (a.details ?? []).map((d) => ({ x: d.at[0], y: d.at[1], title: tr(d.title, app.lang), text: tr(d.text, app.lang) }));
-      zoom.open(new URL(a.image.src, app.base).href, `${tr(a.title, app.lang)}, ${loc(a.artist, app.lang)}`, details);
+      const alt = `${tr(a.title, app.lang)}, ${loc(a.artist, app.lang)}`;
+      // Un objet à deux faces (un billet) se retourne dans son agrandissement.
+      const back = a.back ? { src: new URL(a.back.src, app.base).href, alt: `${alt} : ${ui().verso}` } : undefined;
+      zoom.open(new URL(a.image.src, app.base).href, back ? `${alt} : ${ui().recto}` : alt, details, back);
     }
   });
 

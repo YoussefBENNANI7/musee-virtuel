@@ -136,6 +136,23 @@ describe('service local de l’éditeur', () => {
     expect(readdirSync(join(folder, 'images')).filter((f) => f.endsWith('.jpg')).sort()).toEqual(['machine-a1.jpg', 'piece-a1.jpg']);
   });
 
+  it('garde le verso d’un billet et sa photo d’origine, tant que l’œuvre le montre', async () => {
+    const recto = await storeImage('billets', 'billet', photo, null, dir);
+    const verso = await storeImage('billets', 'billet-verso', photo, null, dir);
+    const folder = join(dir, 'billets');
+    const museum = { rooms: [{ artworks: [{ id: 'billet', image: recto.image, back: { src: verso.image.src } }] }] };
+    const later = Date.now() + 2 * 24 * 3600 * 1000;
+    cleanImages(folder, museum, later);
+    expect(existsSync(join(folder, verso.image.src))).toBe(true);
+    expect(readdirSync(join(folder, 'images', 'sources')).sort()).toEqual(['billet-verso.jpg', 'billet.jpg']);
+    // Le verso retiré de l'œuvre, son image et sa photo d'origine partent au ménage suivant.
+    delete (museum.rooms[0].artworks[0] as { back?: unknown }).back;
+    cleanImages(folder, museum, later);
+    expect(existsSync(join(folder, verso.image.src))).toBe(false);
+    expect(readdirSync(join(folder, 'images', 'sources'))).toEqual(['billet.jpg']);
+    expect(existsSync(join(folder, recto.image.src))).toBe(true);
+  });
+
   it('ne touche jamais aux images qu’il n’a pas déposées lui-même', () => {
     // Le musée de démonstration range ses images à la main : l'éditeur n'y fait aucun ménage.
     const demo = fileURLToPath(new URL('../../public/museums/demo/', import.meta.url));

@@ -183,6 +183,61 @@ describe('paquet de mise à jour d’un musée', () => {
     expect(() => applyUpdate('essai', pack, options())).toThrow(/fichier qui n'existe pas : images\/ailleurs\.webp/);
   });
 
+  it('donne un verso à un billet : son image doit être dans le musée ou dans le paquet', () => {
+    makePackage({ musee: 'essai', oeuvres: { tableau: { back: { src: 'images/tableau-verso.webp' } } } });
+    expect(() => applyUpdate('essai', pack, options())).toThrow(/fichier qui n'existe pas : images\/tableau-verso\.webp/);
+    makePackage({ musee: 'essai', fichiers: ['images/tableau-verso.webp'], oeuvres: { tableau: { back: { src: 'images/tableau-verso.webp' } } } }, { 'images/tableau-verso.webp': 'verso' });
+    applyUpdate('essai', pack, options());
+    const tableau = config().rooms.flatMap((r: { artworks: { id: string }[] }) => r.artworks).find((a: { id: string }) => a.id === 'tableau');
+    expect(tableau.back).toEqual({ src: 'images/tableau-verso.webp' });
+    expect(readFileSync(join(museums, 'essai', 'images', 'tableau-verso.webp'), 'utf8')).toBe('verso');
+  });
+
+  it('retire des œuvres et en ajoute, salle par salle', () => {
+    const before = config();
+    const salle = before.rooms[0].id;
+    const ids = () => config().rooms.flatMap((r: { artworks: { id: string }[] }) => r.artworks.map((a) => a.id));
+    const nouvelle = { id: 'billet-nouveau', type: 'painting', title: { fr: 'Billet' }, image: { src: 'images/billet-nouveau.webp' }, back: { src: 'images/billet-nouveau-verso.webp' } };
+    makePackage(
+      { musee: 'essai', titre: 'Regroupement', fichiers: ['images/billet-nouveau.webp', 'images/billet-nouveau-verso.webp'], retirer: ['piece'], ajouter: { [salle]: [nouvelle] } },
+      { 'images/billet-nouveau.webp': 'recto', 'images/billet-nouveau-verso.webp': 'verso' },
+    );
+    const plan = planUpdate('essai', pack, museums);
+    expect(plan.removed).toEqual([{ id: 'piece', room: salle }]);
+    expect(plan.added).toEqual([{ id: 'billet-nouveau', room: salle }]);
+    applyUpdate('essai', pack, options());
+    expect(ids()).toContain('billet-nouveau');
+    expect(ids()).not.toContain('piece');
+    // Les autres œuvres n'ont pas bougé, et la nouvelle arrive telle que le paquet la décrit.
+    expect(ids().filter((id: string) => id !== 'billet-nouveau')).toEqual(before.rooms.flatMap((r: { artworks: { id: string }[] }) => r.artworks.map((a) => a.id)).filter((id: string) => id !== 'piece'));
+    expect(config().rooms[0].artworks.at(-1)).toEqual(nouvelle);
+  });
+
+  it('refuse de retirer une étape de parcours, une œuvre inconnue ou retouchée, et d’ajouter un doublon', () => {
+    const fresh = (manifest: unknown, files: Record<string, string> = {}) => {
+      rmSync(pack, { recursive: true, force: true });
+      mkdirSync(pack, { recursive: true });
+      makePackage(manifest, files);
+    };
+    const salle = config().rooms[0].id;
+    fresh({ musee: 'essai', retirer: ['inconnue'] });
+    expect(() => planUpdate('essai', pack, museums)).toThrow(/œuvre à retirer inconnue/);
+    fresh({ musee: 'essai', retirer: ['piece'], oeuvres: { piece: { year: '1900' } } });
+    expect(() => planUpdate('essai', pack, museums)).toThrow(/à la fois retouchée et retirée/);
+    fresh({ musee: 'essai', ajouter: { [salle]: [{ id: 'tableau', type: 'painting' }] } });
+    expect(() => planUpdate('essai', pack, museums)).toThrow(/existe déjà dans ce musée/);
+    fresh({ musee: 'essai', ajouter: { ailleurs: [{ id: 'nouveau', type: 'painting' }] } });
+    expect(() => planUpdate('essai', pack, museums)).toThrow(/salle inconnue/);
+    fresh({ musee: 'essai', ajouter: { [salle]: [{ id: 'nouveau', type: 'painting', image: { src: 'images/absente.webp' } }] } });
+    expect(() => planUpdate('essai', pack, museums)).toThrow(/fichier qui n'existe pas : images\/absente\.webp/);
+    // Une œuvre qui sert d'étape à un parcours ne se retire pas : le parcours serait cassé.
+    const museum = config();
+    museum.tours = [{ id: 'visite', name: { fr: 'Visite' }, stops: ['piece'] }];
+    write(join(museums, 'essai', 'museum.json'), JSON.stringify(museum));
+    fresh({ musee: 'essai', retirer: ['piece'] });
+    expect(() => planUpdate('essai', pack, museums)).toThrow(/étape du parcours « visite »/);
+  });
+
   it('ouvre une archive .zip, même quand elle contient un dossier qui contient le paquet', () => {
     makePackage({ musee: 'essai', fichiers: ['images/tableau.webp'] }, { 'images/tableau.webp': 'nouvelle image' });
     const zip = join(root, 'paquet.zip');

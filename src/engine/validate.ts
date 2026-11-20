@@ -198,6 +198,14 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
           translated(spot, 'texte', detail.text);
         });
         if (art.details?.length && !('src' in art.image)) warning(where, 'les détails commentés ne s’affichent que pour une œuvre fournie en fichier image');
+        if (art.back !== undefined) {
+          const back = art.back as unknown;
+          if (!back || typeof back !== 'object' || typeof (back as { src?: unknown }).src !== 'string' || !(back as { src: string }).src.trim()) {
+            error(where, 'le verso ("back") doit donner un fichier image : { "src": "images/….webp" }');
+          } else if (!('src' in art.image)) {
+            warning(where, 'le verso ne se montre que pour une œuvre fournie en fichier image');
+          }
+        }
       }
       if (art.type === 'painting' && art.rotunda) {
         if (!room.rotunda) error(where, 'placée sur un mur courbe, mais la salle n\'est pas une rotonde');
