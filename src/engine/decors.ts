@@ -20,7 +20,8 @@ export interface Decor {
   ceiling: Exclude<CeilingConfig, { type: 'skylight' }>;
   /** Modèles de cadres des œuvres de la salle (voir cadres.ts). */
   frames: DecorFrames;
-  light: { level: number; tint: string; spots: number };
+  /** `accents` n'est présent que si le décor le demande : l'empreinte de lumière des autres salles ne change pas. */
+  light: { level: number; tint: string; spots: number; accents?: number };
   labels: 'light' | 'dark';
 }
 

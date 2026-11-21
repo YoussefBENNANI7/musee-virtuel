@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { objectLight, type Decor } from './decors';
 import { blobTexture, poolTexture as blobTextureLight } from './textures';
 import { wallFrame } from './layout';
-import type { BenchConfig, RoomConfig, WallId } from './types';
+import type { BenchConfig, RoomConfig, WallId, ZoneConfig } from './types';
 
 export const BENCH = { length: 1.8, width: 0.46, height: 0.44 };
 
@@ -18,6 +18,40 @@ export function groundShadow(width: number, depth: number): THREE.Mesh {
   // Avec la lumière précalculée, la vraie ombre est dans l'atlas : cette ombre peinte est alors retirée.
   mesh.userData.ombrePeinte = true;
   return mesh;
+}
+
+/** Largeur du filet qui borde une zone au sol, en mètres. */
+const ZONE_BORDER = 0.035;
+
+/**
+ * Zone marquée au sol : un rectangle de couleur bordé d'un filet, qui réunit plusieurs socles en un îlot.
+ * Elle est posée sur le sol comme un tapis : le visiteur marche dessus, et l'ombre des socles s'y lit encore.
+ */
+export function buildZone(zone: ZoneConfig, room: RoomConfig, decor: Decor): THREE.Group {
+  const [w, d] = zone.size;
+  const lit = (color: string) => new THREE.Color(color).multiplyScalar(objectLight(decor)).multiply(new THREE.Color(decor.light.tint));
+  const group = new THREE.Group();
+  group.name = 'zone';
+  group.position.set(room.position[0] + zone.position[0], 0, room.position[1] + zone.position[1]);
+  const flat = (width: number, depth: number, material: THREE.Material, y: number) => {
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), material);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.y = y;
+    mesh.raycast = () => {};
+    return mesh;
+  };
+  const offset = (rank: number) => ({ polygonOffset: true, polygonOffsetFactor: -rank, polygonOffsetUnits: -rank });
+  const field = new THREE.MeshBasicMaterial({ color: lit(zone.color ?? decor.colors.wood), transparent: true, opacity: 0.9, depthWrite: false, ...offset(1) });
+  const border = new THREE.MeshBasicMaterial({ color: lit(zone.border ?? decor.colors.trim), depthWrite: false, ...offset(2) });
+  group.add(flat(w, d, field, 0.0012));
+  for (const side of [-1, 1]) {
+    const along = flat(w, ZONE_BORDER, border, 0.0016);
+    along.position.z = (side * (d - ZONE_BORDER)) / 2;
+    const across = flat(ZONE_BORDER, d, border, 0.0016);
+    across.position.x = (side * (w - ZONE_BORDER)) / 2;
+    group.add(along, across);
+  }
+  return group;
 }
 
 let lanternGlow: THREE.Material | null = null;

@@ -15,6 +15,14 @@ const room = (extra: Partial<RoomConfig> = {}): RoomConfig => ({
   ...extra,
 });
 
+describe('éclairage d’accent des objets', () => {
+  it('n’existe que si le décor le demande : l’empreinte de lumière des autres salles ne change pas', () => {
+    expect('accents' in resolveDecor(STYLES.contemporary, { decor: 'nuit' }).light).toBe(false);
+    expect(resolveDecor(STYLES.contemporary, {}).light).toEqual({ level: 1, tint: '#ffffff', spots: 1 });
+    expect(resolveDecor(STYLES.contemporary, { decor: { preset: 'nuit', light: { accents: 1.2 } } }).light.accents).toBe(1.2);
+  });
+});
+
 describe('décor d’une salle', () => {
   it('sans décor, la salle suit exactement le style du musée', () => {
     const decor = resolveDecor(classic, room());

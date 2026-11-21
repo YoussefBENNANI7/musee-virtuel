@@ -3,6 +3,7 @@ import { frameMargin } from './accrochage';
 import { FRAMES, isFrameId } from './cadres';
 import { FOUNTAIN_RADIUS, benchFootprint } from './furniture';
 import { ART_CENTER_Y, MIN_DOOR_WIDTH, WALLS, buildLayout, inside, roomRect, wallFrame } from './layout';
+import { LETTERING, lineHeight } from './lettrage';
 import { isStyleId, type Style } from './styles';
 import type { ArtworkConfig, L10n, MuseumConfig, RoomConfig } from './types';
 import { SLOTS, VITRINE_RADIUS } from './vitrines';
@@ -104,6 +105,33 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
       const [fx, fz] = room.fountain.position ?? [NaN, NaN];
       const clear = half + FOUNTAIN_RADIUS + 0.9;
       if (!(Math.abs(fx) <= w / 2 - clear && Math.abs(fz) <= d / 2 - clear)) error(where, 'fontaine : posée hors de la salle ou trop près d\'un mur');
+    }
+    for (const [i, zone] of (room.zones ?? []).entries()) {
+      const spot = `${where}, zone au sol n° ${i + 1}`;
+      const [zx, zz]: number[] = Array.isArray(zone.position) ? zone.position : [NaN, NaN];
+      const [zw, zd]: number[] = Array.isArray(zone.size) ? zone.size : [NaN, NaN];
+      if (!(zw > 0 && zd > 0)) error(spot, 'dimensions invalides');
+      else if (!(Math.abs(zx) + zw / 2 <= w / 2 - half && Math.abs(zz) + zd / 2 <= d / 2 - half)) error(spot, 'elle dépasse de la salle');
+      for (const key of ['color', 'border'] as const) {
+        if (zone[key] !== undefined && !isColor(zone[key])) error(spot, `couleur invalide : "${zone[key]}" (attendu : "#rrggbb")`);
+      }
+    }
+    for (const [i, lettering] of (room.lettering ?? []).entries()) {
+      const spot = `${where}, lettrage n° ${i + 1}`;
+      if (!WALLS.includes(lettering.wall)) {
+        error(spot, `mur inconnu : "${lettering.wall}"`);
+        continue;
+      }
+      translated(spot, 'texte', lettering.text);
+      if (lettering.kind !== undefined && !['title', 'text'].includes(lettering.kind)) error(spot, `genre inconnu : "${lettering.kind}" (title ou text)`);
+      const line = lineHeight(lettering);
+      if (!(line >= 0.02 && line <= 1)) error(spot, 'hauteur de ligne invalide (entre 2 cm et 1 m)');
+      if (lettering.width !== undefined && !(lettering.width >= 0.3 && lettering.width <= 8)) error(spot, 'largeur de paragraphe invalide (entre 30 cm et 8 m)');
+      const along = lettering.wall === 'north' || lettering.wall === 'south' ? w : d;
+      if (!(Math.abs(lettering.offset) <= along / 2 - half)) error(spot, 'placé hors du mur');
+      const y = lettering.y ?? (lettering.kind === 'text' ? LETTERING.text.y : LETTERING.title.y);
+      if (!(y > 0.2 && y < h - 0.1)) error(spot, 'placé hors du mur, en hauteur');
+      if (lettering.color !== undefined && !isColor(lettering.color)) error(spot, `couleur invalide : "${lettering.color}" (attendu : "#rrggbb")`);
     }
     if (room.ceiling !== undefined && !CEILINGS.includes(room.ceiling?.type)) error(where, `plafond inconnu : "${room.ceiling?.type}"`);
     if (room.ceiling?.type === 'skylight') {
@@ -262,6 +290,7 @@ function checkDecor(room: RoomConfig, where: string, error: Report) {
   const light = config.light;
   if (light?.level !== undefined && !(light.level >= 0 && light.level <= 2)) error(where, 'décor : niveau d\'éclairage invalide (entre 0 et 2)');
   if (light?.spots !== undefined && !(light.spots >= 0 && light.spots <= 4)) error(where, 'décor : force des projecteurs invalide (entre 0 et 4)');
+  if (light?.accents !== undefined && !(light.accents >= 0 && light.accents <= 2)) error(where, 'décor : force de l\'éclairage d\'accent des objets invalide (entre 0 et 2)');
   if (light?.tint !== undefined && !isColor(light.tint)) error(where, `décor : teinte de lumière invalide : "${light.tint}" (attendu : "#rrggbb")`);
   for (const [use, id] of Object.entries(config.frames ?? {})) {
     if (!Object.hasOwn(FRAMES, id as string)) error(where, `décor : cadre inconnu pour "${use}" : "${id}" (cadres disponibles : ${Object.keys(FRAMES).join(', ')})`);
@@ -336,6 +365,7 @@ function checkSculpture(
     return;
   }
   if (art.cardSide !== undefined && !WALLS.includes(art.cardSide)) error(where, `côté du cartel inconnu : "${art.cardSide}" (north, south, east ou west)`);
+  if (art.hood !== undefined && typeof art.hood !== 'boolean') error(where, 'cloche de verre : indiquez true ou false dans "hood"');
   if (art.sourcePhoto !== undefined && !(typeof art.sourcePhoto === 'string' && art.sourcePhoto.trim())) error(where, 'photographie de l\'objet réel : indiquez son fichier dans "sourcePhoto"');
   if (art.plinthSide !== undefined && !(typeof art.plinthSide === 'number' && art.plinthSide >= 0.2 && art.plinthSide <= 2)) error(where, 'côté du socle : indiquez une longueur en mètres, de 0,2 à 2 ("plinthSide")');
   const [w, h, d] = room.size;

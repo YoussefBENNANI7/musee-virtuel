@@ -170,6 +170,11 @@ export interface SculptureConfig extends ArtworkBase {
    */
   plinthSide?: number;
   /**
+   * Cloche de verre posée sur le socle, autour de l'objet : la présentation habituelle d'un petit objet
+   * fragile. Le socle prend alors la mesure de l'objet, qui ne doit pas dépasser de sa cloche.
+   */
+  hood?: boolean;
+  /**
    * Photographie de l'objet réel, pour un objet reconstitué en 3D : sa fiche la montre, et le
    * visiteur peut comparer le modèle à ce qui a servi à le construire.
    */
@@ -225,6 +230,42 @@ export interface VitrineConfig {
   position: [number, number];
 }
 
+/**
+ * Zone marquée au sol : un rectangle de couleur bordé d'un filet, comme un tapis ou une incrustation.
+ * Elle réunit plusieurs objets en un îlot ; le visiteur marche dessus librement.
+ */
+export interface ZoneConfig {
+  /** Centre de la zone dans la salle, en mètres : [x, z]. */
+  position: [number, number];
+  /** Largeur (x) et profondeur (z), en mètres. */
+  size: [number, number];
+  /** Couleur de la zone. Par défaut : le bois du décor. */
+  color?: string;
+  /** Couleur du filet qui la borde. Par défaut : celle des plinthes du décor. */
+  border?: string;
+}
+
+/**
+ * Lettrage posé sur un mur, comme des lettres adhésives : un titre de section, ou un court texte
+ * d'introduction. Ce n'est pas une œuvre : on ne clique pas dessus.
+ */
+export interface LetteringConfig {
+  wall: WallId;
+  /** Décalage le long du mur, en mètres, depuis son centre (comme pour un tableau). */
+  offset: number;
+  /** Hauteur du centre du lettrage, en mètres. Par défaut : 2,3 m pour un titre, 1,5 m pour un texte. */
+  y?: number;
+  text: L10n;
+  /** Un titre tient sur une ligne, en grandes lettres ; un texte est composé en paragraphe. */
+  kind?: 'title' | 'text';
+  /** Hauteur d'une ligne, en mètres. Par défaut : 0,22 m pour un titre, 0,055 m pour un texte. */
+  height?: number;
+  /** Pour un texte : largeur du paragraphe, en mètres. Par défaut : 1,6 m. */
+  width?: number;
+  /** Couleur des lettres. Par défaut : sombre dans une salle claire, claire dans une salle sombre. */
+  color?: string;
+}
+
 /** Couleurs d'une salle. Celles qui manquent sont celles du style du musée. */
 export interface DecorColors {
   wall?: string;
@@ -271,6 +312,11 @@ export interface DecorConfig {
     tint?: string;
     /** Force du faisceau des projecteurs sur les murs : 1 = normal, 0 = aucun. */
     spots?: number;
+    /**
+     * Éclairage d'accent des objets sur socle : un faisceau tombe du plafond sur chacun, son socle et le sol
+     * autour de lui s'éclairent. 0 = aucun (par défaut), 1 = normal. Fait pour une salle tamisée.
+     */
+    accents?: number;
   };
   /** Cartels clairs (par défaut) ou sombres, pour une salle obscure. */
   labels?: 'light' | 'dark';
@@ -311,6 +357,10 @@ export interface RoomConfig {
   rotunda?: RotundaConfig;
   /** Vitrines à pièces de monnaie. */
   vitrines?: VitrineConfig[];
+  /** Zones marquées au sol, pour réunir des objets en îlots. */
+  zones?: ZoneConfig[];
+  /** Lettrages muraux : titres de section, texte d'introduction. */
+  lettering?: LetteringConfig[];
   /**
    * Accrochage automatique, tenu par l'éditeur : les tableaux de chaque mur sont répartis à intervalles
    * réguliers, dans l'ordre de la liste. Leur position (`offset`) est alors recalculée à chaque changement.

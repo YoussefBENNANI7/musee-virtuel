@@ -383,6 +383,55 @@ describe('pièce de monnaie à deux faces', () => {
   });
 });
 
+describe('scénographie : éclairage d’accent, cloche, zones au sol, lettrage mural', () => {
+  /** Le musée de test, dont la rotonde (9 m sur 9, des sculptures sur socle) reçoit une scénographie. */
+  const staged = (change: (room: MuseumConfig['rooms'][number]) => void) => {
+    const museum = fixture();
+    change(museum.rooms.find((r) => r.id === 'rotonde')!);
+    return museum;
+  };
+
+  it('accepte une salle mise en scène', () => {
+    const museum = staged((room) => {
+      room.decor = { preset: 'nuit', light: { accents: 1 } };
+      room.zones = [{ position: [0, 0], size: [3, 2], color: '#3a2618', border: '#b9944a' }];
+      room.lettering = [
+        { wall: 'north', offset: 0, text: { fr: 'Compter', en: 'Counting' } },
+        { wall: 'east', offset: 1, kind: 'text', width: 1.4, text: { fr: 'Un court texte.', en: 'A short text.' } },
+      ];
+      const sculpture = room.artworks.find((a) => a.type === 'sculpture')!;
+      if (sculpture.type === 'sculpture') sculpture.hood = true;
+    });
+    expect(errorsOf(museum)).toEqual([]);
+    expect(warningsOf(museum)).toEqual([]);
+  });
+
+  it('refuse un éclairage d’accent hors limites et une cloche mal écrite', () => {
+    expect(errorsOf(staged((room) => (room.decor = { preset: 'nuit', light: { accents: 3 } })))).toEqual(['Salle "rotonde" : décor : force de l\'éclairage d\'accent des objets invalide (entre 0 et 2)']);
+    const museum = staged((room) => {
+      (room.artworks.find((a) => a.type === 'sculpture') as unknown as { hood: unknown }).hood = 'oui';
+    });
+    expect(errorsOf(museum)).toHaveLength(1);
+    expect(errorsOf(museum)[0]).toContain('cloche de verre');
+  });
+
+  it('refuse une zone au sol qui dépasse de la salle ou dont la couleur est illisible', () => {
+    expect(errorsOf(staged((room) => (room.zones = [{ position: [3.5, 0], size: [3, 2] }])))).toEqual(['Salle "rotonde", zone au sol n° 1 : elle dépasse de la salle']);
+    expect(errorsOf(staged((room) => (room.zones = [{ position: [0, 0], size: [0, 2] }])))).toEqual(['Salle "rotonde", zone au sol n° 1 : dimensions invalides']);
+    expect(errorsOf(staged((room) => (room.zones = [{ position: [0, 0], size: [2, 2], color: 'brun' }])))).toEqual(['Salle "rotonde", zone au sol n° 1 : couleur invalide : "brun" (attendu : "#rrggbb")']);
+  });
+
+  it('refuse un lettrage hors du mur, sur un mur inconnu ou d’un genre inconnu, et signale une traduction manquante', () => {
+    const text = { fr: 'Compter', en: 'Counting' };
+    expect(errorsOf(staged((room) => (room.lettering = [{ wall: 'north', offset: 6, text }])))).toEqual(['Salle "rotonde", lettrage n° 1 : placé hors du mur']);
+    expect(errorsOf(staged((room) => (room.lettering = [{ wall: 'north', offset: 0, y: 9, text }])))).toEqual(['Salle "rotonde", lettrage n° 1 : placé hors du mur, en hauteur']);
+    expect(errorsOf(staged((room) => (room.lettering = [{ wall: 'haut' as never, offset: 0, text }])))).toEqual(['Salle "rotonde", lettrage n° 1 : mur inconnu : "haut"']);
+    expect(errorsOf(staged((room) => (room.lettering = [{ wall: 'north', offset: 0, kind: 'affiche' as never, text }])))).toEqual(['Salle "rotonde", lettrage n° 1 : genre inconnu : "affiche" (title ou text)']);
+    expect(errorsOf(staged((room) => (room.lettering = [{ wall: 'north', offset: 0, height: 2, text }])))).toEqual(['Salle "rotonde", lettrage n° 1 : hauteur de ligne invalide (entre 2 cm et 1 m)']);
+    expect(warningsOf(staged((room) => (room.lettering = [{ wall: 'north', offset: 0, text: { fr: 'Compter' } }])))).toEqual(['Salle "rotonde", lettrage n° 1 : texte : traduction manquante (en)']);
+  });
+});
+
 describe('audioguide : textes, témoignages et présentations de salle', () => {
   it('accepte un musée qui les déclare, et signale un témoignage sans fichier', () => {
     const museum = demo();

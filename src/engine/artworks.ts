@@ -96,6 +96,69 @@ function poolMaterial(wallColor: string, strength: number): THREE.Material {
   return mat;
 }
 
+/** Matières de l'éclairage d'accent des objets, par force : la lumière au sol et sur le socle, et le faisceau. */
+const accentMaterials = new Map<number, { pool: THREE.Material; beam: THREE.Material }>();
+function accentMaterial(strength: number) {
+  let mats = accentMaterials.get(strength);
+  if (!mats) {
+    const shared = { color: '#ffe2b4', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false };
+    mats = {
+      pool: new THREE.MeshBasicMaterial({ ...shared, map: poolTexture(), opacity: Math.min(0.9, 0.4 * strength), ...inFront(2) }),
+      // Le faisceau se devine à peine : plus dense, une dizaine de faisceaux voisins font un brouillard.
+      beam: new THREE.MeshBasicMaterial({ ...shared, opacity: Math.min(0.1, 0.018 * strength), side: THREE.DoubleSide }),
+    };
+    accentMaterials.set(strength, mats);
+  }
+  return mats;
+}
+
+/**
+ * Éclairage d'accent d'un objet sur socle (décor `light.accents`) : une flaque de lumière au sol, une autre
+ * sur le dessus du socle, et le faisceau qui tombe du plafond. Peint, comme le halo d'un tableau.
+ * `top` : hauteur du plafond. Renvoie de quoi le mettre à la mesure du socle.
+ */
+function accentLight(strength: number, plinth: number, top: number) {
+  const mats = accentMaterial(strength);
+  const flat = () => {
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mats.pool);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.raycast = noRaycast;
+    return mesh;
+  };
+  const floor = flat();
+  floor.position.y = 0.006;
+  const table = flat();
+  table.position.y = plinth + 0.002;
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 1, Math.max(0.1, top - plinth), 24, 1, true), mats.beam);
+  beam.position.y = (plinth + top) / 2;
+  beam.raycast = noRaycast;
+  const group = new THREE.Group();
+  group.name = 'accent';
+  group.add(floor, table, beam);
+  return {
+    group,
+    /** `side` : côté du socle. */
+    fit(side: number) {
+      floor.scale.set(side * 3.2, side * 3.2, 1);
+      table.scale.set(side * 1.35, side * 1.35, 1);
+      beam.scale.set(side * 0.55, 1, side * 0.55);
+    },
+  };
+}
+
+/** Cloche de verre d'un objet : presque invisible, on la devine à ses arêtes. `side` : côté ; `height` : hauteur. */
+function glassHood(side: number, height: number, decor: Decor): THREE.Group {
+  const box = new THREE.BoxGeometry(side, height, side);
+  const pane = new THREE.Mesh(box, new THREE.MeshStandardMaterial({ color: '#dfeeea', transparent: true, opacity: 0.07, roughness: 0.05, depthWrite: false }));
+  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(box), new THREE.LineBasicMaterial({ color: '#cfe3de', transparent: true, opacity: 0.3 * objectLight(decor) + 0.25 }));
+  pane.raycast = noRaycast;
+  edges.raycast = noRaycast;
+  const hood = new THREE.Group();
+  hood.name = 'cloche';
+  hood.add(pane, edges);
+  return hood;
+}
+
 /** Cartel : éclairé comme le reste de la salle, pour ne pas briller dans une salle tamisée. */
 function label(decor: Decor): THREE.Mesh {
   const color = new THREE.Color('#ffffff').multiplyScalar(Math.min(1, 0.35 + 0.65 * objectLight(decor)));
@@ -258,8 +321,9 @@ export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: T
   parent.add(art);
 
   const decor = ctx.decor(room.id);
-  // Une sculpture reste mise en valeur par son éclairage, même dans une salle tamisée.
-  const light = Math.min(1, 0.4 + 0.6 * objectLight(decor));
+  // Une sculpture reste mise en valeur par son éclairage, même dans une salle tamisée ; sous un faisceau
+  // d'accent, elle est en pleine lumière.
+  const light = Math.min(1, 0.4 + 0.6 * objectLight(decor) + 0.35 * (decor.light.accents ?? 0));
   // Le socle et l'ombre sont taillés à la mesure de la sculpture, une fois sa forme connue.
   const plinth = new THREE.Mesh(new THREE.BoxGeometry(1, cfg.plinth, 1), new THREE.MeshStandardMaterial({ color: litColor(decor.colors.plinth, decor), roughness: 0.8 }));
   plinth.position.y = cfg.plinth / 2;
@@ -269,6 +333,10 @@ export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: T
   card.rotation.y = Math.atan2(cardX, cardZ);
   const shadow = groundShadow(1, 1);
   art.add(plinth, card, shadow);
+  // Éclairage d'accent, si le décor le demande : l'objet est le point le plus clair de la salle.
+  const accent = (decor.light.accents ?? 0) > 0 ? accentLight(decor.light.accents!, cfg.plinth, clearHeight(room, decor)) : null;
+  if (accent) art.add(accent.group);
+  let hood: THREE.Group | null = null;
   if (ctx.quality.shadows) {
     // Ombre portée : le socle la projette et la reçoit ; au sol, une surface invisible la recueille.
     plinth.castShadow = true;
@@ -313,9 +381,18 @@ export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: T
       art.add(shape);
     }
     // Une statue déborde volontiers de son socle ; un objet posé à plat reçoit un socle à sa mesure (`plinthSide`).
-    const side = cfg.plinthSide ?? THREE.MathUtils.clamp(footprint * 0.8, 0.5, 1.3);
+    // Sous cloche, l'objet tient tout entier sur son socle.
+    const side = cfg.plinthSide ?? (cfg.hood ? THREE.MathUtils.clamp(footprint + 0.14, 0.5, 1.5) : THREE.MathUtils.clamp(footprint * 0.8, 0.5, 1.3));
     plinth.scale.set(side, 1, side);
     shadow.scale.set(side, side, 1);
+    accent?.fit(side);
+    if (cfg.hood) {
+      if (hood) art.remove(hood);
+      const tall = Math.max(cfg.height + 0.1, 0.24);
+      hood = glassHood(side - 0.03, tall, decor);
+      hood.position.y = cfg.plinth + tall / 2;
+      art.add(hood);
+    }
     card.position.set(cardX * (side / 2 + 0.002), Math.min(cfg.plinth - 0.12, 0.8), cardZ * (side / 2 + 0.002));
     placed.span = footprint;
     placed.depth = footprint / 2;

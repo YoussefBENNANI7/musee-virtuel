@@ -3,13 +3,14 @@ import { fixtureMaterial, hangPainting, placeSculpture, TRACK_DISTANCE, type Art
 import { FRAMES } from './cadres';
 import { buildBuilding } from './building';
 import { clearHeight, resolveDecor, type Decor } from './decors';
-import { COUNTER, FOUNTAIN_RADIUS, benchFootprint, buildBench, buildCounter, buildFountain, buildLantern, buildPhotoCubes, lanternHeight } from './furniture';
+import { COUNTER, FOUNTAIN_RADIUS, benchFootprint, buildBench, buildCounter, buildFountain, buildLantern, buildPhotoCubes, buildZone, lanternHeight } from './furniture';
+import { buildLettering, drawLettering, letteringColor } from './lettrage';
 import { EYE_HEIGHT, WALLS, buildLayout, inside, roomRect, wallFrame, type Layout } from './layout';
 import type { Quality } from './quality';
 import type { Style } from './styles';
 import { buildRotunda, rotundaFrame, wallNiche } from './rotonde';
 import { labelTexture } from './textures';
-import { loc, tr, type MuseumConfig, type RoomConfig } from './types';
+import { loc, tr, type LetteringConfig, type MuseumConfig, type RoomConfig } from './types';
 import { VITRINE_RADIUS, buildVitrine, placeCoin } from './vitrines';
 
 export type { PlacedArtwork } from './artworks';
@@ -78,10 +79,15 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
   /** Zones occupées par le mobilier et les socles : le visiteur les contourne. */
   const blocked: ((x: number, z: number) => boolean)[] = [];
   const artworks: PlacedArtwork[] = [];
+  /** Lettrages muraux : leur texte est redessiné quand la langue change. */
+  const letterings: { cfg: LetteringConfig; mesh: THREE.Mesh; color: string }[] = [];
   for (const room of museum.rooms) {
     const decor = decors.get(room.id)!;
     for (const wall of WALLS) {
       const { holder, frame } = building.wall(room.id, wall);
+      for (const cfg of room.lettering ?? []) {
+        if (cfg.wall === wall) letterings.push({ cfg, mesh: buildLettering(cfg, holder), color: letteringColor(cfg, decor) });
+      }
       const hung = room.artworks.filter((cfg) => cfg.type === 'painting' && !cfg.rotunda && cfg.wall === wall);
       for (const cfg of hung) {
         if (cfg.type === 'painting') artworks.push(hangPainting(cfg, room, holder, frame, ctx));
@@ -115,6 +121,7 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
       const reach = COUNTER.depth + 0.3;
       blocked.push((x, z) => inside(rect, x, z) && (x - frame.center.x) * frame.normal.x + (z - frame.center.z) * frame.normal.z < reach);
     }
+    for (const zone of room.zones ?? []) group.add(buildZone(zone, room, decor));
     if (room.cubes) group.add(buildPhotoCubes(room.cubes, room, decor, options.base, ctx.onLoad));
     for (const at of room.lanterns ?? []) group.add(buildLantern(at, room, room.size[1], lanternHeight(room)));
     // Rotonde : le mur courbe porte ses propres œuvres, chacune dans une niche de laiton.
@@ -202,6 +209,14 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
         const dark = decors.get(art.room.id)!.labels === 'dark';
         mat.map = labelTexture(tr(art.config.title, lang), loc(art.config.artist, lang), loc(art.config.year, lang), quality, dark);
         mat.needsUpdate = true;
+      }
+      for (const { cfg, mesh, color } of letterings) {
+        const mat = mesh.material as THREE.MeshBasicMaterial;
+        mat.map?.dispose();
+        const drawn = drawLettering(cfg, tr(cfg.text, lang), color, quality.tier === 'low' ? 0.5 : 1);
+        mat.map = drawn.texture;
+        mat.needsUpdate = true;
+        mesh.scale.set(drawn.width, drawn.height, 1);
       }
     },
   };
