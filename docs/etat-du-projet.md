@@ -622,6 +622,21 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 - **Appliquer les paquets n° 11 et n° 12** (téléphone et machine phare affinés ; le n° 11 corrige le titre du téléphone) et dire si le résultat lui convient.
 - **Décisions du 20 novembre 2026 sur l'essai de finition, déjà prises** (« oui » à la finition et aux faces cachées) ; texte d'origine de la demande : (1) appliquer ou non la finition aux deux objets entièrement dessinés et aux pièces dessinées des douze autres ; (2) reprendre ou non les faces cachées des objets habillés par leur photo, objet par objet, avec sa clé Google, chaque objet lui étant montré avant d'être retenu ; (3) donner ou non plus de volume aux deux objets les plus schématiques ; (4) corriger le cartel de l'appareil de bakélite.
 - **Appliquer le paquet n° 14** (horodateur : dos et flancs reconstitués) et dire si le résultat lui convient dans le musée.
+- **Voir le musée à jour avant de lancer la suite** (sa demande du 21 novembre 2026) : il veut voir la version à jour du musée avant de donner ses trois accords (« 1. oui 2. reprends 3. oui » : les deux retouches, l'arrière du terminal de paiement, la planche de netteté des images). **Aucun de ces trois chantiers n'est lancé.** Remis : `musee-a-jour-en-images.html` (conversation et Drive, « Essais »), une visite en images de la copie de travail avec les dix-sept paquets et la lumière calculée (dans cet environnement : 15 minutes pour les trois salles, `npm run lumiere -- 120-ans --salle toutes`) ; et le bloc ci-dessous pour son Mac, qui n'applique que ce qui manque. Il cherche les paquets dans Téléchargements, en `.zip`, décompressés ou dans un dossier téléchargé d'un coup depuis le Drive ; les paquets n° 8 à 11 et n° 13 sont reconnus s'ils sont déjà appliqués, les autres se réappliquent sans dommage ; au premier fichier manquant il s'arrête, et on le relance. Testé sur la copie de travail dans trois situations (paquets 1 à 7 seulement ; 1 à 12 avec un fichier manquant ; paquets 2 à 7 jamais appliqués). Cette session ne peut pas atteindre son Mac (aucun dossier partagé par Remote Control).
+
+  ```bash
+  cd ~/musee-virtuel
+  M=public/museums/120-ans/museum.json
+  paquet() {
+    if [ -n "$2" ] && grep -q "$2" "$M"; then echo "✓ paquet $1 : déjà appliqué"; return 0; fi
+    f=$(find ~/Downloads -maxdepth 3 -name "maj-120-ans-$1*" | sort | head -1)
+    if [ -z "$f" ]; then echo "✗ paquet $1 : je ne le trouve pas dans Téléchargements"; return 1; fi
+    if npm run -s maj -- 120-ans "$f" > /dev/null; then echo "✓ paquet $1 : appliqué"; else echo "✗ paquet $1 : refusé, on s'arrête là"; return 1; fi
+  }
+  if grep -q "models/tri-pieces.glb" "$M"; then paquet 08 "models/havas.glb" && paquet 09 "billet-10-francs-1943" && paquet 10 "billet-10000-francs" && paquet 11 "Téléphone fixe à manivelle" && paquet 12 && paquet 13 "coinBack" && paquet 14 && paquet 15 && paquet 16 && paquet 17 && echo "Musée à jour."; else echo "✗ Les paquets 2 à 7 ne sont pas tous appliqués : dites-le-moi."; fi
+  ```
+
+  Ensuite : `npm run lumiere -- 120-ans` (ne recalcule que les salles modifiées), puis `npm run dev` et http://localhost:5173/?m=120-ans.
 - **Appliquer les paquets n° 15, 16 et 17** (faces cachées de cinq objets) et dire si le résultat lui convient dans le musée. Dire aussi s'il veut une vue plus sobre pour la machine à écrire (éclats de peinture marqués) et pour le dos de la machine à calculer (léger raccord sous le chariot), et s'il veut tout de même reprendre l'arrière du terminal de paiement.
 - **Appliquer le paquet n° 13** (monnaies : autres faces et images du film) sur son Mac, après `git pull`, et dire si la loupe, le retournement et le relief lui conviennent. Trois points à faire confirmer par la commissaire : la face exposée du denier de Juba II, celle du dinar d'Aghmat, et l'attribution de la pièce carrée du film au n° 18.
 - **Appliquer les paquets n° 9 et n° 10** sur son Mac, recalculer la lumière de la chambre forte, et dire si le résultat lui convient. Dire aussi s'il veut les autres faces des trois grands billets ajoutés (mêmes images de catalogue, même mention).
