@@ -112,11 +112,11 @@ describe('service local de l’éditeur', () => {
     expect(existsSync(join(folder, gone.image.src))).toBe(false);
   });
 
-  it('garde une image qui sert encore : la face d’une pièce, la photographie d’un objet', () => {
+  it('garde une image qui sert encore : les deux faces d’une pièce, la photographie d’un objet', () => {
     const folder = join(dir, 'expo');
     mkdirSync(join(folder, 'images', 'sources'), { recursive: true });
     // Trois images déposées par l'éditeur. Deux servent encore, sans être l'image d'un tableau.
-    for (const name of ['machine', 'piece', 'oubliee']) {
+    for (const name of ['machine', 'piece', 'revers', 'oubliee']) {
       writeFileSync(join(folder, 'images', 'sources', `${name}.jpg`), photo);
       writeFileSync(join(folder, 'images', `${name}-a1.jpg`), photo);
     }
@@ -126,14 +126,14 @@ describe('service local de l’éditeur', () => {
           id: 's',
           artworks: [
             { id: 'machine', type: 'sculpture', model: { src: 'models/machine.glb' }, photo: 'images/machine-a1.jpg', sourcePhoto: 'images/machine-a1.jpg' },
-            { id: 'piece', type: 'sculpture', model: { coin: 'images/piece-a1.jpg', metal: 'gold' } },
+            { id: 'piece', type: 'sculpture', model: { coin: 'images/piece-a1.jpg', coinBack: 'images/revers-a1.jpg', metal: 'gold' } },
             { id: 'oubliee', type: 'sculpture', model: { src: 'models/autre.glb' } },
           ],
         },
       ],
     };
     cleanImages(folder, museum, Date.now() + 2 * 24 * 3600 * 1000);
-    expect(readdirSync(join(folder, 'images')).filter((f) => f.endsWith('.jpg')).sort()).toEqual(['machine-a1.jpg', 'piece-a1.jpg']);
+    expect(readdirSync(join(folder, 'images')).filter((f) => f.endsWith('.jpg')).sort()).toEqual(['machine-a1.jpg', 'piece-a1.jpg', 'revers-a1.jpg']);
   });
 
   it('garde le verso d’un billet et sa photo d’origine, tant que l’œuvre le montre', async () => {

@@ -69,8 +69,12 @@ export function startSimple(app: App, fallback: boolean): View {
       }
       return h('figure', {}, img);
     }
-    if (!a.photo) return null;
-    return h('figure', {}, h('img', { alt, loading: 'lazy', src: new URL(a.photo, app.base).href }));
+    if (a.photo) return h('figure', {}, h('img', { alt, loading: 'lazy', src: new URL(a.photo, app.base).href }));
+    // Une pièce de monnaie montre sa face, et son revers quand il est photographié.
+    if (!('coin' in a.model)) return null;
+    const faces = [a.model.coin, a.model.coinBack].filter((file): file is string => Boolean(file));
+    const names = [app.ui().coinFace, app.ui().coinOtherFace];
+    return h('figure', { class: faces.length > 1 ? 'coin-faces two-faces' : 'coin-faces' }, ...faces.map((file, i) => h('img', { alt: faces.length > 1 ? `${alt} : ${names[i]}` : alt, loading: 'lazy', src: new URL(file, app.base).href })));
   }
 
   function audioLabel(id: string) {

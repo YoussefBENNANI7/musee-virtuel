@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { clickArtwork, openMuseum, panel, roomName } from './helpers';
@@ -126,6 +126,110 @@ test('sans verso, pas de bouton pour retourner ; la vue simplifiée montre les d
   await expect(faces.nth(0)).toHaveAttribute('alt', /: Recto$/);
   await expect(faces.nth(1)).toHaveAttribute('alt', /: Verso$/);
   await expect(faces.nth(1)).toHaveAttribute('src', /images\/portee-verso\.webp$/);
+});
+
+/** Le musée de test, avec une pièce de monnaie en vitrine dans le hall ; `back` lui donne un revers photographié. */
+function withCoin(back: boolean) {
+  const museum = fixture();
+  const hall = museum.rooms[0];
+  hall.vitrines = [{ id: 'tresor', position: [3, 2] }];
+  hall.artworks.push({
+    id: 'piece',
+    type: 'sculpture',
+    title: { fr: 'Pièce d’argent', en: 'Silver coin' },
+    artist: 'Atelier',
+    year: '1900',
+    medium: { fr: 'Argent', en: 'Silver' },
+    description: { fr: 'Une pièce.', en: 'A coin.' },
+    position: [0, 0],
+    height: 0.03,
+    plinth: 0.92,
+    vitrine: { id: 'tresor', slot: 0 },
+    model: { coin: 'images/piece.webp', ...(back ? { coinBack: 'images/piece-revers.webp' } : {}), metal: 'silver' },
+  });
+  return museum;
+}
+
+/** Clique sur une pièce de monnaie : le visiteur s'approche de sa vitrine, baisse les yeux vers elle et la touche. */
+async function clickCoin(page: Page, id: string) {
+  const at = await page.evaluate((id) => {
+    const m = (window as any).__museum;
+    m.standBefore(id, 1.2);
+    const art = m.world.artworks.find((a: any) => a.config.id === id);
+    const eye = m.camera.position;
+    m.controls.pitch = Math.atan2(art.center.y - eye.y, Math.hypot(art.center.x - eye.x, art.center.z - eye.z));
+    return new Promise<{ x: number; y: number }>((resolve) =>
+      setTimeout(() => {
+        m.camera.updateMatrixWorld();
+        const v = art.center.clone().project(m.camera);
+        const canvas = m.renderer.domElement;
+        resolve({ x: ((v.x + 1) / 2) * canvas.clientWidth, y: ((1 - v.y) / 2) * canvas.clientHeight });
+      }, 600),
+    );
+  }, id);
+  await page.mouse.click(at.x, at.y);
+}
+
+test('une pièce à deux faces se retourne dans son examen, au bouton comme au clavier', async ({ page }) => {
+  const errors = await openMuseum(page, { museum: withCoin(true) });
+  await clickCoin(page, 'piece');
+  await expect(page.locator('#p-zoom')).toHaveText('Examiner');
+  await page.locator('#p-zoom').click();
+  await expect(page.locator('#inspect')).toBeVisible();
+  const flip = page.locator('#inspect-flip');
+  await expect(flip).toBeVisible();
+  await expect(flip).toHaveAttribute('aria-label', 'Retourner');
+  await expect(page.locator('#inspect-hint')).toContainText('⇄ ou touche R : retourner');
+  // La pièce a bien ses deux faces, et le relief déduit de la photo sur chacune.
+  const faces = await page.evaluate(() => {
+    const m = (window as any).__museum;
+    const coin = m.world.artworks.find((a: any) => a.config.id === 'piece').shape;
+    return coin.children.map((mesh: any) => Boolean(mesh.material.emissiveMap && mesh.material.normalMap));
+  });
+  expect(faces).toEqual([false, true, true]);
+
+  // La pièce se regarde à la loupe (champ resserré), bien en face : elle est penchée d'un demi-radian sur son cube.
+  const fov = () => page.evaluate(() => (window as any).__museum.camera.fov as number);
+  const state = () => page.evaluate(() => (window as any).__museum.inspect.state as { yaw: number; pitch: number });
+  expect(await fov()).toBeLessThan(30);
+  expect((await state()).pitch).toBeCloseTo(0.5, 2);
+
+  // La rotation automatique arrêtée, un clic fait faire un demi-tour à la pièce : on voit son revers, lui aussi bien en face.
+  await page.locator('#inspect-spin').click();
+  await expect(page.locator('#inspect-spin')).toHaveAttribute('aria-pressed', 'false');
+  const start = (await state()).yaw;
+  await flip.click();
+  await expect.poll(async () => (await state()).yaw - start).toBeCloseTo(Math.PI, 2);
+  expect((await state()).pitch).toBeCloseTo(-0.5, 2);
+  // La touche R la remet sur sa première face.
+  await page.keyboard.press('r');
+  await expect.poll(async () => (await state()).yaw - start).toBeCloseTo(2 * Math.PI, 2);
+  expect((await state()).pitch).toBeCloseTo(0.5, 2);
+
+  // En quittant l'examen, la visite retrouve son champ de vision.
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#inspect')).toBeHidden();
+  expect(await fov()).toBeGreaterThan(60);
+  expect(errors).toEqual([]);
+});
+
+test('une pièce sans revers ne se retourne pas ; la vue simplifiée montre les faces d’une pièce', async ({ page }) => {
+  const errors = await openMuseum(page, { museum: withCoin(false) });
+  await clickCoin(page, 'piece');
+  await page.locator('#p-zoom').click();
+  await expect(page.locator('#inspect')).toBeVisible();
+  await expect(page.locator('#inspect-flip')).toBeHidden();
+  await expect(page.locator('#inspect-hint')).not.toContainText('retourner');
+  expect(errors).toEqual([]);
+
+  await openMuseum(page, { museum: withCoin(true), query: '&vue=simple' });
+  const faces = page.locator('#art-piece figure.coin-faces img');
+  await expect(faces).toHaveCount(2);
+  await expect(faces.nth(0)).toHaveAttribute('alt', /: Face exposée$/);
+  await expect(faces.nth(1)).toHaveAttribute('alt', /: Autre face$/);
+  await expect(faces.nth(1)).toHaveAttribute('src', /images\/piece-revers\.webp$/);
+  await openMuseum(page, { museum: withCoin(false), query: '&vue=simple' });
+  await expect(page.locator('#art-piece figure.coin-faces img')).toHaveCount(1);
 });
 
 test('un détail mal placé est signalé à la personne qui configure le musée', async ({ page }) => {

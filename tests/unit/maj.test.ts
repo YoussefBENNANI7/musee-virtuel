@@ -193,6 +193,16 @@ describe('paquet de mise à jour d’un musée', () => {
     expect(readFileSync(join(museums, 'essai', 'images', 'tableau-verso.webp'), 'utf8')).toBe('verso');
   });
 
+  it('donne un revers à une pièce : son image doit être dans le musée ou dans le paquet', () => {
+    makePackage({ musee: 'essai', oeuvres: { piece: { model: { coinBack: 'images/piece-revers.webp' } } } });
+    expect(() => applyUpdate('essai', pack, options())).toThrow(/fichier qui n'existe pas : images\/piece-revers\.webp/);
+    makePackage({ musee: 'essai', fichiers: ['images/piece-revers.webp'], oeuvres: { piece: { model: { coinBack: 'images/piece-revers.webp' } } } }, { 'images/piece-revers.webp': 'revers' });
+    applyUpdate('essai', pack, options());
+    const piece = config().rooms[0].artworks.find((a: { id: string }) => a.id === 'piece');
+    // Le modèle est fusionné : la face et le métal restent, le revers s'ajoute.
+    expect(piece.model).toEqual({ coin: 'images/piece.webp', coinBack: 'images/piece-revers.webp', metal: 'silver' });
+  });
+
   it('retire des œuvres et en ajoute, salle par salle', () => {
     const before = config();
     const salle = before.rooms[0].id;

@@ -841,6 +841,12 @@ html:has(body.simple) {
 .card figure.two-faces img + img {
   margin-top: 10px;
 }
+/* Vue simplifiée : une pièce de monnaie garde sa forme, sans le cadre sombre des tableaux. */
+.card figure.coin-faces img {
+  max-width: 220px;
+  border: 0;
+  background: none;
+}
 .card > div:only-child {
   grid-column: 1 / -1;
 }
@@ -992,6 +998,8 @@ html:has(body.simple) {
   right: 0;
   bottom: max(14px, env(safe-area-inset-bottom));
   margin: 0;
+  /* Sur un téléphone, la phrase passe sur deux lignes : elle ne touche pas les bords de l'écran. */
+  padding: 0 16px;
   text-align: center;
   font: 0.85rem system-ui, sans-serif;
   color: rgba(255, 255, 255, 0.75);

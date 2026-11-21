@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { inspectPitch, inspectRange } from '../../src/inspect';
+import { coinLens, inspectPitch, inspectRange } from '../../src/inspect';
 
 // Caméra de la visite : champ vertical de 68°, écran 16:9.
 const tan = Math.tan((68 * Math.PI) / 360);
@@ -31,14 +31,48 @@ describe('examen d’un objet : distances', () => {
     expect(min).toBeLessThan(start);
   });
 
-  it('une pièce de monnaie se regarde toujours d’aussi près', () => {
-    // Une pièce de 3 cm, plate : rien d'elle n'avance vers la caméra, ses distances sont celles d'avant le réglage.
+  it('un très petit objet plat se regarde toujours d’aussi près', () => {
+    // Un objet de 3 cm, plat : rien de lui n'avance vers la caméra, ses distances sont celles d'avant le réglage.
+    // (Une pièce de monnaie, elle, se regarde à la loupe : voir plus bas.)
     const radius = Math.max(0.03, 0.03 * 1.6) / 2;
     const before = Math.min(radius * 0.45 + 0.12, radius * 2.5 + 0.06);
     const { start, min, max } = inspectRange(0.03, 0.03 * 1.6, 0, tan, aspect);
     expect(min).toBeCloseTo(before, 9);
     expect(start).toBeCloseTo(before * 1.2, 9);
     expect(max).toBeCloseTo(before * 1.2 * 1.7, 9);
+  });
+});
+
+describe('examen d’une pièce de monnaie : la loupe', () => {
+  /** Part de la hauteur de l'écran qu'occupe une pièce vue de face à cette distance. */
+  const share = (diameter: number, fov: number, distance: number) => diameter / (2 * distance * Math.tan((fov * Math.PI) / 360));
+
+  it('au départ, une grande pièce et une petite occupent la même part de l’écran', () => {
+    const ryal = coinLens(0.037, 16 / 10);
+    const denier = coinLens(0.018, 16 / 10);
+    expect(share(0.037, ryal.fov, ryal.start)).toBeCloseTo(0.7, 6);
+    expect(share(0.018, denier.fov, denier.start)).toBeCloseTo(0.7, 6);
+    // Le champ se resserre pour la petite pièce : c'est une loupe plus forte.
+    expect(denier.fov).toBeLessThan(ryal.fov);
+    expect(ryal.fov).toBeLessThan(30);
+  });
+
+  it('sur un téléphone tenu en hauteur, la pièce tient dans la largeur', () => {
+    const aspect = 390 / 844;
+    const { fov, start } = coinLens(0.037, aspect);
+    expect(share(0.037, fov, start) / aspect).toBeCloseTo(0.7, 6);
+  });
+
+  it('de près on lit les détails, sans jamais passer en deçà de ce que la caméra montre', () => {
+    for (const diameter of [0.014, 0.018, 0.026, 0.037]) {
+      const { fov, start, min, max } = coinLens(diameter, 16 / 10);
+      expect(min).toBeLessThan(start);
+      expect(max).toBeGreaterThan(start);
+      // La pièce déborde de l'écran quand on s'approche au plus près : on en lit les détails.
+      expect(share(diameter, fov, min)).toBeGreaterThan(1.2);
+      // Vue par la tranche, son bord le plus proche reste au-delà des 5 cm que la caméra ne montre pas.
+      expect(min - diameter / 2).toBeGreaterThan(0.05);
+    }
   });
 });
 

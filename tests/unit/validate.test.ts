@@ -362,6 +362,27 @@ describe('verso d’un objet à deux faces', () => {
   });
 });
 
+describe('pièce de monnaie à deux faces', () => {
+  /** Le musée de test, avec une vitrine et une pièce dans le hall. */
+  const withCoin = (model: Record<string, unknown>) => {
+    const museum = fixture();
+    const hall = museum.rooms[0];
+    hall.vitrines = [{ id: 'tresor', position: [3, 2] }];
+    hall.artworks.push({ id: 'piece', type: 'sculpture', title: { fr: 'Pièce', en: 'Coin' }, artist: 'Atelier', year: '1900', medium: { fr: 'Argent', en: 'Silver' }, description: { fr: 'Une pièce.', en: 'A coin.' }, position: [0, 0], height: 0.03, plinth: 0.92, vitrine: { id: 'tresor', slot: 0 }, model } as never);
+    return museum;
+  };
+
+  it('accepte une pièce avec ou sans revers', () => {
+    expect(errorsOf(withCoin({ coin: 'images/piece.webp', metal: 'silver' }))).toEqual([]);
+    expect(errorsOf(withCoin({ coin: 'images/piece.webp', coinBack: 'images/piece-revers.webp', metal: 'silver' }))).toEqual([]);
+  });
+
+  it('refuse un revers qui ne donne pas d’image', () => {
+    expect(errorsOf(withCoin({ coin: 'images/piece.webp', coinBack: '', metal: 'silver' }))).toEqual(['Œuvre "piece" : pièce : "model.coinBack" doit donner l\'image de son autre face']);
+    expect(errorsOf(withCoin({ coin: 'images/piece.webp', coinBack: 3, metal: 'silver' }))).toHaveLength(1);
+  });
+});
+
 describe('audioguide : textes, témoignages et présentations de salle', () => {
   it('accepte un musée qui les déclare, et signale un témoignage sans fichier', () => {
     const museum = demo();

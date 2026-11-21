@@ -658,8 +658,8 @@ export function startVisit(app: App): View {
     renderer.setSize(w, h, false);
     reflection?.resize(w * pixelRatio, h * pixelRatio);
     camera.aspect = w / h;
-    // Sur un écran étroit, on élargit le champ pour garder la salle lisible.
-    camera.fov = w < h ? 82 : 68;
+    // Sur un écran étroit, on élargit le champ pour garder la salle lisible. L'examen d'une pièce garde sa loupe.
+    camera.fov = inspect.lens(camera.aspect) ?? (w < h ? 82 : 68);
     applyViewOffset();
     camera.updateProjectionMatrix();
     invalidate();

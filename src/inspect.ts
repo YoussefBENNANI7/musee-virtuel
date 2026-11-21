@@ -6,6 +6,7 @@ import { $ } from './ui';
 const BACKGROUND = new THREE.Color('#1c2b26');
 const SPIN = 0.35; // rad/s, rotation automatique
 const LOOK = 0.008; // rad par pixel de glissement
+const FLIP = 5; // rad/s, quand on retourne une pièce : un demi-tour en un peu plus d'une demi-seconde
 
 /**
  * Distances de l'examen d'un objet, comptées depuis son centre : celle de départ, la plus proche, la plus lointaine.
@@ -16,11 +17,31 @@ const LOOK = 0.008; // rad par pixel de glissement
 export function inspectRange(height: number, span: number, reach: number, tan: number, aspect: number): { start: number; min: number; max: number } {
   const flat = Math.max(height / (2 * tan), span / (2 * tan * aspect));
   const radius = Math.max(height, span) / 2;
-  // Une pièce de monnaie s'approche de plus près qu'une sculpture.
+  // Un très petit objet s'approche de plus près qu'une sculpture.
   const min = Math.max(Math.min(radius * 0.45 + 0.12, radius * 2.5 + 0.06), reach + 0.08);
-  // Un très petit objet (une pièce de monnaie) se regarde de près, mais jamais en deçà de ce que la caméra peut montrer.
+  // Un très petit objet se regarde de près, mais jamais en deçà de ce que la caméra peut montrer.
   const start = Math.max(1.45 * flat, 1.2 * flat + reach, min * 1.2);
   return { start, min, max: start * 1.7 };
+}
+
+/** Part de l'écran (de son plus petit côté) qu'une pièce de monnaie occupe au début de son examen. */
+const COIN_FILL = 0.7;
+/** Distance du centre d'une pièce au début de son examen, en mètres. */
+const COIN_START = 0.16;
+
+/**
+ * Examen d'une pièce de monnaie : une loupe. Avec le champ de la visite, une pièce de 2 cm n'occuperait qu'un
+ * dixième de l'écran, à moins d'approcher la caméra plus près qu'elle ne sait montrer. On resserre donc le champ
+ * (`fov`, en degrés), d'autant plus que la pièce est petite : au départ, toute pièce occupe la même part de l'écran,
+ * et de près on lit ses détails.
+ */
+export function coinLens(diameter: number, aspect: number): { fov: number; start: number; min: number; max: number } {
+  // Sur un écran en hauteur, c'est la largeur qui limite.
+  const tan = diameter / (2 * COIN_FILL * COIN_START * Math.min(1, aspect));
+  const fov = THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(2 * Math.atan(tan)), 4, 60);
+  // La caméra ne montre rien à moins de 5 cm : la pièce, même vue par la tranche, reste au-delà.
+  const min = Math.max(0.07, diameter / 2 + 0.055);
+  return { fov, start: COIN_START, min, max: COIN_START * 1.8 };
 }
 
 /**
@@ -40,6 +61,8 @@ export interface Inspect {
   update(dt: number): boolean;
   readonly isOpen: boolean;
   readonly state: { yaw: number; pitch: number; distance: number; spinning: boolean };
+  /** Champ de vision (en degrés) que l'examen en cours impose à la caméra, pour un écran de ces proportions ; `null` s'il n'en impose pas. */
+  lens(aspect: number): number | null;
 }
 
 /**
@@ -50,7 +73,7 @@ export interface Inspect {
 export function setupInspect(options: {
   camera: THREE.PerspectiveCamera;
   scene: THREE.Scene;
-  labels(): { close: string; zoomIn: string; zoomOut: string; inspectHint: string; inspectSpin: string };
+  labels(): { close: string; zoomIn: string; zoomOut: string; inspectHint: string; inspectSpin: string; flip: string; zoomHintFlip: string };
   onOpen(): void;
   onClose(): void;
 }): Inspect {
@@ -66,6 +89,16 @@ export function setupInspect(options: {
   let min = 0.5;
   let max = 6;
   let spinning = false;
+  /** Angle qu'il reste à parcourir pour montrer l'autre face d'une pièce que l'on retourne. */
+  let flipLeft = 0;
+  /** Ce dont le regard monte ou descend par radian parcouru pendant ce demi-tour : on finit bien en face de l'autre face. */
+  let flipSlope = 0;
+  /** Diamètre de la pièce de monnaie examinée, ou 0 pour un autre objet. */
+  let coin = 0;
+  /** Champ de vision de la visite, à rendre en fermant l'examen d'une pièce. */
+  let fovBefore = 0;
+  /** Vrai quand l'objet examiné a deux faces à montrer (une pièce de monnaie dont le revers est photographié). */
+  let twoFaced = false;
   let dirty = false;
   let opener: HTMLElement | null = null;
   const home = new THREE.Vector3();
@@ -120,6 +153,19 @@ export function setupInspect(options: {
     zoomBy(e.deltaY < 0 ? 1 / 1.15 : 1.15);
   }, { passive: false });
 
+  /**
+   * Retourne la pièce : un demi-tour autour d'elle, pour voir son autre face. La pièce est penchée sur son cube :
+   * le regard passe en même temps du dessus au dessous (ou l'inverse), pour retrouver l'autre face aussi droite.
+   */
+  const flip = () => {
+    if (!twoFaced) return;
+    setSpin(false);
+    const goal = flipLeft > 0 ? pitch + flipSlope * flipLeft : pitch; // l'angle où menait le demi-tour en cours
+    flipLeft += Math.PI;
+    flipSlope = (-goal - pitch) / flipLeft;
+    dirty = true;
+  };
+  $('inspect-flip').addEventListener('click', flip);
   $('inspect-in').addEventListener('click', () => zoomBy(1 / 1.3));
   $('inspect-out').addEventListener('click', () => zoomBy(1.3));
   $('inspect-spin').addEventListener('click', () => setSpin(!spinning));
@@ -134,6 +180,7 @@ export function setupInspect(options: {
     else if (e.key === 'ArrowDown') turn(0, -step);
     else if (e.key === '+' || e.key === '=') zoomBy(1 / 1.3);
     else if (e.key === '-') zoomBy(1.3);
+    else if ((e.key === 'r' || e.key === 'R') && twoFaced) flip();
     else return;
     setSpin(false);
     e.preventDefault();
@@ -146,6 +193,9 @@ export function setupInspect(options: {
     get state() {
       return { yaw, pitch, distance, spinning };
     },
+    lens(aspect) {
+      return coin ? coinLens(coin, aspect).fov : null;
+    },
     open(target) {
       if (art) return;
       opener = document.activeElement as HTMLElement | null;
@@ -156,23 +206,41 @@ export function setupInspect(options: {
       $('inspect-in').setAttribute('aria-label', t.zoomIn);
       $('inspect-out').setAttribute('aria-label', t.zoomOut);
       $('inspect-spin').setAttribute('aria-label', t.inspectSpin);
-      $('inspect-hint').textContent = t.inspectHint;
+      const model = target.config.type === 'sculpture' ? (target.config.model as { coinBack?: string }) : null;
+      twoFaced = Boolean(model?.coinBack);
+      flipLeft = 0;
+      coin = 0;
+      $('inspect-flip').hidden = !twoFaced;
+      $('inspect-flip').setAttribute('aria-label', t.flip);
+      $('inspect-flip').title = t.flip;
+      $('inspect-hint').textContent = twoFaced ? `${t.zoomHintFlip} · ${t.inspectHint}` : t.inspectHint;
 
       // Recul pour que la sculpture entière tienne à l'écran, en hauteur comme en largeur, d'où qu'on la regarde.
       const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
       target.shape?.updateWorldMatrix(true, true);
       const size = target.shape ? new THREE.Box3().setFromObject(target.shape).getSize(new THREE.Vector3()) : null;
-      // Une pièce de monnaie est plate : elle n'avance pas vers la caméra, et se cadre comme avant.
+      // Une pièce de monnaie est plate : elle n'avance pas vers la caméra.
       const flatCoin = target.config.type === 'sculpture' && target.config.vitrine !== undefined;
       const reach = flatCoin ? 0 : size ? Math.hypot(size.x, size.z) / 2 : target.span / 2;
-      const range = inspectRange(target.config.height, target.span, reach, tan, camera.aspect);
+      const range = flatCoin ? coinLens(target.config.height, camera.aspect) : inspectRange(target.config.height, target.span, reach, tan, camera.aspect);
       min = range.min;
       max = range.max;
       distance = wanted = range.start;
-      // On part du côté où se tenait le visiteur.
       home.copy(camera.position);
-      yaw = Math.atan2(home.x - target.center.x, home.z - target.center.z);
-      pitch = flatCoin || !size ? 0.12 : inspectPitch(size.y, Math.max(size.x, size.z));
+      if (flatCoin && target.shape) {
+        // Une pièce se regarde à la loupe, bien en face : sa face avant regarde le long de l'axe z de sa forme.
+        coin = target.config.height;
+        fovBefore = camera.fov;
+        camera.fov = coinLens(coin, camera.aspect).fov;
+        camera.updateProjectionMatrix();
+        const facing = target.shape.getWorldDirection(new THREE.Vector3());
+        yaw = Math.atan2(facing.x, facing.z);
+        pitch = Math.asin(THREE.MathUtils.clamp(facing.y, -1, 1));
+      } else {
+        // On part du côté où se tenait le visiteur.
+        yaw = Math.atan2(home.x - target.center.x, home.z - target.center.z);
+        pitch = !size ? 0.12 : inspectPitch(size.y, Math.max(size.x, size.z));
+      }
       setSpin(!stillMotion);
 
       background = scene.background;
@@ -194,6 +262,11 @@ export function setupInspect(options: {
       document.body.classList.remove('inspecting');
       camera.layers.set(0);
       scene.background = background;
+      if (coin) {
+        coin = 0;
+        camera.fov = fovBefore;
+        camera.updateProjectionMatrix();
+      }
       camera.position.copy(home);
       options.onClose();
       opener?.focus?.();
@@ -202,6 +275,13 @@ export function setupInspect(options: {
       if (!art) return false;
       if (spinning) {
         yaw += SPIN * dt;
+        dirty = true;
+      }
+      if (flipLeft > 0) {
+        const step = Math.min(flipLeft, FLIP * dt);
+        yaw += step;
+        pitch = THREE.MathUtils.clamp(pitch + flipSlope * step, -1.2, 1.45);
+        flipLeft -= step;
         dirty = true;
       }
       if (Math.abs(wanted - distance) > 0.001) {

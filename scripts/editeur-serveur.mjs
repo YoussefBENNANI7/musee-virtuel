@@ -142,7 +142,7 @@ export function cleanImages(folder, museum, now = Date.now()) {
   // Une image sert à un tableau, à son verso, à la face d'une pièce, à la vue simplifiée d'un objet ou à sa fiche.
   const used = new Set(
     works
-      .flatMap((a) => [a.image?.src, a.back?.src, a.model?.coin, a.photo, a.sourcePhoto])
+      .flatMap((a) => [a.image?.src, a.back?.src, a.model?.coin, a.model?.coinBack, a.photo, a.sourcePhoto])
       .filter((src) => typeof src === 'string')
       .map((src) => src.split('/').pop().replace(/\.[^.]+$/, '')),
   );

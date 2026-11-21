@@ -327,6 +327,8 @@ function checkSculpture(
   if (art.vitrine || coin?.coin !== undefined) {
     // Pièce de monnaie : elle n'a de place que dans une vitrine de sa salle.
     if (typeof coin?.coin !== 'string') return error(where, 'pièce : indiquez l\'image de sa face dans "model.coin"');
+    const back = (coin as { coinBack?: unknown }).coinBack;
+    if (back !== undefined && !(typeof back === 'string' && back.trim())) error(where, 'pièce : "model.coinBack" doit donner l\'image de son autre face');
     if (!COIN_METALS.includes(coin.metal as string)) error(where, `métal inconnu : "${coin.metal}" (gold, silver ou bronze)`);
     if (!(room.vitrines ?? []).some((v) => v.id === art.vitrine?.id)) return error(where, `vitrine inconnue : "${art.vitrine?.id}"`);
     if (!(Number.isInteger(art.vitrine!.slot) && art.vitrine!.slot >= 0 && art.vitrine!.slot < SLOTS.length)) error(where, `place invalide dans la vitrine (de 0 à ${SLOTS.length - 1})`);

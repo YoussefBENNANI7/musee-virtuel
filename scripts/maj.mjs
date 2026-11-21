@@ -66,7 +66,7 @@ export function patchArtwork(art, patch) {
 
 /** Fichiers qu'une œuvre fait charger : son image, son verso, son modèle, la face d'une pièce, ses photographies, ses voix. */
 function filesOf(art) {
-  const files = [art.image?.src, art.back?.src, art.model?.src, art.model?.coin, art.photo, art.sourcePhoto];
+  const files = [art.image?.src, art.back?.src, art.model?.src, art.model?.coin, art.model?.coinBack, art.photo, art.sourcePhoto];
   // Un modèle préparé pour le web se charge depuis models/web/, en version complète ou légère.
   if (art.model?.web && typeof art.model.src === 'string') {
     const slash = art.model.src.lastIndexOf('/');

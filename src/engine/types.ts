@@ -37,8 +37,9 @@ export type ModelSource =
   /**
    * Pièce de monnaie : un disque de métal qui porte la photo de sa face (`coin`, image carrée
    * cadrée au ras de la pièce). Elle se présente dans une vitrine de la salle (voir `vitrine`).
+   * `coinBack` : la photo de son autre face ; le visiteur retourne alors la pièce en l'examinant.
    */
-  | { coin: string; metal: CoinMetal; /** Vrai pour une monnaie carrée, comme certains qirats. */ square?: boolean };
+  | { coin: string; coinBack?: string; metal: CoinMetal; /** Vrai pour une monnaie carrée, comme certains qirats. */ square?: boolean };
 
 export type CoinMetal = 'gold' | 'silver' | 'bronze';
 
