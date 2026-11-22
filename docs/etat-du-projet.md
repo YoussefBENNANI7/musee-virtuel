@@ -726,8 +726,27 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
-- **Chambre forte et Grand Livre** (22 novembre 2026) : donner son accord pour verser le lot dans `main`, puis appliquer le paquet n° 19 sur son Mac (bloc dans « Chambre forte : direction B retenue, coupole atténuée ; Grand Livre reconstruit ») et dire si la salle et le livre lui conviennent. À faire valider par la commissaire : les titres des séries de billets et des vitrines ; le « dès 2024 » de la légende du livre. S'il veut des photos du livre plus nettes : recharger son crédit Google (AI Studio), ou fournir les images d'origine du livre.
+- **Chambre forte et Grand Livre** (22 novembre 2026) : lot versé dans `main` le 22 novembre 2026 sur son feu vert ; appliquer les paquets n° 19 et 20 (bloc ci-dessous, essayé sur une copie dans l'état d'avant, deux fois : il applique puis reconnaît les paquets déjà appliqués) sur son Mac (bloc dans « Chambre forte : direction B retenue, coupole atténuée ; Grand Livre reconstruit ») et dire si la salle et le livre lui conviennent. À faire valider par la commissaire : les titres des séries de billets et des vitrines ; le « dès 2024 » de la légende du livre. S'il veut des photos du livre plus nettes : recharger son crédit Google (AI Studio), ou fournir les images d'origine du livre.
 - **Paquet n° 20** (recto net du billet de 5 dirhams) : à appliquer après le n° 19 ; dire si la pièce de 500 francs 1956 envoyée le 22 novembre 2026 fait partie de l'exposition.
+
+  ```bash
+  cd ~/musee-virtuel
+  git pull
+  ```
+
+  ```bash
+  cd ~/musee-virtuel
+  paquet() {
+    f=$(find ~/Downloads -maxdepth 3 -name "maj-120-ans-$1*" | sort | head -1)
+    if grep -q "$2" public/museums/120-ans/museum.json; then echo "✓ paquet $1 : déjà appliqué"
+    elif [ -z "$f" ]; then echo "✗ paquet $1 : je ne le trouve pas dans Téléchargements"; return 1
+    elif npm run -s maj -- 120-ans "$f" > /dev/null && grep -q "$2" public/museums/120-ans/museum.json; then echo "✓ paquet $1 : appliqué"
+    else echo "✗ paquet $1 : refusé, on s'arrête là"; return 1; fi
+  }
+  if grep -q ROTUNDA_FIELDS scripts/maj.mjs; then paquet 19 '"dome"' && paquet 20 'AA/73' && echo "Musée à jour."; else echo "✗ Le moteur n'est pas à jour : faites d'abord git pull"; fi
+  ```
+
+  Puis `npm run lumiere -- 120-ans --salle chambre-forte`, `npm run dev` et http://localhost:5173/?m=120-ans.
 - **Hall des Guichets, direction B retouchée** (22 novembre 2026) : lot versé dans `main` le 22 novembre 2026 sur son feu vert (un premier essai sur son Mac, avant ce versement, avait été arrêté net par la vérification du bloc : le musée n'a pas bougé). **Paquet n° 18 appliqué sur son Mac le 22 novembre 2026 (« la salle est réaménagée »).** Premier essai manqué : il avait écrit « la salle s'affiche », mais sa capture montrait l'ancien hall ; le paquet n'avait jamais été téléchargé depuis le Drive, et l'ancien bloc ne le disait pas clairement. Bloc corrigé ci-dessous : il trouve le paquet sous toutes ses formes (archive, dossier décompressé par Safari), ne l'applique qu'une fois, et dit si la salle est réaménagée. **Leçon : toujours demander le texte affiché par le Terminal avant de considérer un paquet comme appliqué.** Son avis sur la salle est attendu. À relire avec lui : les quatre titres de groupe et le texte d'introduction, provisoires ; la photographie d'archive de la fresque et sa légende, à préciser avec la commissaire. Ensuite : décliner la charte dans les autres salles (l'écrin pour la chambre forte), faire entrer les options de mise en scène dans l'éditeur, rendre les cartels lisibles.
 - **Confirmer la sauvegarde `musees-sauvegarde-v2`** sur son Bureau (l'étiquette `v2`, elle, est créée et vérifiée).
 - **Appliquer le paquet n° 8** (`npm run maj -- 120-ans ~/Downloads/maj-120-ans-08.zip`, puis `npm run lumiere -- 120-ans --salle guichets`) et dire si l'ensemble lui convient : niveau de détail, hauteur des socles, implantation.
