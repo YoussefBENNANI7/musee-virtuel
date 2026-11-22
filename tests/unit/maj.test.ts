@@ -280,6 +280,31 @@ describe('paquet de mise à jour d’un musée', () => {
     expect(readFileSync(join(museums, 'essai', 'museum.json'), 'utf8')).toBe(before);
   });
 
+  it('retouche la mise en scène d’une rotonde et le titre de ses vitrines, pas leur plan', () => {
+    const base = museum() as any;
+    base.rooms[0].rotunda = { wallHeight: 5, vaultDoor: 180 };
+    base.rooms[0].vitrines = [{ id: 'origines', position: [0, 1] }, { id: 'almohades', position: [2, 1] }];
+    write(join(museums, 'essai', 'museum.json'), `${JSON.stringify(base, null, 2)}\n`);
+    makePackage({ musee: 'essai', salles: { salle: { rotunda: { dome: 0.3, frieze: { from: 1, to: 2, color: '#c9bc9f' } }, vitrines: { origines: { title: { fr: 'Les origines' } } } } } });
+    applyUpdate('essai', pack, options());
+    const room = config().rooms[0];
+    expect(room.rotunda).toEqual({ wallHeight: 5, vaultDoor: 180, dome: 0.3, frieze: { from: 1, to: 2, color: '#c9bc9f' } });
+    expect(room.vitrines).toEqual([{ id: 'origines', position: [0, 1], title: { fr: 'Les origines' } }, { id: 'almohades', position: [2, 1] }]);
+    const before = readFileSync(join(museums, 'essai', 'museum.json'), 'utf8');
+    makePackage({ musee: 'essai', salles: { salle: { rotunda: { vaultDoor: 90 } } } });
+    expect(() => applyUpdate('essai', pack, options())).toThrow(/mise en scène d'une rotonde.*pas « vaultDoor »/);
+    makePackage({ musee: 'essai', salles: { salle: { vitrines: { origines: { position: [3, 3] } } } } });
+    expect(() => applyUpdate('essai', pack, options())).toThrow("une mise à jour ne change que le titre d'une vitrine, pas « position » (vitrine « origines »)");
+    makePackage({ musee: 'essai', salles: { salle: { vitrines: { inconnue: { title: { fr: 'x' } } } } } });
+    expect(() => applyUpdate('essai', pack, options())).toThrow('vitrine inconnue dans la salle « salle » : « inconnue »');
+    expect(readFileSync(join(museums, 'essai', 'museum.json'), 'utf8')).toBe(before);
+  });
+
+  it('refuse de retoucher la rotonde d’une salle qui n’en est pas une', () => {
+    makePackage({ musee: 'essai', salles: { salle: { rotunda: { dome: 0.3 } } } });
+    expect(() => applyUpdate('essai', pack, options())).toThrow("la salle « salle » n'est pas une rotonde");
+  });
+
   it('ouvre une archive .zip, même quand elle contient un dossier qui contient le paquet', () => {
     makePackage({ musee: 'essai', fichiers: ['images/tableau.webp'] }, { 'images/tableau.webp': 'nouvelle image' });
     const zip = join(root, 'paquet.zip');

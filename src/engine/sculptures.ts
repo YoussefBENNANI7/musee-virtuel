@@ -24,19 +24,29 @@ let loader: GLTFLoader | null = null;
 export function loadSculpture(model: FileModel, base: string, quality: Quality, env: THREE.Texture, light: number): Promise<THREE.Group> {
   loader ??= new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   return loader.loadAsync(modelUrl(model, base, quality.lightModels)).then((gltf) => {
-    gltf.scene.traverse((node) => {
-      const mesh = node as THREE.Mesh;
-      if (!mesh.isMesh) return;
-      for (const mat of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
-        const std = mat as THREE.MeshStandardMaterial;
-        if (!std.isMeshStandardMaterial) continue;
-        std.envMap = env;
-        std.envMapIntensity = light;
-        std.color.multiplyScalar(light);
-        if (std.map) std.map.anisotropy = quality.anisotropy;
-      }
-    });
+    lightModel(gltf.scene, env, light, quality.anisotropy);
     return gltf.scene;
+  });
+}
+
+/**
+ * Met un modèle 3D à la lumière de sa salle. Plusieurs pièces d'un modèle partagent souvent la même matière :
+ * chacune n'est assombrie qu'une fois, sinon elle vire au noir (vingt feuilles d'un livre, une seule matière « papier »).
+ */
+export function lightModel(scene: THREE.Object3D, env: THREE.Texture | null, light: number, anisotropy = 1) {
+  const done = new Set<THREE.Material>();
+  scene.traverse((node) => {
+    const mesh = node as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    for (const mat of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+      const std = mat as THREE.MeshStandardMaterial;
+      if (!std.isMeshStandardMaterial || done.has(std)) continue;
+      done.add(std);
+      std.envMap = env;
+      std.envMapIntensity = light;
+      std.color.multiplyScalar(light);
+      if (std.map) std.map.anisotropy = anisotropy;
+    }
   });
 }
 

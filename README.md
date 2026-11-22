@@ -151,7 +151,7 @@ npx playwright install chromium
 | `npm run preview` | Montre cette version publiable sur l'ordinateur |
 | `npm run images -- demo --attach` | Associe et prépare les images déposées dans `images/` |
 | `npm run modeles -- demo` | Prépare les modèles 3D déposés dans `models/` (versions allégées) |
-| `npm run maj -- mon-musee paquet.zip` | Applique un paquet de mise à jour (images, modèles, retouches de fiches, mise en scène d'une salle) à un musée de l'ordinateur ; plusieurs paquets peuvent être donnés à la suite, ils sont appliqués dans l'ordre ; `--essai` montre sans rien écrire |
+| `npm run maj -- mon-musee paquet.zip` | Applique un paquet de mise à jour (images, modèles, retouches de fiches, mise en scène d'une salle, d'une rotonde, titres des vitrines) à un musée de l'ordinateur ; plusieurs paquets peuvent être donnés à la suite, ils sont appliqués dans l'ordre ; `--essai` montre sans rien écrire |
 | `npm run voix -- demo --voix Sulafat` | Produit les voix de l'audioguide avec le service de voix de Google (clé dans `GEMINI_API_KEY`, ffmpeg nécessaire) |
 | `npm run licences` | Dresse l'inventaire des licences du moteur et du musée, dans `docs/licences.md` |
 | `npm run vignettes -- demo` | Photographie les sculptures pour la vue simplifiée (le musée doit tourner) |

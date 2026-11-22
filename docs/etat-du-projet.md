@@ -396,6 +396,45 @@ Demande du porteur, le 22 novembre 2026 : « lance la chambre forte avec deux di
 - **Remis au porteur le 22 novembre 2026** : une page privée, https://claude.ai/artifact/YMBXXHKUEuBfP18bKHpogV (aussi `chambre-forte-deux-directions.html`, Drive, « Essais » ; les outils et les deux `museum.json` dans `chambre-forte-outils.zip`, même dossier) : le plan, l'état actuel et les deux directions depuis les six mêmes points de vue, sur ordinateur et sur téléphone, un tableau de comparaison, ce qui est provisoire.
 - **Rien n'est appliqué au musée du porteur ni versé dans `main` avant son choix.** Pour l'appliquer ensuite, les paquets de mise à jour devront savoir retoucher les réglages de mise en scène de la rotonde et les titres des vitrines (aujourd'hui, `salles` refuse `rotunda` et `vitrines`, qui portent aussi le plan de la salle).
 
+### Chambre forte : direction B retenue, coupole atténuée ; Grand Livre reconstruit (22 novembre 2026)
+
+Choix du porteur, le 22 novembre 2026 : **« B avec la coupole atténuée de A »**, et une demande nouvelle : **retravailler le Grand Livre** (« plus de réalisme, graphisme, alignement du texte et des images et leur netteté sur la partie visible des pages »).
+
+- **Chambre forte** : la direction B (« la salle des coffres ») avec `dome` 0,3. Rien d'autre ne change par rapport à la page de comparaison.
+- **Diagnostic du Grand Livre d'avant** : ses deux pages étaient deux photos du vrai livre, prises de biais sur des pages courbes, plaquées telles quelles sur des pages déjà courbes : texte penché, images déformées, voile gris. Le modèle venait d'une autre conversation (`scripts/grand-livre.py`, absent du dépôt) ; il donnait à la page un format en hauteur (1 m sur 1,39) et une page de droite dressée.
+- **Sources** : les photos HD du vrai livre, sur le Drive (`Exposition-120-ans-optimisee/hd/IMG_4898` à `4901`). Elles montrent un livre géant aux **pages carrées** (environ 1 m de côté), bombées, une dizaine de feuilles en éventail de chaque côté, sur un plateau noir incliné vers le lecteur.
+- **Page de gauche, recomposée à plat** (`livre/pages.cjs`, composée par Chromium) : le texte relu ligne à ligne sur IMG_4901 et recomposé avec les mêmes coupures de ligne, justifié ; titre, lettrine, repère « 1989-1996 », en-tête et filet d'encadrement. Polices libres proches de l'imprimé : Bodoni Moda (titre et texte), EB Garamond italique (légende), licence SIL. **Le logo « 120 » de l'en-tête est un simple « 120 » en italique, pas le logo de l'anniversaire.** La légende reproduit l'imprimé, y compris « dès 2024 » (sans doute une coquille du livre pour 2004 : à signaler à la commissaire).
+- **Page de droite** : les trois photographies imprimées sont redressées à plat (`livre/redresse.py`) : leurs bords courbes sont suivis sur IMG_4901, et l'échelle le long de la page est corrigée d'après la pente du bord. Puis netteté et tons sans IA (`livre/retouche.py`). **Les proportions exactes de la maquette (format des photos, marges) sont estimées d'après des photos prises de biais : fidèles dans leur disposition, pas au millimètre.**
+- **Netteté par IA non faite** : le service d'images de Google a refusé (crédit prépayé du projet épuisé, erreur 402, le 22 novembre 2026). `livre/nettete.py` est prêt : à relancer si le porteur recharge son crédit dans AI Studio (trois images, moins d'un dollar), en comparant chaque résultat à l'original (enseignes et logos).
+- **Le livre en 3D** (`livre/grand-livre.py`, Blender) : chaque feuille est une lame de 4 mm qui suit une courbe de longueur constante (elle monte du pli, s'arrondit, retombe vers la tranche) ; onze feuilles de chaque côté, décalées comme un jeu de cartes ; plats et dos noirs, plateau incliné de 12°, pied. Les ombres entre les feuilles sont calculées par Blender et rangées dans les couleurs des sommets. 2,15 m de large, 1,11 m de profondeur, **0,62 m de haut** (l'ancien modèle : 1,27 m) : le champ `height` de l'œuvre passe à 0,619. Textures de 2560 points par page ; fichier de 1,8 Mo.
+- **Défaut du moteur corrigé** : `loadSculpture` assombrissait une matière une fois par pièce qui la porte ; vingt-deux feuilles partageant la matière « papier » viraient au noir dans une salle tamisée. Chaque matière n'est plus assombrie qu'une fois (`lightModel`, `src/engine/sculptures.ts`). Sans effet dans une salle en pleine lumière (le hall).
+- **Paquets** : `salles` sait retoucher la mise en scène d'une rotonde (`dome`, `safes`, `frieze`, `niches`, pas sa forme ni sa porte) et le titre des vitrines (par leur identifiant, pas leur place).
+- **Remis au porteur** : la page privée de la chambre forte, mise à jour (https://claude.ai/artifact/YMBXXHKUEuBfP18bKHpogV) : la salle retenue, le livre en avant/après, ses limites. Outils, photos redressées, pages composées et musée de travail : `grand-livre-outils.zip` (Drive, « Essais »).
+- **Paquet n° 19** (`maj-120-ans-19.zip`, Drive, « Mises-a-jour », 1 Mo) : la chambre forte retenue (décor, lettrage, rotonde, titres des vitrines, place et passe-partout des 29 œuvres du mur courbe) et le Grand Livre (fichier remplacé, hauteur). Essayé sur une copie du musée de travail : la salle obtenue est identique à celle de la direction retenue, les autres salles ne changent pas, l'ancien livre est gardé dans la sauvegarde. **Il demande le moteur de ce lot.**
+
+À faire sur le Mac, une fois ce lot versé dans `main` (télécharger d'abord `maj-120-ans-19.zip` depuis le Drive, dossier « Mises-a-jour ») :
+
+```bash
+cd ~/musee-virtuel
+git pull
+```
+
+```bash
+cd ~/musee-virtuel
+f=$(find ~/Downloads -maxdepth 3 -name "maj-120-ans-19*" | sort | head -1)
+if ! grep -q ROTUNDA_FIELDS scripts/maj.mjs; then echo "✗ Le moteur n'est pas à jour : faites d'abord git pull"
+elif grep -q '"dome"' public/museums/120-ans/museum.json; then echo "✓ La chambre forte est déjà réaménagée"
+elif [ -z "$f" ]; then echo "✗ Je ne trouve pas le paquet 19 dans Téléchargements"
+else npm run maj -- 120-ans "$f" && grep -q '"dome"' public/museums/120-ans/museum.json && echo "✓ La chambre forte est réaménagée"; fi
+```
+
+```bash
+cd ~/musee-virtuel
+npm run lumiere -- 120-ans --salle chambre-forte
+```
+
+Puis `npm run dev` et http://localhost:5173/?m=120-ans.
+
 ### Voix de l'audioguide : décisions prises, production à venir
 
 Le moteur lit déjà un enregistrement par œuvre et par langue quand on lui en fournit un (champ `audio` de l'œuvre) ; sans lui, il fait lire le texte par la voix du navigateur. Il ne manque que les fichiers.
@@ -678,7 +717,7 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
-- **Choisir la direction de la chambre forte** (22 novembre 2026) : A « l'écrin de velours », B « la salle des coffres », ou un mélange ; dire si le regroupement des billets en quatre séries et les titres lui conviennent. Page de comparaison : https://claude.ai/artifact/YMBXXHKUEuBfP18bKHpogV. Rien n'est appliqué avant son choix.
+- **Chambre forte et Grand Livre** (22 novembre 2026) : donner son accord pour verser le lot dans `main`, puis appliquer le paquet n° 19 sur son Mac (bloc dans « Chambre forte : direction B retenue, coupole atténuée ; Grand Livre reconstruit ») et dire si la salle et le livre lui conviennent. À faire valider par la commissaire : les titres des séries de billets et des vitrines ; le « dès 2024 » de la légende du livre. S'il veut des photos du livre plus nettes : recharger son crédit Google (AI Studio), ou fournir les images d'origine du livre.
 - **Hall des Guichets, direction B retouchée** (22 novembre 2026) : lot versé dans `main` le 22 novembre 2026 sur son feu vert (un premier essai sur son Mac, avant ce versement, avait été arrêté net par la vérification du bloc : le musée n'a pas bougé). **Paquet n° 18 appliqué sur son Mac le 22 novembre 2026 (« la salle est réaménagée »).** Premier essai manqué : il avait écrit « la salle s'affiche », mais sa capture montrait l'ancien hall ; le paquet n'avait jamais été téléchargé depuis le Drive, et l'ancien bloc ne le disait pas clairement. Bloc corrigé ci-dessous : il trouve le paquet sous toutes ses formes (archive, dossier décompressé par Safari), ne l'applique qu'une fois, et dit si la salle est réaménagée. **Leçon : toujours demander le texte affiché par le Terminal avant de considérer un paquet comme appliqué.** Son avis sur la salle est attendu. À relire avec lui : les quatre titres de groupe et le texte d'introduction, provisoires ; la photographie d'archive de la fresque et sa légende, à préciser avec la commissaire. Ensuite : décliner la charte dans les autres salles (l'écrin pour la chambre forte), faire entrer les options de mise en scène dans l'éditeur, rendre les cartels lisibles.
 - **Confirmer la sauvegarde `musees-sauvegarde-v2`** sur son Bureau (l'étiquette `v2`, elle, est créée et vérifiée).
 - **Appliquer le paquet n° 8** (`npm run maj -- 120-ans ~/Downloads/maj-120-ans-08.zip`, puis `npm run lumiere -- 120-ans --salle guichets`) et dire si l'ensemble lui convient : niveau de détail, hauteur des socles, implantation.

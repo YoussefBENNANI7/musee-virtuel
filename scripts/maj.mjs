@@ -30,6 +30,8 @@
 // lettrage…), avec les mêmes règles que pour une œuvre :
 //     "salles": { "guichets": { "decor": { "preset": "guichets", … }, "zones": [ … ], "lettering": [ … ] } }
 // Le plan de la salle (place, dimensions, rotonde, vitrines) et ses œuvres ne se changent pas ainsi.
+// Deux exceptions, qui ne touchent pas au plan : la mise en scène d'une rotonde, et le titre des vitrines.
+//     "salles": { "chambre-forte": { "rotunda": { "dome": 0.3, "frieze": { … } }, "vitrines": { "origines": { "title": { "fr": "…" } } } } }
 //
 // Avant d'écrire, tout est vérifié, puis l'état précédent est copié dans musees-sauvegardes/ : si une
 // vérification échoue, le musée reste exactement comme il était.
@@ -45,6 +47,11 @@ export const BACKUP_DIR = join(ROOT, 'musees-sauvegardes');
 
 /** Champs d'une salle qu'un paquet peut retoucher : sa mise en scène, pas son plan ni ses œuvres. */
 const ROOM_FIELDS = ['name', 'intro', 'decor', 'wall', 'ceiling', 'light', 'benches', 'lanterns', 'counters', 'cubes', 'zones', 'lettering', 'autoHang'];
+
+/** Réglages d'une rotonde qu'un paquet peut retoucher : sa mise en scène, pas sa forme ni sa porte. */
+const ROTUNDA_FIELDS = ['dome', 'safes', 'frieze', 'niches'];
+/** Ce qu'un paquet peut retoucher d'une vitrine : son titre, pas sa place. */
+const VITRINE_FIELDS = ['title'];
 
 /** Dossiers d'un musée où un paquet a le droit de poser des fichiers. */
 const FOLDERS = ['images', 'models', 'audio'];
@@ -182,9 +189,29 @@ export function planUpdate(museumId, packageDir, museumsDir = MUSEUMS_DIR) {
   for (const [roomId, patch] of Object.entries(roomPatches)) {
     if (!roomIds.has(roomId)) throw new Error(`salle inconnue dans ce musée : « ${roomId} »`);
     if (!isPlain(patch)) throw new Error(`retouche illisible pour la salle « ${roomId} »`);
-    const refused = Object.keys(patch).filter((key) => !ROOM_FIELDS.includes(key));
+    const refused = Object.keys(patch).filter((key) => !ROOM_FIELDS.includes(key) && key !== 'rotunda' && key !== 'vitrines');
     if (refused.length) throw new Error(`une mise à jour ne change que la mise en scène d'une salle (${ROOM_FIELDS.join(', ')}), pas « ${refused.join(', ')} » (salle « ${roomId} »)`);
+    const room = museum.rooms.find((r) => r.id === roomId);
+    if ('rotunda' in patch) {
+      if (!isPlain(room.rotunda)) throw new Error(`la salle « ${roomId} » n'est pas une rotonde`);
+      const wrong = isPlain(patch.rotunda) ? Object.keys(patch.rotunda).filter((key) => !ROTUNDA_FIELDS.includes(key)) : ['rotunda'];
+      if (wrong.length) throw new Error(`une mise à jour ne change que la mise en scène d'une rotonde (${ROTUNDA_FIELDS.join(', ')}), pas « ${wrong.join(', ')} » (salle « ${roomId} »)`);
+    }
+    if ('vitrines' in patch) {
+      if (!isPlain(patch.vitrines)) throw new Error(`maj.json : les vitrines de la salle « ${roomId} » se retouchent par leur identifiant : { "vitrine": { "title": … } }`);
+      for (const [id, change] of Object.entries(patch.vitrines)) {
+        if (!(room.vitrines ?? []).some((v) => v.id === id)) throw new Error(`vitrine inconnue dans la salle « ${roomId} » : « ${id} »`);
+        const wrong = isPlain(change) ? Object.keys(change).filter((key) => !VITRINE_FIELDS.includes(key)) : ['?'];
+        if (wrong.length) throw new Error(`une mise à jour ne change que le titre d'une vitrine, pas « ${wrong.join(', ')} » (vitrine « ${id} »)`);
+      }
+    }
   }
+  /** Une salle retouchée : ses vitrines le sont une à une, par leur identifiant ; le reste comme une œuvre. */
+  const patchRoom = (room, { vitrines, ...patch }) => {
+    const out = patchArtwork(room, patch);
+    if (vitrines) out.vitrines = room.vitrines.map((v) => (vitrines[v.id] ? patchArtwork(v, vitrines[v.id]) : v));
+    return out;
+  };
   if (!copies.length && !Object.keys(patches).length && !removals.length && !added.length && !Object.keys(roomPatches).length) throw new Error('ce paquet ne contient rien à appliquer');
 
   const gone = new Set(removals);
@@ -192,7 +219,7 @@ export function planUpdate(museumId, packageDir, museumsDir = MUSEUMS_DIR) {
   const updated = {
     ...museum,
     rooms: museum.rooms.map((room) => ({
-      ...(roomPatches[room.id] ? patchArtwork(room, roomPatches[room.id]) : room),
+      ...(roomPatches[room.id] ? patchRoom(room, roomPatches[room.id]) : room),
       artworks: [
         ...(room.artworks ?? []).filter((art) => !gone.has(art.id)).map((art) => (patches[art.id] ? patchArtwork(art, patches[art.id]) : art)),
         ...(additions[room.id] ?? []).map((art) => JSON.parse(JSON.stringify(art))),
