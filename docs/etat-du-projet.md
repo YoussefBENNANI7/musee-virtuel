@@ -435,6 +435,15 @@ npm run lumiere -- 120-ans --salle chambre-forte
 
 Puis `npm run dev` et http://localhost:5173/?m=120-ans.
 
+### Document de recherche du porteur et trois images (22 novembre 2026)
+
+Le porteur a transmis un inventaire de pistes (« Recherche d'images — monnaies et billets », sans source ni date d'origine précisées) et trois images.
+
+- **Billet de 5 dirhams 1970 (1390 H)** : un recto net, de 1632 × 808 points, du même type que le billet exposé (Hassan II, kasbah), d'un autre exemplaire (n° AA/73 891397 ; l'exposé porte A/74…). Le recto du musée était une image floue tirée du film. **Retenu : paquet n° 20** (`maj-120-ans-20.zip`, Drive, « Mises-a-jour », 0,6 Mo), qui remplace le recto et en écrit la mention. Source et droits de l'image inconnus : à confirmer avant toute diffusion publique (l'inventaire signale un avers « CC0 » sur Numista pour ce type, sans que l'on sache si c'est cette image). Paquet sans changement de moteur : il s'applique avec le moteur actuel.
+- **Ryal de 1336 H (Moulay Youssef)** : c'est la photographie que le musée utilise déjà, des deux faces (Windrain, Wikimedia Commons, CC0). Rien à changer.
+- **Pièce de 500 francs 1956 (Mohammed V)** : elle n'est pas dans l'inventaire des monnaies de l'exposition. Non ajoutée ; question posée au porteur.
+- **L'inventaire** confirme les pistes déjà suivies le 20 novembre 2026 (identification des 54 objets, catalogues de RealBanknotes, dont les conditions interdisent la collecte automatique). Pistes nouvelles à examiner si le porteur le souhaite : le dinar mérinide d'Abou Yahya sur Wikimedia (CC BY-SA 4.0, 916 points, type proche du n° 37) et les fiches Numista des billets (images souvent sous licence non commerciale).
+
 ### Voix de l'audioguide : décisions prises, production à venir
 
 Le moteur lit déjà un enregistrement par œuvre et par langue quand on lui en fournit un (champ `audio` de l'œuvre) ; sans lui, il fait lire le texte par la voix du navigateur. Il ne manque que les fichiers.
@@ -718,6 +727,7 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 ## 4. En attente du porteur du projet
 
 - **Chambre forte et Grand Livre** (22 novembre 2026) : donner son accord pour verser le lot dans `main`, puis appliquer le paquet n° 19 sur son Mac (bloc dans « Chambre forte : direction B retenue, coupole atténuée ; Grand Livre reconstruit ») et dire si la salle et le livre lui conviennent. À faire valider par la commissaire : les titres des séries de billets et des vitrines ; le « dès 2024 » de la légende du livre. S'il veut des photos du livre plus nettes : recharger son crédit Google (AI Studio), ou fournir les images d'origine du livre.
+- **Paquet n° 20** (recto net du billet de 5 dirhams) : à appliquer après le n° 19 ; dire si la pièce de 500 francs 1956 envoyée le 22 novembre 2026 fait partie de l'exposition.
 - **Hall des Guichets, direction B retouchée** (22 novembre 2026) : lot versé dans `main` le 22 novembre 2026 sur son feu vert (un premier essai sur son Mac, avant ce versement, avait été arrêté net par la vérification du bloc : le musée n'a pas bougé). **Paquet n° 18 appliqué sur son Mac le 22 novembre 2026 (« la salle est réaménagée »).** Premier essai manqué : il avait écrit « la salle s'affiche », mais sa capture montrait l'ancien hall ; le paquet n'avait jamais été téléchargé depuis le Drive, et l'ancien bloc ne le disait pas clairement. Bloc corrigé ci-dessous : il trouve le paquet sous toutes ses formes (archive, dossier décompressé par Safari), ne l'applique qu'une fois, et dit si la salle est réaménagée. **Leçon : toujours demander le texte affiché par le Terminal avant de considérer un paquet comme appliqué.** Son avis sur la salle est attendu. À relire avec lui : les quatre titres de groupe et le texte d'introduction, provisoires ; la photographie d'archive de la fresque et sa légende, à préciser avec la commissaire. Ensuite : décliner la charte dans les autres salles (l'écrin pour la chambre forte), faire entrer les options de mise en scène dans l'éditeur, rendre les cartels lisibles.
 - **Confirmer la sauvegarde `musees-sauvegarde-v2`** sur son Bureau (l'étiquette `v2`, elle, est créée et vérifiée).
 - **Appliquer le paquet n° 8** (`npm run maj -- 120-ans ~/Downloads/maj-120-ans-08.zip`, puis `npm run lumiere -- 120-ans --salle guichets`) et dire si l'ensemble lui convient : niveau de détail, hauteur des socles, implantation.
