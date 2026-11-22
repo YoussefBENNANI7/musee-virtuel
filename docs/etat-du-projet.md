@@ -369,7 +369,11 @@ git pull
 
 ```bash
 cd ~/musee-virtuel
-if grep -q ROOM_FIELDS scripts/maj.mjs; then npm run maj -- 120-ans ~/Downloads/maj-120-ans-18.zip; else echo "✗ Le moteur n'est pas à jour : faites d'abord git pull"; fi
+f=$(find ~/Downloads -maxdepth 3 -name "maj-120-ans-18*" | sort | head -1)
+if ! grep -q ROOM_FIELDS scripts/maj.mjs; then echo "✗ Le moteur n'est pas à jour : faites d'abord git pull"
+elif grep -q '"bars": "fine"' public/museums/120-ans/museum.json; then echo "✓ La salle est déjà réaménagée"
+elif [ -z "$f" ]; then echo "✗ Je ne trouve pas le paquet 18 dans Téléchargements"
+else npm run maj -- 120-ans "$f" && grep -q '"bars": "fine"' public/museums/120-ans/museum.json && echo "✓ La salle est réaménagée"; fi
 ```
 
 ```bash
@@ -661,7 +665,7 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
-- **Hall des Guichets, direction B retouchée** (22 novembre 2026) : lot versé dans `main` le 22 novembre 2026 sur son feu vert (un premier essai sur son Mac, avant ce versement, avait été arrêté net par la vérification du bloc : le musée n'a pas bougé). **Paquet n° 18 appliqué sur son Mac le 22 novembre 2026, lumière du hall recalculée : « la salle s'affiche ».** Son avis sur la salle, vue dans son musée, est attendu. À relire avec lui : les quatre titres de groupe et le texte d'introduction, provisoires ; la photographie d'archive de la fresque et sa légende, à préciser avec la commissaire. Ensuite : décliner la charte dans les autres salles (l'écrin pour la chambre forte), faire entrer les options de mise en scène dans l'éditeur, rendre les cartels lisibles.
+- **Hall des Guichets, direction B retouchée** (22 novembre 2026) : lot versé dans `main` le 22 novembre 2026 sur son feu vert (un premier essai sur son Mac, avant ce versement, avait été arrêté net par la vérification du bloc : le musée n'a pas bougé). **Le paquet n° 18 n'est pas encore appliqué sur son Mac** : le porteur a d'abord écrit « la salle s'affiche », puis sa capture a montré l'ancien hall (comptoirs sur trois murs, socles bruns, verrière à barres noires). Cause probable : le bloc visait `~/Downloads/maj-120-ans-18.zip` exactement, alors que Safari décompresse souvent l'archive dans un dossier et jette le `.zip`. Bloc corrigé ci-dessous : il trouve le paquet sous toutes ses formes, ne l'applique qu'une fois, et dit si la salle est réaménagée. Son avis sur la salle est attendu ensuite. À relire avec lui : les quatre titres de groupe et le texte d'introduction, provisoires ; la photographie d'archive de la fresque et sa légende, à préciser avec la commissaire. Ensuite : décliner la charte dans les autres salles (l'écrin pour la chambre forte), faire entrer les options de mise en scène dans l'éditeur, rendre les cartels lisibles.
 - **Confirmer la sauvegarde `musees-sauvegarde-v2`** sur son Bureau (l'étiquette `v2`, elle, est créée et vérifiée).
 - **Appliquer le paquet n° 8** (`npm run maj -- 120-ans ~/Downloads/maj-120-ans-08.zip`, puis `npm run lumiere -- 120-ans --salle guichets`) et dire si l'ensemble lui convient : niveau de détail, hauteur des socles, implantation.
 - **Objets plats** (posés à plat sur leur socle, comme dans l'exposition) : les garder ainsi, ou les présenter inclinés sur un petit pupitre ? L'examen les montre déjà de dessus.
