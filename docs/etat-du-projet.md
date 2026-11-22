@@ -360,7 +360,7 @@ Choix du porteur, le 22 novembre 2026, sur la recommandation de Claude : **la di
 - **Paquet n° 18** (`maj-120-ans-18.zip`, Drive, « Mises-a-jour ») : il fait passer la salle de son état actuel (paquets 1 à 17) à la direction B retouchée : mise en scène de la salle (décor, verrière, comptoir sur le seul mur ouest, banc, zones, lettrage), place, socle et cloche des quatorze objets, fresque ajoutée avec son image. Essayé sur une copie du musée de travail : la salle obtenue est identique à celle de la direction B, les autres salles ne changent pas. **Il demande le moteur de ce lot** : les paquets savent désormais retoucher la mise en scène d'une salle (`"salles"` dans `maj.json`, `scripts/maj.mjs`), jamais son plan ni ses œuvres ; un moteur plus ancien ignorerait cette partie, d'où la vérification dans le bloc ci-dessous.
 - Fabriqué par `paquet-18/fabrique.py` (Drive, « Essais », `hall-direction-b-outils.zip`), qui compare la salle du musée de travail à celle de la direction B et refuse tout écart hors de la mise en scène.
 
-À faire sur le Mac, une fois ce lot versé dans `main` :
+À faire sur le Mac (le lot est dans `main` depuis le 22 novembre 2026) :
 
 ```bash
 cd ~/musee-virtuel
@@ -661,7 +661,7 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
-- **Hall des Guichets, direction B retouchée** (22 novembre 2026) : donner son accord pour verser le lot dans `main`, puis appliquer le paquet n° 18 sur son Mac (bloc dans « Hall des Guichets : la direction B retenue, avec trois retouches ») et dire si la salle lui convient. À relire avec lui : les quatre titres de groupe et le texte d'introduction, provisoires ; la photographie d'archive de la fresque et sa légende, à préciser avec la commissaire. Ensuite : décliner la charte dans les autres salles (l'écrin pour la chambre forte), faire entrer les options de mise en scène dans l'éditeur, rendre les cartels lisibles.
+- **Hall des Guichets, direction B retouchée** (22 novembre 2026) : lot versé dans `main` le 22 novembre 2026 sur son feu vert (un premier essai sur son Mac, avant ce versement, avait été arrêté net par la vérification du bloc : le musée n'a pas bougé). Appliquer le paquet n° 18 sur son Mac (bloc dans « Hall des Guichets : la direction B retenue, avec trois retouches ») et dire si la salle lui convient. À relire avec lui : les quatre titres de groupe et le texte d'introduction, provisoires ; la photographie d'archive de la fresque et sa légende, à préciser avec la commissaire. Ensuite : décliner la charte dans les autres salles (l'écrin pour la chambre forte), faire entrer les options de mise en scène dans l'éditeur, rendre les cartels lisibles.
 - **Confirmer la sauvegarde `musees-sauvegarde-v2`** sur son Bureau (l'étiquette `v2`, elle, est créée et vérifiée).
 - **Appliquer le paquet n° 8** (`npm run maj -- 120-ans ~/Downloads/maj-120-ans-08.zip`, puis `npm run lumiere -- 120-ans --salle guichets`) et dire si l'ensemble lui convient : niveau de détail, hauteur des socles, implantation.
 - **Objets plats** (posés à plat sur leur socle, comme dans l'exposition) : les garder ainsi, ou les présenter inclinés sur un petit pupitre ? L'examen les montre déjà de dessus.
