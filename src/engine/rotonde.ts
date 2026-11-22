@@ -19,6 +19,8 @@ const BASE = 0.3;
 const SAFES = 3.3;
 /** Côté d'une porte de coffre, en mètres. */
 const SAFE_DOOR = 0.375;
+/** Retrait de la frise d'étoffe devant la paroi de coffres, en mètres. */
+export const FRIEZE_INSET = 0.012;
 const BRASS = '#b9944a';
 /** Demi-largeur du pan de mur droit qui porte la porte de chambre forte, quand on entre par elle. */
 const GATE_HALF = 2;
@@ -215,6 +217,29 @@ function latticeTexture(quality: Quality): THREE.Texture {
   );
 }
 
+/** Étoffe de la frise : un tissage serré, à peine visible, sur un fond uni. */
+function clothTexture(quality: Quality): THREE.Texture {
+  const texture = canvasTexture(
+    256,
+    (g, s) => {
+      g.fillStyle = '#9a9a9a';
+      g.fillRect(0, 0, s, s);
+      for (let y = 0; y < s; y += 2) {
+        g.fillStyle = y % 4 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
+        g.fillRect(0, y, s, 1);
+      }
+      for (let x = 0; x < s; x += 3) {
+        g.fillStyle = 'rgba(0,0,0,0.035)';
+        g.fillRect(x, 0, 1, s);
+      }
+    },
+    quality,
+  );
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(60, 3);
+  return texture;
+}
+
 /** Tenture rouge de la niche : plus claire au centre, comme sous un projecteur. */
 function velvetTexture(quality: Quality): THREE.Texture {
   return canvasTexture(
@@ -267,9 +292,9 @@ export function buildRotunda(room: RoomConfig, decor: Decor, quality: Quality, e
   // Si l'on entre par la porte de chambre forte, le mur s'interrompt à cet endroit, sur la largeur de son encadrement.
   const gateAngle = room.rotunda!.passage ? room.rotunda!.vaultDoor : undefined;
   const gap = gateAngle === undefined ? 0 : Math.asin(GATE_HALF / R);
-  const band = (from: number, to: number, material: THREE.Material) => {
+  const band = (from: number, to: number, material: THREE.Material, radius = R) => {
     const start = gateAngle === undefined ? 0 : Math.PI - rad(gateAngle) + gap;
-    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(R, R, to - from, 96, 1, true, start, Math.PI * 2 - gap * 2), material);
+    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, to - from, 96, 1, true, start, Math.PI * 2 - gap * 2), material);
     mesh.position.y = (from + to) / 2;
     group.add(mesh);
     return mesh;
@@ -278,7 +303,7 @@ export function buildRotunda(room: RoomConfig, decor: Decor, quality: Quality, e
   const safes = safesTexture(quality);
   const around = Math.round((2 * Math.PI * R) / (4 * SAFE_DOOR));
   safes.repeat.set(around, (SAFES - BASE) / (4 * SAFE_DOOR));
-  band(BASE, SAFES, new THREE.MeshBasicMaterial({ map: safes, color: painted('#ffffff', 0.5), side: THREE.BackSide, toneMapped: false }));
+  band(BASE, SAFES, new THREE.MeshBasicMaterial({ map: safes, color: painted('#ffffff', 0.5 * (room.rotunda!.safes ?? 1)), side: THREE.BackSide, toneMapped: false }));
   const panels = panellingTexture(quality);
   panels.repeat.set(12, 1);
   band(SAFES, H, new THREE.MeshBasicMaterial({ map: panels, color: painted('#ffffff', 0.8), side: THREE.BackSide, toneMapped: false }));
@@ -295,6 +320,39 @@ export function buildRotunda(room: RoomConfig, decor: Decor, quality: Quality, e
   rail(BASE, 0.02);
   rail(SAFES, 0.03);
   rail(H, 0.08, true);
+  // Frise d'étoffe devant les coffres : un fond calme pour les œuvres, bordé de laiton.
+  const frieze = room.rotunda!.frieze;
+  if (frieze && !frieze.spans) {
+    band(frieze.from, frieze.to, new THREE.MeshBasicMaterial({ map: clothTexture(quality), color: painted(frieze.color, 1.6), side: THREE.BackSide, toneMapped: false }), R - FRIEZE_INSET).name = 'frise';
+    rail(frieze.from, 0.018);
+    rail(frieze.to, 0.018);
+  }
+  // En panneaux : un morceau de frise par groupe d'œuvres, cerné de laiton, comme un coffre ouvert dans la paroi.
+  for (const [a1, a2] of frieze?.spans ?? []) {
+    const r = R - FRIEZE_INSET;
+    const cloth = clothTexture(quality);
+    cloth.repeat.set(Math.max(1, Math.round((r * rad(a2 - a1)) / 0.4)), 3);
+    const panel = new THREE.Mesh(
+      new THREE.CylinderGeometry(r, r, frieze!.to - frieze!.from, Math.max(8, Math.ceil(a2 - a1)), 1, true, Math.PI - rad(a2), rad(a2 - a1)),
+      new THREE.MeshBasicMaterial({ map: cloth, color: painted(frieze!.color, 1.6), side: THREE.BackSide, toneMapped: false }),
+    );
+    panel.position.y = (frieze!.from + frieze!.to) / 2;
+    panel.name = 'frise';
+    group.add(panel);
+    const tube = 0.018;
+    for (const y of [frieze!.from, frieze!.to]) {
+      const arc = new THREE.Mesh(new THREE.TorusGeometry(r - tube, tube, 8, Math.max(8, Math.ceil(a2 - a1)), rad(a2 - a1)), brass);
+      arc.rotation.x = Math.PI / 2;
+      arc.rotation.z = rad(a1) - Math.PI / 2;
+      arc.position.y = y;
+      group.add(arc);
+    }
+    for (const a of [a1, a2]) {
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(tube, tube, frieze!.to - frieze!.from, 8), brass);
+      post.position.set(Math.sin(rad(a)) * (r - tube), (frieze!.from + frieze!.to) / 2, -Math.cos(rad(a)) * (r - tube));
+      group.add(post);
+    }
+  }
 
   // --- Coupole ajourée ---------------------------------------------------------
   // Une calotte dont la résille est plaquée vue de dessous : les étoiles restent régulières.
@@ -309,8 +367,9 @@ export function buildRotunda(room: RoomConfig, decor: Decor, quality: Quality, e
   for (let i = 0; i <= RINGS; i++) {
     const t = i / RINGS;
     const y = H + rise * Math.sqrt(1 - t * t);
-    // Le ciel de la coupole est plus lumineux en son centre qu'à sa naissance.
-    const glow = 0.16 + 0.6 * (1 - t * t) ** 1.5;
+    // Le ciel de la coupole est plus lumineux en son centre qu'à sa naissance ; `dome` en règle l'éclat tel que l'œil
+    // le perçoit (d'où la puissance : à 0,5, la coupole paraît deux fois moins vive).
+    const glow = (0.16 + 0.6 * (1 - t * t) ** 1.5) * (room.rotunda!.dome ?? 1) ** 2.2;
     for (let j = 0; j <= TURNS; j++) {
       const a = (j / TURNS) * Math.PI * 2;
       const x = Math.cos(a) * R * t;

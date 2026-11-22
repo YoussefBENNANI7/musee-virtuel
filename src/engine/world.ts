@@ -4,14 +4,14 @@ import { FRAMES } from './cadres';
 import { buildBuilding } from './building';
 import { clearHeight, resolveDecor, type Decor } from './decors';
 import { COUNTER, FOUNTAIN_RADIUS, benchFootprint, buildBench, buildCounter, buildFountain, buildLantern, buildPhotoCubes, buildZone, lanternHeight } from './furniture';
-import { buildLettering, drawLettering, letteringColor } from './lettrage';
+import { bendLettering, buildLettering, drawLettering, letteringColor } from './lettrage';
 import { EYE_HEIGHT, WALLS, buildLayout, inside, roomRect, wallFrame, type Layout } from './layout';
 import type { Quality } from './quality';
 import type { Style } from './styles';
-import { buildRotunda, rotundaFrame, wallNiche } from './rotonde';
+import { FRIEZE_INSET, buildRotunda, rotundaFrame, wallNiche } from './rotonde';
 import { labelTexture } from './textures';
 import { loc, tr, type LetteringConfig, type MuseumConfig, type RoomConfig } from './types';
-import { VITRINE_RADIUS, buildVitrine, placeCoin } from './vitrines';
+import { VITRINE, VITRINE_RADIUS, VITRINE_TITLE, buildVitrine, placeCoin } from './vitrines';
 
 export type { PlacedArtwork } from './artworks';
 
@@ -79,14 +79,17 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
   /** Zones occupées par le mobilier et les socles : le visiteur les contourne. */
   const blocked: ((x: number, z: number) => boolean)[] = [];
   const artworks: PlacedArtwork[] = [];
-  /** Lettrages muraux : leur texte est redessiné quand la langue change. */
-  const letterings: { cfg: LetteringConfig; mesh: THREE.Mesh; color: string }[] = [];
+  /**
+   * Lettrages muraux : leur texte est redessiné quand la langue change. `curve` : rayon du mur courbe qui les porte ;
+   * `fit` : largeur à ne pas dépasser (le titre d'une vitrine tient sur la face de son socle).
+   */
+  const letterings: { cfg: LetteringConfig; mesh: THREE.Mesh; color: string; curve?: number; fit?: number }[] = [];
   for (const room of museum.rooms) {
     const decor = decors.get(room.id)!;
     for (const wall of WALLS) {
       const { holder, frame } = building.wall(room.id, wall);
       for (const cfg of room.lettering ?? []) {
-        if (cfg.wall === wall) letterings.push({ cfg, mesh: buildLettering(cfg, holder), color: letteringColor(cfg, decor) });
+        if (cfg.wall === wall && cfg.angle === undefined) letterings.push({ cfg, mesh: buildLettering(cfg, holder), color: letteringColor(cfg, decor) });
       }
       const hung = room.artworks.filter((cfg) => cfg.type === 'painting' && !cfg.rotunda && cfg.wall === wall);
       for (const cfg of hung) {
@@ -136,7 +139,7 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
         holder.position.copy(frame.center);
         holder.rotation.y = frame.rotY;
         group.add(holder);
-        wallNiche(holder, cfg.width, cfg.height, cfg.y ?? 1.55, decor, options.env);
+        if (room.rotunda!.niches !== false) wallNiche(holder, cfg.width, cfg.height, cfg.y ?? 1.55, decor, options.env);
         artworks.push(hangPainting({ ...cfg, offset: 0 }, room, holder, frame, ctx));
         artworks[artworks.length - 1].config = cfg;
         // Le mur courbe ne lit pas la lumière précalculée : le halo peint de l'œuvre y reste toujours.
@@ -145,11 +148,32 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
         });
       }
     }
+    // Lettrage sur le mur courbe : cintré pour l'épouser, posé sur la frise d'étoffe s'il y en a une.
+    if (rotunda) {
+      const inset = (room.rotunda!.frieze ? FRIEZE_INSET : 0) + 0.006;
+      for (const cfg of room.lettering ?? []) {
+        if (cfg.angle === undefined) continue;
+        const frame = rotundaFrame(rotunda.shape, cfg.angle, inset);
+        const holder = new THREE.Group();
+        holder.position.copy(frame.center);
+        holder.rotation.y = frame.rotY;
+        group.add(holder);
+        letterings.push({ cfg: { ...cfg, offset: 0 }, mesh: buildLettering({ ...cfg, offset: 0 }, holder), color: letteringColor(cfg, decor), curve: rotunda.shape.radius - inset });
+      }
+    }
     // Vitrines : chaque pièce de monnaie y a sa place.
     const vitrines = new Map<string, THREE.Group>();
     for (const cfg of room.vitrines ?? []) {
       const vitrine = buildVitrine(cfg, room, decor, rotunda ? rotunda.shape.wallHeight + 0.6 : 0);
       vitrines.set(cfg.id, vitrine);
+      // Titre de la vitrine, en lettres de laiton sur la face avant de son socle.
+      if (cfg.title) {
+        const title: LetteringConfig = { offset: 0, y: VITRINE_TITLE.y, height: VITRINE_TITLE.height, text: cfg.title, color: VITRINE_TITLE.color };
+        const front = new THREE.Group();
+        front.position.z = VITRINE.side / 2 + 0.002;
+        vitrine.add(front);
+        letterings.push({ cfg: title, mesh: buildLettering(title, front), color: VITRINE_TITLE.color, fit: VITRINE.side - 0.08 });
+      }
       group.add(vitrine);
       const [vx, vz] = [vitrine.position.x, vitrine.position.z];
       blocked.push((x, z) => Math.hypot(x - vx, z - vz) < VITRINE_RADIUS);
@@ -210,13 +234,16 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
         mat.map = labelTexture(tr(art.config.title, lang), loc(art.config.artist, lang), loc(art.config.year, lang), quality, dark);
         mat.needsUpdate = true;
       }
-      for (const { cfg, mesh, color } of letterings) {
+      for (const { cfg, mesh, color, curve, fit } of letterings) {
         const mat = mesh.material as THREE.MeshBasicMaterial;
         mat.map?.dispose();
         const drawn = drawLettering(cfg, tr(cfg.text, lang), color, quality.tier === 'low' ? 0.5 : 1);
         mat.map = drawn.texture;
         mat.needsUpdate = true;
-        mesh.scale.set(drawn.width, drawn.height, 1);
+        // Trop long pour sa place, un titre est réduit d'un bloc, sans changer de proportions.
+        const k = fit ? Math.min(1, fit / drawn.width) : 1;
+        if (curve) bendLettering(mesh, drawn.width, drawn.height, curve);
+        else mesh.scale.set(drawn.width * k, drawn.height * k, 1);
       }
     },
   };

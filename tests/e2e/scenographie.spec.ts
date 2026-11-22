@@ -67,3 +67,36 @@ test('sans mise en scène, rien de tout cela n’apparaît', async ({ page }) =>
   await openMuseum(page);
   expect((await staging(page)).count).toEqual({});
 });
+
+test('dans une rotonde : frise en panneaux, lettrage cintré sur le mur courbe, titre de vitrine', async ({ page }) => {
+  const museum = fixture();
+  const room = museum.rooms.find((r: any) => r.id === 'rotonde');
+  room.rotunda = { dome: 0.3, safes: 0.6, niches: false, frieze: { from: 0.9, to: 2, color: '#d6c9ad', spans: [[70, 110], [250, 290]] } };
+  room.lettering = [{ angle: 90, y: 2.2, height: 0.16, text: { fr: 'Le franc', en: 'The franc' } }];
+  room.vitrines = [{ id: 'essai', position: [0, -2.2], title: { fr: 'Les origines', en: 'The origins' } }];
+  // La rotonde ne laisse pas de place aux sculptures du milieu de la salle : on les retire pour l'essai.
+  const gone = new Set(room.artworks.filter((a: any) => a.type === 'sculpture').map((a: any) => a.id));
+  room.artworks = room.artworks.filter((a: any) => !gone.has(a.id));
+  for (const tour of museum.tours ?? []) tour.stops = tour.stops.filter((id: string) => !gone.has(id));
+  const errors = await openMuseum(page, { museum });
+  const scene = await page.evaluate(() => {
+    const found: Record<string, number> = {};
+    const bends: number[] = [];
+    (window as any).__museum.world.group.traverse((o: any) => {
+      if (['frise', 'lettrage'].includes(o.name)) found[o.name] = (found[o.name] ?? 0) + 1;
+      if (o.name === 'lettrage') {
+        const p = o.geometry.attributes.position;
+        let z = 0;
+        for (let i = 0; i < p.count; i++) z = Math.max(z, p.getZ(i));
+        bends.push(z);
+      }
+    });
+    return { found, bends };
+  });
+  // Deux panneaux de frise ; un lettrage sur le mur courbe et un sur la vitrine.
+  expect(scene.found).toEqual({ frise: 2, lettrage: 2 });
+  // Le lettrage du mur courbe est cintré : ses bouts avancent vers la salle ; celui de la vitrine reste plan.
+  expect(Math.max(...scene.bends)).toBeGreaterThan(0.001);
+  expect(Math.min(...scene.bends)).toBe(0);
+  expect(errors).toEqual([]);
+});

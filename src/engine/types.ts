@@ -224,6 +224,18 @@ export interface RotundaConfig {
    * déclarer, en face, une porte ordinaire sur le mur de la salle (au nord pour 0, à l'est pour 90, etc.).
    */
   passage?: boolean;
+  /** Éclat de la coupole étoilée, tel que l'œil le perçoit, de 0 à 1 : 1 par défaut ; moins, elle s'efface devant les œuvres. */
+  dome?: number;
+  /** Clarté de la paroi de coffres, de 0 à 1 : 1 par défaut ; moins, elle recule dans l'ombre. */
+  safes?: number;
+  /**
+   * Frise d'étoffe tendue devant la paroi de coffres, de `from` à `to` mètres de haut : un fond calme pour les œuvres
+   * accrochées au mur courbe. Bordée de laiton. Tout autour de la salle, ou seulement en panneaux : `spans`, des paires
+   * d'angles [début, fin] en degrés (0 = nord, 90 = est), derrière chaque groupe d'œuvres.
+   */
+  frieze?: { from: number; to: number; color: string; spans?: [number, number][] };
+  /** Faux pour accrocher les œuvres du mur courbe sans leur niche de laiton (avec un passe-partout, par exemple). */
+  niches?: boolean;
 }
 
 /** Vitrine sur socle : une cloche de verre sur des cubes noirs, pour une à cinq pièces de monnaie. */
@@ -231,6 +243,8 @@ export interface VitrineConfig {
   id: string;
   /** Position dans la salle, en mètres, depuis son centre : [x, z]. */
   position: [number, number];
+  /** Titre lettré sur la face avant du socle, par exemple le nom d'une dynastie. */
+  title?: L10n;
 }
 
 /**
@@ -253,9 +267,12 @@ export interface ZoneConfig {
  * d'introduction. Ce n'est pas une œuvre : on ne clique pas dessus.
  */
 export interface LetteringConfig {
-  wall: WallId;
-  /** Décalage le long du mur, en mètres, depuis son centre (comme pour un tableau). */
-  offset: number;
+  /** Mur qui porte le lettrage. Dans une rotonde, on donne plutôt `angle`. */
+  wall?: WallId;
+  /** Dans une rotonde : angle, en degrés, du point du mur courbe où le lettrage est centré (0 = nord, 90 = est). */
+  angle?: number;
+  /** Décalage le long du mur, en mètres, depuis son centre (comme pour un tableau). Sans objet dans une rotonde. */
+  offset?: number;
   /** Hauteur du centre du lettrage, en mètres. Par défaut : 2,3 m pour un titre, 1,5 m pour un texte. */
   y?: number;
   text: L10n;

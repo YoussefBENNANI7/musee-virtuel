@@ -115,6 +115,8 @@ Tout s'enregistre au fur et à mesure, et le vrai musée s'affiche à droite. Le
 - **Mise en scène d'une salle** (facultatif, à écrire dans `museum.json`) :
   - **éclairage d'accent** des objets sur socle : `"decor": {"preset": "nuit", "light": {"accents": 1}}` fait tomber un faisceau sur chacun, dans une salle tamisée ; dans une salle claire, le faisceau ne se voit pas, seule une flaque de lumière éclaire le socle et le sol ;
   - **verrière à traverses fines**, claires comme le plafond : `"ceiling": {"type": "skylight", "bars": "fine"}` ;
+  - **dans une rotonde** (`rotunda`) : éclat de la coupole (`"dome"`, de 0 à 1), clarté de la paroi de coffres (`"safes"`), frise d'étoffe tout autour ou en panneaux derrière chaque groupe d'œuvres (`"frieze": {"from": 0.9, "to": 2.5, "color": "#4a1620", "spans": [[80, 115]]}`), accrochage sans niche de laiton (`"niches": false`) ; le lettrage s'y place par son angle sur le mur courbe (`"angle": 90`) et se cintre pour l'épouser ;
+  - **titre d'une vitrine** à monnaies, lettré sur la face de son socle : `"title": {"fr": "Les Almohades"}` ;
   - **cloche de verre** sur un objet : `"hood": true` (le socle prend alors la mesure de l'objet) ;
   - **zones au sol** (`zones`), pour réunir des objets en îlots : `{"position": [x, z], "size": [largeur, profondeur], "color": "#24443b", "border": "#b9944a"}` ; le visiteur marche dessus ;
   - **lettrage mural** (`lettering`) : un titre (`{"wall": "north", "offset": 2, "text": {"fr": "Compter"}}`) ou un court texte (`"kind": "text"`, `"width"` en mètres), posé sur le mur comme des lettres adhésives. Ce n'est pas une œuvre : on ne clique pas dessus.

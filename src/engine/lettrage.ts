@@ -88,8 +88,24 @@ export function drawLettering(cfg: LetteringConfig, text: string, color: string,
 export function buildLettering(cfg: LetteringConfig, holder: THREE.Object3D): THREE.Mesh {
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
   mesh.name = 'lettrage';
-  mesh.position.set(cfg.offset, cfg.y ?? (cfg.kind === 'text' ? LETTERING.text.y : LETTERING.title.y), 0.004);
+  mesh.position.set(cfg.offset ?? 0, cfg.y ?? (cfg.kind === 'text' ? LETTERING.text.y : LETTERING.title.y), 0.004);
   mesh.raycast = () => {};
   holder.add(mesh);
   return mesh;
+}
+
+/**
+ * Lettrage sur un mur courbe vu de l'intérieur (rotonde) : le plan est cintré pour épouser le mur, de rayon `radius`.
+ * Un plan droit s'enfoncerait dans le mur par ses deux bouts. Remplace la mise à l'échelle d'un lettrage droit.
+ */
+export function bendLettering(mesh: THREE.Mesh, width: number, height: number, radius: number) {
+  const geometry = new THREE.PlaneGeometry(width, height, Math.max(1, Math.ceil(width / 0.08)), 1);
+  const position = geometry.attributes.position;
+  for (let i = 0; i < position.count; i++) {
+    const a = position.getX(i) / radius;
+    position.setXYZ(i, radius * Math.sin(a), position.getY(i), radius * (1 - Math.cos(a)));
+  }
+  mesh.geometry.dispose();
+  mesh.geometry = geometry;
+  mesh.scale.set(1, 1, 1);
 }

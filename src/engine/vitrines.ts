@@ -13,6 +13,8 @@ import type { CoinMetal, RoomConfig, SculptureConfig, VitrineConfig } from './ty
  * ouvrir sa fiche, et on l'examine seule sous tous les angles.
  */
 export const VITRINE = { side: 0.66, plinth: 0.92, glass: 0.6 };
+/** Titre lettré sur la face avant du socle : hauteur de son centre, hauteur de ligne, couleur de laiton. */
+export const VITRINE_TITLE = { y: 0.66, height: 0.05, color: '#c9a45a' };
 /** Rayon au sol que le visiteur contourne. */
 export const VITRINE_RADIUS = VITRINE.side * 0.71 + 0.22;
 /** Places des pièces sur le plateau : position, côté et hauteur du cube. La face avant de la vitrine regarde le centre de la salle. */

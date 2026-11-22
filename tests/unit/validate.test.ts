@@ -406,6 +406,32 @@ describe('scénographie : éclairage d’accent, cloche, zones au sol, lettrage 
     expect(warningsOf(museum)).toEqual([]);
   });
 
+  it('dans une rotonde : coupole, coffres, frise, niches, lettrage par angle et titres de vitrine', () => {
+    const rotunda = (change: (room: MuseumConfig['rooms'][number]) => void = () => {}) =>
+      staged((room) => {
+        room.rotunda = { dome: 0.3, safes: 0.4, frieze: { from: 1, to: 2.2, color: '#3a1418' }, niches: false };
+        room.lettering = [{ angle: 90, y: 2, height: 0.16, text: { fr: 'Le franc', en: 'The franc' } }];
+        room.vitrines = [{ id: 'origines', position: [0, 1.5], title: { fr: 'Les origines', en: 'The origins' } }];
+        change(room);
+      });
+    const before = errorsOf(staged(() => {}));
+    const fresh = (museum: MuseumConfig) => errorsOf(museum).filter((e) => !before.includes(e));
+    expect(fresh(rotunda())).toEqual([]);
+    expect(fresh(rotunda((room) => (room.rotunda!.dome = 2)))).toEqual(['Salle "rotonde" : rotonde : "dome" invalide (entre 0 et 1)']);
+    expect(fresh(rotunda((room) => (room.rotunda!.frieze = { from: 1, to: 4, color: '#3a1418' })))).toEqual(['Salle "rotonde" : rotonde : frise invalide (de 0,3 m à 3,3 m de haut, sur 20 cm au moins)']);
+    expect(fresh(rotunda((room) => (room.rotunda!.frieze = { from: 1, to: 2, color: '#d8ccb2', spans: [[80, 110], [300, 330]] })))).toEqual([]);
+    expect(fresh(rotunda((room) => (room.rotunda!.frieze = { from: 1, to: 2, color: '#d8ccb2', spans: [[110, 80]] })))).toEqual([
+      'Salle "rotonde" : rotonde : panneaux de frise invalides (des paires d\'angles [début, fin], en degrés, début < fin)',
+    ]);
+    expect(fresh(rotunda((room) => (room.lettering = [{ wall: 'north', offset: 0, text: { fr: 'Le franc', en: 'The franc' } }])))).toEqual([
+      'Salle "rotonde", lettrage n° 1 : dans une rotonde, placez le lettrage par son angle sur le mur courbe ("angle", en degrés, 0 = nord)',
+    ]);
+    expect(warningsOf(rotunda((room) => (room.vitrines![0].title = { fr: 'Les origines' })))).toContain('Salle "rotonde", vitrine "origines" : titre : traduction manquante (en)');
+    // Hors d'une rotonde, un lettrage placé par son angle est refusé.
+    const flat = staged((room) => (room.lettering = [{ angle: 90, text: { fr: 'Le franc', en: 'The franc' } }]));
+    expect(errorsOf(flat)).toEqual(['Salle "rotonde", lettrage n° 1 : placé par un angle, mais la salle n\'est pas une rotonde']);
+  });
+
   it('accepte une verrière à traverses fines, et refuse un autre mot', () => {
     expect(errorsOf(staged((room) => (room.ceiling = { type: 'skylight', bars: 'fine' })))).toEqual([]);
     const museum = staged((room) => (room.ceiling = { type: 'skylight', bars: 'épaisses' as 'fine' }));

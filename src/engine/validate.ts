@@ -5,7 +5,7 @@ import { FOUNTAIN_RADIUS, benchFootprint } from './furniture';
 import { ART_CENTER_Y, MIN_DOOR_WIDTH, WALLS, buildLayout, inside, roomRect, wallFrame } from './layout';
 import { LETTERING, lineHeight } from './lettrage';
 import { isStyleId, type Style } from './styles';
-import type { ArtworkConfig, L10n, MuseumConfig, RoomConfig } from './types';
+import type { ArtworkConfig, L10n, MuseumConfig, RoomConfig, WallId } from './types';
 import { SLOTS, VITRINE_RADIUS } from './vitrines';
 import { rotundaShape } from './rotonde';
 
@@ -92,11 +92,27 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
     }
     const round = rotundaShape(room);
     if (round && round.radius < 3) error(where, 'salle trop petite pour une rotonde (rayon minimal : 3 m)');
+    if (room.rotunda && round) {
+      for (const key of ['dome', 'safes'] as const) {
+        const value = room.rotunda[key];
+        if (value !== undefined && !(value >= 0 && value <= 1)) error(where, `rotonde : "${key}" invalide (entre 0 et 1)`);
+      }
+      const frieze = room.rotunda.frieze;
+      if (frieze !== undefined) {
+        if (!(frieze.from >= 0.3 && frieze.to > frieze.from + 0.2 && frieze.to <= 3.3)) error(where, 'rotonde : frise invalide (de 0,3 m à 3,3 m de haut, sur 20 cm au moins)');
+        if (!isColor(frieze.color)) error(where, `rotonde : couleur de frise invalide : "${frieze.color}" (attendu : "#rrggbb")`);
+        if (frieze.spans !== undefined && !(Array.isArray(frieze.spans) && frieze.spans.every((s) => Array.isArray(s) && s.length === 2 && s[0] >= 0 && s[1] > s[0] && s[1] - s[0] <= 360))) {
+          error(where, 'rotonde : panneaux de frise invalides (des paires d\'angles [début, fin], en degrés, début < fin)');
+        }
+      }
+      if (room.rotunda.niches !== undefined && typeof room.rotunda.niches !== 'boolean') error(where, 'rotonde : indiquez true ou false dans "niches"');
+    }
     const vitrineIds = new Set<string>();
     for (const vitrine of room.vitrines ?? []) {
       const spot = `${where}, vitrine "${vitrine.id}"`;
       if (vitrineIds.has(vitrine.id)) error(spot, 'identifiant utilisé par plusieurs vitrines');
       vitrineIds.add(vitrine.id);
+      if (vitrine.title !== undefined) translated(spot, 'titre', vitrine.title);
       const [vx, vz]: number[] = Array.isArray(vitrine.position) ? vitrine.position : [NaN, NaN];
       const reach = round ? round.radius - 0.5 - VITRINE_RADIUS - Math.hypot(vx, vz) : Math.min(w / 2 - Math.abs(vx), d / 2 - Math.abs(vz)) - half - VITRINE_RADIUS;
       if (!(reach >= 0)) error(spot, 'posée hors de la salle ou trop près d\'un mur');
@@ -118,7 +134,16 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
     }
     for (const [i, lettering] of (room.lettering ?? []).entries()) {
       const spot = `${where}, lettrage n° ${i + 1}`;
-      if (!WALLS.includes(lettering.wall)) {
+      // Dans une rotonde, le lettrage se place par son angle sur le mur courbe ; ailleurs, sur un mur.
+      if (room.rotunda) {
+        if (!Number.isFinite(lettering.angle)) {
+          error(spot, 'dans une rotonde, placez le lettrage par son angle sur le mur courbe ("angle", en degrés, 0 = nord)');
+          continue;
+        }
+      } else if (lettering.angle !== undefined) {
+        error(spot, 'placé par un angle, mais la salle n\'est pas une rotonde');
+        continue;
+      } else if (!WALLS.includes(lettering.wall as WallId)) {
         error(spot, `mur inconnu : "${lettering.wall}"`);
         continue;
       }
@@ -127,10 +152,13 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
       const line = lineHeight(lettering);
       if (!(line >= 0.02 && line <= 1)) error(spot, 'hauteur de ligne invalide (entre 2 cm et 1 m)');
       if (lettering.width !== undefined && !(lettering.width >= 0.3 && lettering.width <= 8)) error(spot, 'largeur de paragraphe invalide (entre 30 cm et 8 m)');
-      const along = lettering.wall === 'north' || lettering.wall === 'south' ? w : d;
-      if (!(Math.abs(lettering.offset) <= along / 2 - half)) error(spot, 'placé hors du mur');
+      if (!room.rotunda) {
+        const along = lettering.wall === 'north' || lettering.wall === 'south' ? w : d;
+        if (!(Math.abs(lettering.offset ?? NaN) <= along / 2 - half)) error(spot, 'placé hors du mur');
+      }
       const y = lettering.y ?? (lettering.kind === 'text' ? LETTERING.text.y : LETTERING.title.y);
-      if (!(y > 0.2 && y < h - 0.1)) error(spot, 'placé hors du mur, en hauteur');
+      const top = round ? round.wallHeight : h;
+      if (!(y > 0.2 && y < top - 0.1)) error(spot, 'placé hors du mur, en hauteur');
       if (lettering.color !== undefined && !isColor(lettering.color)) error(spot, `couleur invalide : "${lettering.color}" (attendu : "#rrggbb")`);
     }
     if (room.ceiling !== undefined && !CEILINGS.includes(room.ceiling?.type)) error(where, `plafond inconnu : "${room.ceiling?.type}"`);

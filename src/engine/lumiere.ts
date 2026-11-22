@@ -202,7 +202,9 @@ export function roomContext(room: RoomConfig, decor: Decor, style: string): stri
       ? [a.id, a.wall, a.offset, a.width, a.height, a.y ?? null, a.frame ?? null, a.frameless ?? null, ...when(a.rotunda)]
       : [a.id, a.position, a.plinth, a.height, a.turn ?? null, 'src' in a.model ? a.model.src : a.model, ...when(a.vitrine)],
   );
-  const extras = { counters: room.counters, cubes: room.cubes, rotunda: room.rotunda, vitrines: room.vitrines };
+  // Le titre d'une vitrine n'éclaire rien : le changer ne demande pas de recalculer la lumière.
+  const vitrines = room.vitrines?.map(({ title, ...vitrine }) => vitrine);
+  const extras = { counters: room.counters, cubes: room.cubes, rotunda: room.rotunda, vitrines };
   const more = Object.values(extras).some((v) => v !== undefined) ? [extras] : [];
   return JSON.stringify([style, decor, artworks, room.benches ?? [], room.fountain ?? null, room.lanterns ?? [], ...more]);
 }
