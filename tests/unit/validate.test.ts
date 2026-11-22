@@ -406,6 +406,12 @@ describe('scénographie : éclairage d’accent, cloche, zones au sol, lettrage 
     expect(warningsOf(museum)).toEqual([]);
   });
 
+  it('accepte une verrière à traverses fines, et refuse un autre mot', () => {
+    expect(errorsOf(staged((room) => (room.ceiling = { type: 'skylight', bars: 'fine' })))).toEqual([]);
+    const museum = staged((room) => (room.ceiling = { type: 'skylight', bars: 'épaisses' as 'fine' }));
+    expect(errorsOf(museum)).toEqual(['Salle "rotonde" : verrière : pour des traverses fines, indiquez "fine" dans "bars"']);
+  });
+
   it('refuse un éclairage d’accent hors limites et une cloche mal écrite', () => {
     expect(errorsOf(staged((room) => (room.decor = { preset: 'nuit', light: { accents: 3 } })))).toEqual(['Salle "rotonde" : décor : force de l\'éclairage d\'accent des objets invalide (entre 0 et 2)']);
     const museum = staged((room) => {

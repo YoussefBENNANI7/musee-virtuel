@@ -6,10 +6,10 @@ import { clickArtwork, openMuseum, panel } from './helpers';
 const fixture = () => JSON.parse(readFileSync(fileURLToPath(new URL('../fixtures/museum.json', import.meta.url)), 'utf8'));
 
 /** Le musée de test, dont la rotonde est mise en scène : éclairage d'accent, cloche, zone au sol, lettrage mural. */
-function staged() {
+function staged(decor: unknown = { preset: 'nuit', light: { accents: 1 } }) {
   const museum = fixture();
   const room = museum.rooms.find((r: any) => r.id === 'rotonde');
-  room.decor = { preset: 'nuit', light: { accents: 1 } };
+  room.decor = decor;
   room.zones = [{ position: [0, 0], size: [3, 2], color: '#3a2618', border: '#b9944a' }];
   room.lettering = [
     { wall: 'north', offset: 0, text: { fr: 'Formes en liberté', en: 'Shapes set free' } },
@@ -25,7 +25,7 @@ const staging = (page: any) =>
     const count: Record<string, number> = {};
     const titles: { width: number; height: number; drawn: boolean }[] = [];
     (window as any).__museum.world.group.traverse((o: any) => {
-      if (['accent', 'cloche', 'zone', 'lettrage'].includes(o.name)) count[o.name] = (count[o.name] ?? 0) + 1;
+      if (['accent', 'faisceau', 'cloche', 'zone', 'lettrage'].includes(o.name)) count[o.name] = (count[o.name] ?? 0) + 1;
       if (o.name === 'lettrage') titles.push({ width: o.scale.x, height: o.scale.y, drawn: Boolean(o.material.map) });
     });
     return { count, titles };
@@ -36,7 +36,7 @@ test('une salle mise en scène : faisceaux sur les objets, cloche, zone au sol e
   await expect(page.locator('#config-errors')).toBeHidden();
   const { count, titles } = await staging(page);
   // Cinq sculptures dans la rotonde : chacune a son éclairage d'accent ; une seule est sous cloche.
-  expect(count).toEqual({ accent: 5, cloche: 1, zone: 1, lettrage: 2 });
+  expect(count).toEqual({ accent: 5, faisceau: 5, cloche: 1, zone: 1, lettrage: 2 });
   // Le titre tient sur une ligne, bien plus large que haute ; le texte est composé en paragraphe, sur 1,40 m au plus.
   const [title, text] = titles;
   expect(title.drawn && text.drawn).toBe(true);
@@ -52,6 +52,14 @@ test('une salle mise en scène : faisceaux sur les objets, cloche, zone au sol e
   // Sous sa cloche, l'objet s'ouvre toujours d'un clic.
   await clickArtwork(page, 'galet-qui-respire');
   await expect(panel(page)).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('dans une salle claire, les objets gardent leur lumière d’accent, sans faisceau visible', async ({ page }) => {
+  const errors = await openMuseum(page, { museum: staged({ preset: 'pierre-claire', light: { accents: 0.7 } }) });
+  const { count } = await staging(page);
+  expect(count.accent).toBe(5);
+  expect(count.faisceau).toBeUndefined();
   expect(errors).toEqual([]);
 });
 

@@ -248,6 +248,38 @@ describe('paquet de mise à jour d’un musée', () => {
     expect(() => planUpdate('essai', pack, museums)).toThrow(/étape du parcours « visite »/);
   });
 
+  it('retouche la mise en scène d’une salle, sans toucher à ses œuvres', () => {
+    makePackage({
+      musee: 'essai',
+      salles: { salle: { decor: { preset: 'guichets', light: { accents: 0.7 } }, ceiling: { type: 'skylight', bars: 'fine' }, zones: [{ position: [0, 0], size: [2, 1] }] } },
+      oeuvres: { tableau: { width: 0.6 } },
+    });
+    const result = applyUpdate('essai', pack, options());
+    expect(result.rooms).toEqual([{ id: 'salle', fields: ['decor', 'ceiling', 'zones'] }]);
+    const room = config().rooms[0];
+    expect(room.decor).toEqual({ preset: 'guichets', light: { accents: 0.7 } });
+    expect(room.ceiling).toEqual({ type: 'skylight', bars: 'fine' });
+    expect(room.zones).toHaveLength(1);
+    expect(room.artworks.map((a: { id: string }) => a.id)).toEqual(['tableau', 'piece']);
+    expect(room.artworks[0].width).toBe(0.6);
+    // Une seconde retouche fusionne le décor et retire les zones.
+    makePackage({ musee: 'essai', salles: { salle: { decor: { light: { accents: 0.4 } }, zones: null } } });
+    applyUpdate('essai', pack, options());
+    expect(config().rooms[0].decor).toEqual({ preset: 'guichets', light: { accents: 0.4 } });
+    expect(config().rooms[0].zones).toBeUndefined();
+  });
+
+  it('refuse de changer le plan d’une salle, une salle inconnue ou un fichier manquant', () => {
+    const before = readFileSync(join(museums, 'essai', 'museum.json'), 'utf8');
+    makePackage({ musee: 'essai', salles: { salle: { size: [20, 4, 20] } } });
+    expect(() => applyUpdate('essai', pack, options())).toThrow(/mise en scène d'une salle.*pas « size »/);
+    makePackage({ musee: 'essai', salles: { hall: { zones: [] } } });
+    expect(() => applyUpdate('essai', pack, options())).toThrow('salle inconnue dans ce musée : « hall »');
+    makePackage({ musee: 'essai', salles: { salle: { cubes: { position: [0, 0], images: ['images/absente.webp'] } } } });
+    expect(() => applyUpdate('essai', pack, options())).toThrow("la salle « salle » attendrait un fichier qui n'existe pas : images/absente.webp");
+    expect(readFileSync(join(museums, 'essai', 'museum.json'), 'utf8')).toBe(before);
+  });
+
   it('ouvre une archive .zip, même quand elle contient un dossier qui contient le paquet', () => {
     makePackage({ musee: 'essai', fichiers: ['images/tableau.webp'] }, { 'images/tableau.webp': 'nouvelle image' });
     const zip = join(root, 'paquet.zip');

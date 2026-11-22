@@ -137,6 +137,7 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
     if (room.ceiling?.type === 'skylight') {
       const margin = room.ceiling.margin ?? 1.2;
       if (Math.min(w, d) - margin * 2 < 1) error(where, 'verrière : marge trop grande pour la taille de la salle');
+      if (room.ceiling.bars !== undefined && room.ceiling.bars !== 'fine') error(where, 'verrière : pour des traverses fines, indiquez "fine" dans "bars"');
     }
     const cove = coveOf(room, resolveDecor(style, room));
     if (cove) {

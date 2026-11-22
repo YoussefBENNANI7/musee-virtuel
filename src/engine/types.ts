@@ -195,8 +195,11 @@ export interface BenchConfig {
 
 export type CeilingConfig =
   | { type: 'flat' }
-  /** Verrière centrale. `margin` : distance entre la verrière et les murs, en mètres. */
-  | { type: 'skylight'; margin?: number }
+  /**
+   * Verrière centrale. `margin` : distance entre la verrière et les murs, en mètres.
+   * `bars: 'fine'` : traverses plus fines, claires comme le plafond, au lieu de se découper en sombre sur le ciel.
+   */
+  | { type: 'skylight'; margin?: number; bars?: 'fine' }
   /**
    * Plafond flottant : un panneau abaissé de `drop` mètres, détaché des murs par une gorge
    * lumineuse large de `inset` mètres. La lumière cachée dans la gorge lave le haut des murs.

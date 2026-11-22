@@ -26,6 +26,11 @@
 // Une œuvre retirée ne doit être l'étape d'aucun parcours ; une œuvre ajoutée porte un identifiant nouveau,
 // et sa salle doit exister.
 //
+// Un paquet peut enfin retoucher la mise en scène d'une salle (décor, plafond, mobilier, zones au sol,
+// lettrage…), avec les mêmes règles que pour une œuvre :
+//     "salles": { "guichets": { "decor": { "preset": "guichets", … }, "zones": [ … ], "lettering": [ … ] } }
+// Le plan de la salle (place, dimensions, rotonde, vitrines) et ses œuvres ne se changent pas ainsi.
+//
 // Avant d'écrire, tout est vérifié, puis l'état précédent est copié dans musees-sauvegardes/ : si une
 // vérification échoue, le musée reste exactement comme il était.
 import { execFileSync } from 'node:child_process';
@@ -37,6 +42,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 export const MUSEUMS_DIR = join(ROOT, 'public', 'museums');
 export const BACKUP_DIR = join(ROOT, 'musees-sauvegardes');
+
+/** Champs d'une salle qu'un paquet peut retoucher : sa mise en scène, pas son plan ni ses œuvres. */
+const ROOM_FIELDS = ['name', 'intro', 'decor', 'wall', 'ceiling', 'light', 'benches', 'lanterns', 'counters', 'cubes', 'zones', 'lettering', 'autoHang'];
 
 /** Dossiers d'un musée où un paquet a le droit de poser des fichiers. */
 const FOLDERS = ['images', 'models', 'audio'];
@@ -168,14 +176,23 @@ export function planUpdate(museumId, packageDir, museumsDir = MUSEUMS_DIR) {
       added.push({ id: art.id, room: roomId });
     }
   }
-  if (!copies.length && !Object.keys(patches).length && !removals.length && !added.length) throw new Error('ce paquet ne contient rien à appliquer');
+  // Salles à retoucher : leur mise en scène seulement.
+  const roomPatches = manifest.salles ?? {};
+  if (!isPlain(roomPatches)) throw new Error('maj.json : « salles » doit être un objet : { "salle": { retouches } }');
+  for (const [roomId, patch] of Object.entries(roomPatches)) {
+    if (!roomIds.has(roomId)) throw new Error(`salle inconnue dans ce musée : « ${roomId} »`);
+    if (!isPlain(patch)) throw new Error(`retouche illisible pour la salle « ${roomId} »`);
+    const refused = Object.keys(patch).filter((key) => !ROOM_FIELDS.includes(key));
+    if (refused.length) throw new Error(`une mise à jour ne change que la mise en scène d'une salle (${ROOM_FIELDS.join(', ')}), pas « ${refused.join(', ')} » (salle « ${roomId} »)`);
+  }
+  if (!copies.length && !Object.keys(patches).length && !removals.length && !added.length && !Object.keys(roomPatches).length) throw new Error('ce paquet ne contient rien à appliquer');
 
   const gone = new Set(removals);
   const fresh = new Set(added.map((art) => art.id));
   const updated = {
     ...museum,
     rooms: museum.rooms.map((room) => ({
-      ...room,
+      ...(roomPatches[room.id] ? patchArtwork(room, roomPatches[room.id]) : room),
       artworks: [
         ...(room.artworks ?? []).filter((art) => !gone.has(art.id)).map((art) => (patches[art.id] ? patchArtwork(art, patches[art.id]) : art)),
         ...(additions[room.id] ?? []).map((art) => JSON.parse(JSON.stringify(art))),
@@ -190,9 +207,18 @@ export function planUpdate(museumId, packageDir, museumsDir = MUSEUMS_DIR) {
         for (const file of filesOf(art))
           if (!arriving.has(file) && !existsSync(join(folder, file))) throw new Error(`l'œuvre « ${art.id} » attendrait un fichier qui n'existe pas : ${file}`);
 
+  // Une salle retouchée doit, elle aussi, trouver ses fichiers (photographies des cubes, voix de l'introduction).
+  for (const room of updated.rooms) {
+    if (!roomPatches[room.id]) continue;
+    const files = [...(room.cubes?.images ?? []), ...(isPlain(room.intro?.audio) ? Object.values(room.intro.audio) : [])];
+    for (const file of files)
+      if (typeof file === 'string' && !arriving.has(file) && !existsSync(join(folder, file))) throw new Error(`la salle « ${room.id} » attendrait un fichier qui n'existe pas : ${file}`);
+  }
+
   const artworks = Object.entries(patches).map(([id, patch]) => ({ id, room: known.get(id), fields: Object.keys(patch) }));
+  const rooms = Object.entries(roomPatches).map(([id, patch]) => ({ id, fields: Object.keys(patch) }));
   const removed = removals.map((id) => ({ id, room: known.get(id) }));
-  return { museumId, title: typeof manifest.titre === 'string' ? manifest.titre : '', folder, configPath, copies, artworks, added, removed, museum: updated, changed: JSON.stringify(updated) !== JSON.stringify(museum) };
+  return { museumId, title: typeof manifest.titre === 'string' ? manifest.titre : '', folder, configPath, copies, artworks, rooms, added, removed, museum: updated, changed: JSON.stringify(updated) !== JSON.stringify(museum) };
 }
 
 /**
@@ -267,6 +293,7 @@ function main() {
       const result = dry ? planUpdate(museumId, pack.dir) : applyUpdate(museumId, pack.dir);
       console.log(`${dry ? 'Essai, rien n’est écrit' : 'Mise à jour appliquée'} : ${result.title || 'paquet sans titre'}`);
       for (const copy of result.copies) console.log(`  ${copy.replaces ? 'remplace' : 'ajoute  '} ${copy.path} (${size(copy.size)})`);
+      for (const room of result.rooms) console.log(`  retouche la salle « ${room.id} » : ${room.fields.join(', ')}`);
       for (const art of result.artworks) console.log(`  retouche l’œuvre « ${art.id} » (${art.room}) : ${art.fields.join(', ')}`);
       for (const art of result.removed) console.log(`  retire l’œuvre « ${art.id} » (${art.room})`);
       for (const art of result.added) console.log(`  ajoute l’œuvre « ${art.id} » (${art.room})`);

@@ -113,7 +113,8 @@ Tout s'enregistre au fur et à mesure, et le vrai musée s'affiche à droite. Le
 - **Sculptures et objets** : position dans la salle, hauteur, socle, rotation (`turn`), clarté (`tone`), et un modèle 3D au format GLB (`"model": {"src": "models/nom.glb"}`) ou une forme dessinée par le moteur. Après avoir déposé un modèle dans `models/`, lancer `npm run modeles -- mon-musee`. On peut choisir le côté du socle qui porte le cartel (`cardSide` : `north`, `south`, `east` ou `west`), donner au socle une largeur (`plinthSide`, en mètres, pour un objet posé à plat qui ne doit pas en dépasser) et, pour un objet reconstitué en 3D, montrer dans sa fiche la photographie de l'objet réel (`sourcePhoto`).
 - **Pièces de monnaie** : une vitrine (`vitrines`) porte jusqu'à cinq pièces. Une pièce est une sculpture dont le modèle est une photo et un métal : `"model": {"coin": "images/piece.webp", "metal": "silver"}` (`gold`, `silver` ou `bronze` ; `"square": true` pour une monnaie carrée), placée par `"vitrine": {"id": "…", "slot": 0}`. L'image est carrée, la pièce au ras du cadre. Avec la photo de l'autre face (`"coinBack": "images/piece-revers.webp"`), le visiteur retourne la pièce dans son examen, par le bouton ⇄ ou la touche R. Le moteur déduit de chaque photo un léger relief : les reflets du métal bougent quand on tourne la pièce.
 - **Mise en scène d'une salle** (facultatif, à écrire dans `museum.json`) :
-  - **éclairage d'accent** des objets sur socle : `"decor": {"preset": "nuit", "light": {"accents": 1}}` fait tomber un faisceau sur chacun, dans une salle tamisée ;
+  - **éclairage d'accent** des objets sur socle : `"decor": {"preset": "nuit", "light": {"accents": 1}}` fait tomber un faisceau sur chacun, dans une salle tamisée ; dans une salle claire, le faisceau ne se voit pas, seule une flaque de lumière éclaire le socle et le sol ;
+  - **verrière à traverses fines**, claires comme le plafond : `"ceiling": {"type": "skylight", "bars": "fine"}` ;
   - **cloche de verre** sur un objet : `"hood": true` (le socle prend alors la mesure de l'objet) ;
   - **zones au sol** (`zones`), pour réunir des objets en îlots : `{"position": [x, z], "size": [largeur, profondeur], "color": "#24443b", "border": "#b9944a"}` ; le visiteur marche dessus ;
   - **lettrage mural** (`lettering`) : un titre (`{"wall": "north", "offset": 2, "text": {"fr": "Compter"}}`) ou un court texte (`"kind": "text"`, `"width"` en mètres), posé sur le mur comme des lettres adhésives. Ce n'est pas une œuvre : on ne clique pas dessus.
@@ -148,7 +149,7 @@ npx playwright install chromium
 | `npm run preview` | Montre cette version publiable sur l'ordinateur |
 | `npm run images -- demo --attach` | Associe et prépare les images déposées dans `images/` |
 | `npm run modeles -- demo` | Prépare les modèles 3D déposés dans `models/` (versions allégées) |
-| `npm run maj -- mon-musee paquet.zip` | Applique un paquet de mise à jour (images, modèles, retouches de fiches) à un musée de l'ordinateur ; plusieurs paquets peuvent être donnés à la suite, ils sont appliqués dans l'ordre ; `--essai` montre sans rien écrire |
+| `npm run maj -- mon-musee paquet.zip` | Applique un paquet de mise à jour (images, modèles, retouches de fiches, mise en scène d'une salle) à un musée de l'ordinateur ; plusieurs paquets peuvent être donnés à la suite, ils sont appliqués dans l'ordre ; `--essai` montre sans rien écrire |
 | `npm run voix -- demo --voix Sulafat` | Produit les voix de l'audioguide avec le service de voix de Google (clé dans `GEMINI_API_KEY`, ffmpeg nécessaire) |
 | `npm run licences` | Dresse l'inventaire des licences du moteur et du musée, dans `docs/licences.md` |
 | `npm run vignettes -- demo` | Photographie les sculptures pour la vue simplifiée (le musée doit tourner) |

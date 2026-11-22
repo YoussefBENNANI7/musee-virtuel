@@ -97,28 +97,39 @@ function poolMaterial(wallColor: string, strength: number): THREE.Material {
 }
 
 /** Matières de l'éclairage d'accent des objets, par force : la lumière au sol et sur le socle, et le faisceau. */
-const accentMaterials = new Map<number, { pool: THREE.Material; beam: THREE.Material }>();
-function accentMaterial(strength: number) {
-  let mats = accentMaterials.get(strength);
+const accentMaterials = new Map<string, { pool: THREE.Material; beam: THREE.Material }>();
+function accentMaterial(strength: number, beamPart: number) {
+  const key = `${strength}:${beamPart}`;
+  let mats = accentMaterials.get(key);
   if (!mats) {
     const shared = { color: '#ffe2b4', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false };
     mats = {
       pool: new THREE.MeshBasicMaterial({ ...shared, map: poolTexture(), opacity: Math.min(0.9, 0.4 * strength), ...inFront(2) }),
       // Le faisceau se devine à peine : plus dense, une dizaine de faisceaux voisins font un brouillard.
-      beam: new THREE.MeshBasicMaterial({ ...shared, opacity: Math.min(0.1, 0.018 * strength), side: THREE.DoubleSide }),
+      beam: new THREE.MeshBasicMaterial({ ...shared, opacity: Math.min(0.1, 0.018 * strength) * beamPart, side: THREE.DoubleSide }),
     };
-    accentMaterials.set(strength, mats);
+    accentMaterials.set(key, mats);
   }
   return mats;
 }
 
 /**
- * Éclairage d'accent d'un objet sur socle (décor `light.accents`) : une flaque de lumière au sol, une autre
- * sur le dessus du socle, et le faisceau qui tombe du plafond. Peint, comme le halo d'un tableau.
- * `top` : hauteur du plafond. Renvoie de quoi le mettre à la mesure du socle.
+ * Part visible du faisceau d'accent, de 0 à 1, selon le niveau de lumière de la salle : un faisceau ne se devine
+ * que sur un fond sombre. Pleine dans une salle tamisée (niveau 0,5 ou moins), nulle dans une salle claire
+ * (0,85 ou plus) : là, seules les flaques de lumière sur le socle et au sol restent.
  */
-function accentLight(strength: number, plinth: number, top: number) {
-  const mats = accentMaterial(strength);
+export function accentBeam(decor: Pick<Decor, 'light'>): number {
+  return THREE.MathUtils.clamp((0.85 - decor.light.level) / 0.35, 0, 1);
+}
+
+/**
+ * Éclairage d'accent d'un objet sur socle (décor `light.accents`) : une flaque de lumière au sol, une autre
+ * sur le dessus du socle, et, dans une salle tamisée, le faisceau qui tombe du plafond. Peint, comme le halo
+ * d'un tableau. `top` : hauteur du plafond ; `beam` : part visible du faisceau (voir `accentBeam`).
+ * Renvoie de quoi le mettre à la mesure du socle.
+ */
+function accentLight(strength: number, plinth: number, top: number, beam: number) {
+  const mats = accentMaterial(strength, beam);
   const flat = () => {
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mats.pool);
     mesh.rotation.x = -Math.PI / 2;
@@ -129,19 +140,24 @@ function accentLight(strength: number, plinth: number, top: number) {
   floor.position.y = 0.006;
   const table = flat();
   table.position.y = plinth + 0.002;
-  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 1, Math.max(0.1, top - plinth), 24, 1, true), mats.beam);
-  beam.position.y = (plinth + top) / 2;
-  beam.raycast = noRaycast;
   const group = new THREE.Group();
   group.name = 'accent';
-  group.add(floor, table, beam);
+  group.add(floor, table);
+  let cone: THREE.Mesh | null = null;
+  if (beam > 0) {
+    cone = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 1, Math.max(0.1, top - plinth), 24, 1, true), mats.beam);
+    cone.name = 'faisceau';
+    cone.position.y = (plinth + top) / 2;
+    cone.raycast = noRaycast;
+    group.add(cone);
+  }
   return {
     group,
     /** `side` : côté du socle. */
     fit(side: number) {
       floor.scale.set(side * 3.2, side * 3.2, 1);
       table.scale.set(side * 1.35, side * 1.35, 1);
-      beam.scale.set(side * 0.55, 1, side * 0.55);
+      cone?.scale.set(side * 0.55, 1, side * 0.55);
     },
   };
 }
@@ -334,7 +350,7 @@ export function placeSculpture(cfg: SculptureConfig, room: RoomConfig, parent: T
   const shadow = groundShadow(1, 1);
   art.add(plinth, card, shadow);
   // Éclairage d'accent, si le décor le demande : l'objet est le point le plus clair de la salle.
-  const accent = (decor.light.accents ?? 0) > 0 ? accentLight(decor.light.accents!, cfg.plinth, clearHeight(room, decor)) : null;
+  const accent = (decor.light.accents ?? 0) > 0 ? accentLight(decor.light.accents!, cfg.plinth, clearHeight(room, decor), accentBeam(decor)) : null;
   if (accent) art.add(accent.group);
   let hood: THREE.Group | null = null;
   if (ctx.quality.shadows) {

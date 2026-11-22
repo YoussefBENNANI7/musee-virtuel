@@ -58,6 +58,8 @@ export interface Building {
 }
 
 const SKYLIGHT_WELL = 0.7;
+/** Traverses fines d'une verrière (`bars: 'fine'`) : largeur et hauteur, en mètres. */
+const FINE_BARS: [number, number] = [0.022, 0.045];
 const noRaycast = () => {};
 
 /** Positions des sommets le long d'une longueur : serrées près des bords, où la lumière varie vite. */
@@ -455,13 +457,17 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
     glass.userData.verriere = room.id;
     ceiling.add(glass);
 
-    // Fines traverses du vitrage, espacées d'environ un mètre et demi.
+    // Fines traverses du vitrage, espacées d'environ un mètre et demi. Vues d'en bas, elles se découpent en sombre
+    // sur le ciel ; plus fines et peintes comme le plafond (`bars: 'fine'`), elles ne barrent plus la verrière.
     const [cols, rows] = skylightBars(ow, od);
+    const fine = room.ceiling?.type === 'skylight' && room.ceiling.bars === 'fine';
+    const [thick, tall] = fine ? FINE_BARS : [0.04, 0.06];
+    const barMat = fine ? new THREE.MeshBasicMaterial({ color: new THREE.Color(decor.colors.ceiling).multiplyScalar(0.84), toneMapped: false }) : trimMat;
     const bars = (span: number, across: number, count: number, alongX: boolean) => {
       for (let i = 1; i < count; i++) {
         const at = -span / 2 + (span * i) / count;
-        const bar = new THREE.Mesh(new THREE.BoxGeometry(alongX ? 0.04 : across, 0.06, alongX ? across : 0.04), trimMat);
-        bar.position.set(alongX ? at : 0, SKYLIGHT_WELL - 0.03, alongX ? 0 : at);
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(alongX ? thick : across, tall, alongX ? across : thick), barMat);
+        bar.position.set(alongX ? at : 0, SKYLIGHT_WELL - tall / 2, alongX ? 0 : at);
         ceiling.add(bar);
       }
     };

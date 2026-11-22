@@ -349,6 +349,36 @@ Demande du porteur, le 21 novembre 2026, capture du Hall des Guichets à l'appui
 - **Suite prévue une fois le choix fait** : appliquer la direction retenue au hall par un paquet de mise à jour ; si c'est la direction sombre, ajouter de vrais projecteurs d'accent au calcul de lumière par Blender ; faire entrer les quatre options dans l'éditeur ; reprendre la lisibilité des cartels ; puis décliner le principe dans les deux autres salles et dans les autres musées.
 - **Piège de test** : pour cliquer sur une sculpture, `clickArtwork` vise le milieu du socle ; à 2 m, ce point tombe sous la barre du bas de l'écran et le clic n'ouvre rien. Garder la distance par défaut (3 m).
 
+### Hall des Guichets : la direction B retenue, avec trois retouches (22 novembre 2026)
+
+Choix du porteur, le 22 novembre 2026, sur la recommandation de Claude : **la direction B, « l'atelier clair »**, avec les trois retouches proposées. Raisons données : un hall des guichets est l'espace public et clair de la banque ; la direction sombre se lit mal sur téléphone ; ses faisceaux peints paraissent artificiels de près et demanderaient de vrais projecteurs dans le calcul de lumière. **L'esprit de la direction A est gardé pour la chambre forte** (déjà sombre : on passe de la lumière du public au secret du coffre), à proposer plus tard.
+
+- **Retouche 1, des objets plus présents** : éclairage d'accent léger (`accents` 0,7) et lumière générale un peu baissée (niveau 0,92) : une tache de lumière chaude sur chaque socle et au sol. **Le moteur ne montre plus le faisceau dans une salle claire** (`accentBeam`, `src/engine/artworks.ts`) : il se voit en entier jusqu'au niveau 0,5, plus du tout à partir de 0,85, et s'estompe entre les deux (les salles « nuit », au niveau 0,55, gardent 86 % de leur faisceau).
+- **Retouche 2, une verrière plus légère** : nouvelle option `"ceiling": {"type": "skylight", "bars": "fine"}` : traverses de 2,2 cm sur 4,5 au lieu de 4 sur 6, de la couleur du plafond (légèrement assombrie) au lieu de se découper en noir sur le ciel. Les autres verrières ne changent pas.
+- **Retouche 3, des zones au sol resserrées** : chaque zone suit ses socles, avec 14 cm de marge tout autour (au lieu de grands tapis de 3,3 m sur 1,3).
+- **Fresque** : sa légende ne dit plus « de Casablanca » : le lieu n'est pas établi. Titre « La Bourse de commerce », lieu, date et légende à préciser avec la commissaire.
+- **Paquet n° 18** (`maj-120-ans-18.zip`, Drive, « Mises-a-jour ») : il fait passer la salle de son état actuel (paquets 1 à 17) à la direction B retouchée : mise en scène de la salle (décor, verrière, comptoir sur le seul mur ouest, banc, zones, lettrage), place, socle et cloche des quatorze objets, fresque ajoutée avec son image. Essayé sur une copie du musée de travail : la salle obtenue est identique à celle de la direction B, les autres salles ne changent pas. **Il demande le moteur de ce lot** : les paquets savent désormais retoucher la mise en scène d'une salle (`"salles"` dans `maj.json`, `scripts/maj.mjs`), jamais son plan ni ses œuvres ; un moteur plus ancien ignorerait cette partie, d'où la vérification dans le bloc ci-dessous.
+- Fabriqué par `paquet-18/fabrique.py` (Drive, « Essais », `hall-direction-b-outils.zip`), qui compare la salle du musée de travail à celle de la direction B et refuse tout écart hors de la mise en scène.
+
+À faire sur le Mac, une fois ce lot versé dans `main` :
+
+```bash
+cd ~/musee-virtuel
+git pull
+```
+
+```bash
+cd ~/musee-virtuel
+if grep -q ROOM_FIELDS scripts/maj.mjs; then npm run maj -- 120-ans ~/Downloads/maj-120-ans-18.zip; else echo "✗ Le moteur n'est pas à jour : faites d'abord git pull"; fi
+```
+
+```bash
+cd ~/musee-virtuel
+npm run lumiere -- 120-ans --salle guichets
+```
+
+Puis `npm run dev` et http://localhost:5173/?m=120-ans.
+
 ### Voix de l'audioguide : décisions prises, production à venir
 
 Le moteur lit déjà un enregistrement par œuvre et par langue quand on lui en fournit un (champ `audio` de l'œuvre) ; sans lui, il fait lire le texte par la voix du navigateur. Il ne manque que les fichiers.
@@ -631,7 +661,7 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
-- **Choisir la direction d'aménagement du Hall des Guichets** (21 novembre 2026) : A « l'écrin » (salle sombre, faisceaux sur les objets), B « l'atelier clair » (verrière, pierre pâle, zones vert profond), ou un mélange ; dire si le plan en quatre thèmes lui convient, et ce qui le gêne. Page de comparaison : https://claude.ai/artifact/AJ1icDtf1XVzLRYsVXcgQ7. Voir « Scénographie : quatre options du moteur, et deux directions pour le Hall des Guichets ». Rien n'est appliqué tant qu'il n'a pas choisi. À relire avec lui : les quatre titres de groupe et le texte d'introduction, provisoires ; la photographie d'archive choisie pour la fresque.
+- **Hall des Guichets, direction B retouchée** (22 novembre 2026) : donner son accord pour verser le lot dans `main`, puis appliquer le paquet n° 18 sur son Mac (bloc dans « Hall des Guichets : la direction B retenue, avec trois retouches ») et dire si la salle lui convient. À relire avec lui : les quatre titres de groupe et le texte d'introduction, provisoires ; la photographie d'archive de la fresque et sa légende, à préciser avec la commissaire. Ensuite : décliner la charte dans les autres salles (l'écrin pour la chambre forte), faire entrer les options de mise en scène dans l'éditeur, rendre les cartels lisibles.
 - **Confirmer la sauvegarde `musees-sauvegarde-v2`** sur son Bureau (l'étiquette `v2`, elle, est créée et vérifiée).
 - **Appliquer le paquet n° 8** (`npm run maj -- 120-ans ~/Downloads/maj-120-ans-08.zip`, puis `npm run lumiere -- 120-ans --salle guichets`) et dire si l'ensemble lui convient : niveau de détail, hauteur des socles, implantation.
 - **Objets plats** (posés à plat sur leur socle, comme dans l'exposition) : les garder ainsi, ou les présenter inclinés sur un petit pupitre ? L'examen les montre déjà de dessus.
