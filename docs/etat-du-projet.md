@@ -459,7 +459,7 @@ Demande du porteur, le 23 novembre 2026 : « que les pages du livre soient plus 
 - **Ce qui change** (`grand-livre.py`, Blender) : la seule forme des feuilles (réglages `REGLAGES` : à droite de 54° pour la feuille du dessus à 9° pour celle du dessous, à gauche de 36° à 0°, boucle au pli, léger affaissement vers la tranche), et une ombre plus douce entre les feuilles. Pages imprimées, couverture, socle et place du livre : inchangés. Le livre mesure 2,15 × 1,23 × **1,195 m** (0,619 m avant) : le champ `height` de l'œuvre suit, car le musée met le modèle à cette hauteur.
 - **Effet dans la salle** : vu de l'entrée, la page de droite cache un peu le bas de la vitrine de 1904, au fond.
 - **Vérifié** : trois essais comparés aux trois photos ; captures dans la chambre forte, avant et après, sur ordinateur et sur téléphone (musées d'essai sans billets ni monnaies, faute de leurs images ici). Paquet essayé sur une copie du musée dans l'état du paquet n° 19 : seuls le modèle et la hauteur du livre changent ; une seconde application ne change rien de plus.
-- **Paquet n° 21** (`maj-120-ans-21.zip`, Drive, « Mises-a-jour », 1,2 Mo) : `models/grand-livre.glb` et `height` de l'œuvre `grand-livre`. Sans changement de moteur. Outils, réglages et comparaisons : `livre-ouvert-outils.zip` (Drive, « Essais »).
+- **Paquet n° 21** (`maj-120-ans-21.zip`, Drive, « Mises-a-jour », 1,2 Mo) : `models/grand-livre.glb` et `height` de l'œuvre `grand-livre`. Sans changement de moteur. **Appliqué sur son Mac le 23 novembre 2026.** Outils, réglages et comparaisons : `livre-ouvert-outils.zip` (Drive, « Essais »).
 
 ### Voix de l'audioguide : décisions prises, production à venir
 
@@ -743,7 +743,7 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
-- **Paquet n° 21, Grand Livre plus ouvert** (23 novembre 2026) : l'appliquer, recalculer la lumière de la chambre forte, et dire si le livre lui convient (ouverture, hauteur, vitrine de 1904 en partie cachée vue de l'entrée). Commandes : `cd ~/musee-virtuel && npm run maj -- 120-ans ~/Downloads/maj-120-ans-21.zip`, puis `npm run lumiere -- 120-ans`.
+- ~~Appliquer le paquet n° 21 (Grand Livre plus ouvert)~~ : fait sur son Mac le 23 novembre 2026 (« c'est fait, ça marche ! »). Reste ouvert : un réglage plus ou moins ouvert s'il le souhaite (la page de droite cache un peu la vitrine de 1904 vue de l'entrée).
 - ~~Appliquer les paquets n° 9 à 20~~ : fait le 23 novembre 2026, voir « Rattrapage des paquets 9 à 20 ».
 - **Chambre forte et Grand Livre** (22 novembre 2026) : lot versé dans `main` le 22 novembre 2026 sur son feu vert ; appliquer les paquets n° 19 et 20 (bloc ci-dessous, essayé sur une copie dans l'état d'avant, deux fois : il applique puis reconnaît les paquets déjà appliqués) sur son Mac (bloc dans « Chambre forte : direction B retenue, coupole atténuée ; Grand Livre reconstruit ») et dire si la salle et le livre lui conviennent. À faire valider par la commissaire : les titres des séries de billets et des vitrines ; le « dès 2024 » de la légende du livre. S'il veut des photos du livre plus nettes : recharger son crédit Google (AI Studio), ou fournir les images d'origine du livre.
 - **Paquet n° 20** (recto net du billet de 5 dirhams) : à appliquer après le n° 19 ; dire si la pièce de 500 francs 1956 envoyée le 22 novembre 2026 fait partie de l'exposition.
