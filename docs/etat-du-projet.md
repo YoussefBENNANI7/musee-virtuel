@@ -444,6 +444,23 @@ Le porteur a transmis un inventaire de pistes (« Recherche d'images — monnaie
 - **Pièce de 500 francs 1956 (Mohammed V)** : elle n'est pas dans l'inventaire des monnaies de l'exposition. Non ajoutée ; question posée au porteur.
 - **L'inventaire** confirme les pistes déjà suivies le 20 novembre 2026 (identification des 54 objets, catalogues de RealBanknotes, dont les conditions interdisent la collecte automatique). Pistes nouvelles à examiner si le porteur le souhaite : le dinar mérinide d'Abou Yahya sur Wikimedia (CC BY-SA 4.0, 916 points, type proche du n° 37) et les fiches Numista des billets (images souvent sous licence non commerciale).
 
+### Rattrapage des paquets 9 à 20 sur le Mac du porteur (23 novembre 2026)
+
+- **Constat** : sur son Mac, la chambre forte et le Grand Livre étaient restés dans l'ancien état. Le paquet n° 19 était refusé : « œuvre inconnue dans ce musée : « billet-10-francs-1943 » ». **Les paquets n° 9 à 17 n'avaient jamais été appliqués** (dans le Drive, aucun n'avait été ouvert, contrairement aux n° 1 à 8 et 18 à 20). L'ancien bloc cachait la raison des refus (`> /dev/null`).
+- **Vérifié avant de les appliquer après le n° 18** : les n° 11 à 17 ne changent que des modèles 3D, un titre et des mentions (`credit`), jamais la place, le socle ou la cloche des objets ; les n° 9, 10 et 13 ne touchent que les billets et les monnaies. Le hall réaménagé par le n° 18 ne bouge donc pas.
+- **Bloc donné, qui affiche la raison d'un refus** : la fonction `paquet` des blocs précédents, avec `r=$(npm run -s maj -- 120-ans "$f" 2>&1)` et `echo "$r" | grep "✗"` en cas d'échec, enchaînée de 09 à 20 (repères : 09 `billet-10-francs-1943`, 10 `billet-10000-francs`, 11 `Téléphone fixe à manivelle`, 13 `coinBack`, 19 `"dome"`, 20 `AA/73` ; 12, 14 à 17 se réappliquent sans dommage). Liens Drive donnés un par un : un téléchargement groupé depuis le Drive produit une seule archive que `npm run maj` ne lit pas.
+- **Résultat** : le porteur confirme le 23 novembre 2026 que la chambre forte et le nouveau livre s'affichent (« ça marche maintenant »).
+
+### Grand Livre : pages plus ouvertes, comme dans l'exposition (23 novembre 2026)
+
+Demande du porteur, le 23 novembre 2026 : « que les pages du livre soient plus ouvertes, comme sur la photo originale, sans toucher à autre chose ».
+
+- **Écart constaté** (rendus aux angles des photos IMG_4898, 4899 et 4900 du Drive) : le livre du paquet n° 19 retombait presque à plat. Sur les photos, les feuilles sont raides : chacune part presque à la verticale du pli, s'arrondit, puis reste presque droite ; elles s'étalent en éventail, très ouvert à droite, plus bas à gauche.
+- **Ce qui change** (`grand-livre.py`, Blender) : la seule forme des feuilles (réglages `REGLAGES` : à droite de 54° pour la feuille du dessus à 9° pour celle du dessous, à gauche de 36° à 0°, boucle au pli, léger affaissement vers la tranche), et une ombre plus douce entre les feuilles. Pages imprimées, couverture, socle et place du livre : inchangés. Le livre mesure 2,15 × 1,23 × **1,195 m** (0,619 m avant) : le champ `height` de l'œuvre suit, car le musée met le modèle à cette hauteur.
+- **Effet dans la salle** : vu de l'entrée, la page de droite cache un peu le bas de la vitrine de 1904, au fond.
+- **Vérifié** : trois essais comparés aux trois photos ; captures dans la chambre forte, avant et après, sur ordinateur et sur téléphone (musées d'essai sans billets ni monnaies, faute de leurs images ici). Paquet essayé sur une copie du musée dans l'état du paquet n° 19 : seuls le modèle et la hauteur du livre changent ; une seconde application ne change rien de plus.
+- **Paquet n° 21** (`maj-120-ans-21.zip`, Drive, « Mises-a-jour », 1,2 Mo) : `models/grand-livre.glb` et `height` de l'œuvre `grand-livre`. Sans changement de moteur. Outils, réglages et comparaisons : `livre-ouvert-outils.zip` (Drive, « Essais »).
+
 ### Voix de l'audioguide : décisions prises, production à venir
 
 Le moteur lit déjà un enregistrement par œuvre et par langue quand on lui en fournit un (champ `audio` de l'œuvre) ; sans lui, il fait lire le texte par la voix du navigateur. Il ne manque que les fichiers.
@@ -726,6 +743,8 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
+- **Paquet n° 21, Grand Livre plus ouvert** (23 novembre 2026) : l'appliquer, recalculer la lumière de la chambre forte, et dire si le livre lui convient (ouverture, hauteur, vitrine de 1904 en partie cachée vue de l'entrée). Commandes : `cd ~/musee-virtuel && npm run maj -- 120-ans ~/Downloads/maj-120-ans-21.zip`, puis `npm run lumiere -- 120-ans`.
+- ~~Appliquer les paquets n° 9 à 20~~ : fait le 23 novembre 2026, voir « Rattrapage des paquets 9 à 20 ».
 - **Chambre forte et Grand Livre** (22 novembre 2026) : lot versé dans `main` le 22 novembre 2026 sur son feu vert ; appliquer les paquets n° 19 et 20 (bloc ci-dessous, essayé sur une copie dans l'état d'avant, deux fois : il applique puis reconnaît les paquets déjà appliqués) sur son Mac (bloc dans « Chambre forte : direction B retenue, coupole atténuée ; Grand Livre reconstruit ») et dire si la salle et le livre lui conviennent. À faire valider par la commissaire : les titres des séries de billets et des vitrines ; le « dès 2024 » de la légende du livre. S'il veut des photos du livre plus nettes : recharger son crédit Google (AI Studio), ou fournir les images d'origine du livre.
 - **Paquet n° 20** (recto net du billet de 5 dirhams) : à appliquer après le n° 19 ; dire si la pièce de 500 francs 1956 envoyée le 22 novembre 2026 fait partie de l'exposition.
 
