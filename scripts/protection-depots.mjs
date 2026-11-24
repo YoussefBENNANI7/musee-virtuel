@@ -14,19 +14,27 @@ import { join, resolve } from 'node:path';
  * ne distingue pas .GIT de .git).
  */
 export function cheminInterdit(url) {
-  let path = String(url ?? '').split(/[?#]/)[0];
-  for (let i = 0; i < 5; i++) {
-    let next;
-    try {
-      next = decodeURIComponent(path);
-    } catch {
-      // Une adresse mal encodée n'est jamais celle d'un fichier du musée.
-      return true;
+  const path = String(url ?? '').split(/[?#]/)[0];
+  // Chaque partie de l'adresse est décodée à part : un « % » ailleurs dans l'adresse n'empêche pas de voir le .git.
+  for (const segment of path.split('/')) {
+    let part = segment;
+    for (let i = 0; i < 5; i++) {
+      let next;
+      try {
+        next = decodeURIComponent(part);
+      } catch {
+        // Une adresse mal encodée n'est jamais celle d'un fichier du musée. Une fois décodée, en revanche,
+        // une partie peut contenir un « % » légitime (« remise 50%.webp ») : on garde la forme obtenue.
+        if (i === 0) return true;
+        break;
+      }
+      if (next === part) break;
+      part = next;
     }
-    if (next === path) break;
-    path = next;
+    // Une barre encodée (%2F) peut cacher plusieurs parties dans une seule.
+    if (part.split(/[\\/]+/).some((piece) => piece.trim().toLowerCase() === '.git')) return true;
   }
-  return path.split(/[\\/]+/).some((part) => part.trim().toLowerCase() === '.git');
+  return false;
 }
 
 /** Retire du dossier tout ce qui s'appelle .git (dossier ou fichier), à toute profondeur. Renvoie les chemins retirés. */

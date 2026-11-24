@@ -19,6 +19,8 @@ describe('adresses refusées par le serveur du musée', () => {
     '/museums/120-ans/%252Egit/config',
     '/museums/120-ans/.git%2Fconfig',
     '/museums/120-ans/.git%20/config',
+    // Un « % » ailleurs dans l'adresse n'empêche pas de voir le .git.
+    '/museums/120-ans/%252Egit/remise%252050%25.txt',
     '/./museums/120-ans/.git/HEAD',
     // Une adresse mal encodée n'est jamais celle d'un fichier du musée.
     '/museums/%E0%A4%A/museum.json',
@@ -37,6 +39,8 @@ describe('adresses servies normalement', () => {
     '/museums/120-ans/images/git.webp',
     '/museums/120-ans/.gitignore',
     '/museums/120-ans/models/digit.glb',
+    // Un nom de fichier qui contient « % » : une fois décodé, il ne se décode plus.
+    '/museums/120-ans/images/remise%2050%25.webp',
   ])('%s', (url) => {
     expect(cheminInterdit(url)).toBe(false);
   });
