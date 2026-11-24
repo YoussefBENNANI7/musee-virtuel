@@ -29,10 +29,17 @@ test.afterEach(clean);
 const saved = (page: Page) => expect(page.locator('#status')).toHaveText('Enregistré', { timeout: 30_000 });
 
 /**
- * Remplace l'aperçu en 3D par une page vide. Sans carte graphique, chaque rechargement de l'aperçu
- * coûte une quinzaine de secondes aux tests ; ceux qui ne vérifient que l'éditeur s'en passent.
+ * Remplace l'aperçu en 3D par une page vide : à chaque chargement, ou seulement aux `times` premiers.
+ *
+ * L'aperçu est un cadre de la page de l'éditeur, de même origine : les deux partagent un seul fil
+ * d'exécution. Sans carte graphique, le navigateur calcule au processeur les textures que le moteur
+ * dessine et adoucit d'un flou (la pierre des sols, le badigeon des murs) : chaque construction de
+ * l'aperçu gèle ainsi la page de l'éditeur, de 15 à 20 secondes, plus de 30 quand d'autres tests
+ * dessinent en même temps, et toute vérification du test attend la fin du gel. Les tests qui ne
+ * vérifient que l'éditeur s'en passent.
  */
-const withoutPreview = (page: Page) => page.route(/\/\?m=[^&]+&apercu=1/, (route) => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Aperçu coupé</title>' }));
+const withoutPreview = (page: Page, times?: number) =>
+  page.route(/\/\?m=[^&]+&apercu=1/, (route) => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Aperçu coupé</title>' }), { times });
 
 /** Crée un musée depuis l'accueil de l'éditeur et renvoie son identifiant. */
 async function create(page: Page, plan: string) {
@@ -50,6 +57,9 @@ async function create(page: Page, plan: string) {
 test('créer un musée, y déposer des photos : elles s’accrochent seules et le musée s’ouvre', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
+  // Le premier aperçu, celui du musée encore vide, ne sert pas au test : il est coupé, sinon les photos
+  // déposées attendraient la fin de son gel (voir withoutPreview). Les suivants montrent le vrai musée.
+  await withoutPreview(page, 1);
   await page.goto('/editeur.html');
   // L'accueil liste les musées du dossier, dont la démonstration.
   await expect(page.locator('.museums strong', { hasText: 'Musée des Horizons' })).toBeVisible();
@@ -62,9 +72,14 @@ test('créer un musée, y déposer des photos : elles s’accrochent seules et l
 
   // Trois photos déposées : trois œuvres, réparties sur les murs sans rien régler.
   await page.setInputFiles('#photos', [file('portrait de famille.webp'), file('IMG_2041.webp'), file('nature_morte.webp')]);
-  // Sans carte graphique, le premier chargement de l'aperçu en 3D occupe la page une vingtaine de
-  // secondes quand un autre test dessine en même temps : le dépôt attend la fin de ce chargement.
-  await expect(page.locator('.work')).toHaveCount(3, { timeout: 60_000 });
+  // L'éditeur les enregistre, puis recharge l'aperçu : le vrai musée s'y ouvre, sans erreur de configuration.
+  // L'aperçu se vérifie en premier : le nom du musée s'y inscrit dans la tâche même qui gèle la page, et
+  // ne se lit qu'une fois ce gel fini. L'éditeur, vérifié ensuite, est alors libre.
+  const preview = page.frameLocator('#preview');
+  await expect(preview.locator('#museum-name')).toHaveText(name, { timeout: 60_000 });
+  await expect(preview.locator('#config-errors')).toBeHidden();
+  await expect(preview.locator('#welcome')).toHaveCount(0);
+  await expect(page.locator('.work')).toHaveCount(3);
   await saved(page);
   // Les œuvres sont rangées par mur : l'ordre à l'écran n'est pas celui du dépôt.
   expect((await page.locator('.work-title').allInnerTexts()).sort()).toEqual(['Nature morte', 'Portrait de famille', 'Sans titre']);
@@ -82,18 +97,13 @@ test('créer un musée, y déposer des photos : elles s’accrochent seules et l
   const places = works.map((a: any) => `${a.wall}:${a.offset}`);
   expect(new Set(places).size).toBe(3);
 
-  // Le vrai musée s'ouvre dans l'aperçu, sans erreur de configuration.
-  const preview = page.frameLocator('#preview');
-  await expect(preview.locator('#museum-name')).toHaveText(name, { timeout: 60_000 });
-  await expect(preview.locator('#config-errors')).toBeHidden();
-  await expect(preview.locator('#welcome')).toHaveCount(0);
-  // Une modification enregistrée se voit dans l'aperçu dès que le champ est quitté.
+  // Une modification enregistrée se voit dans l'aperçu dès que le champ est quitté (là aussi, l'aperçu d'abord).
   await page.locator('#tabs button', { hasText: 'Musée' }).click();
   await page.locator('label.field', { hasText: 'Nom du musée' }).locator('input').first().fill('Essai renommé');
   await page.locator('#tabs button', { hasText: 'Œuvres' }).click();
+  await expect(preview.locator('#museum-name')).toHaveText('Essai renommé', { timeout: 60_000 });
   await saved(page);
   expect(onDisk(id).name.fr).toBe('Essai renommé');
-  await expect(preview.locator('#museum-name')).toHaveText('Essai renommé', { timeout: 60_000 });
   // Les cartels restent à remplir : l'éditeur le dit en clair, une ligne par œuvre.
   await page.locator('#tabs button', { hasText: 'À compléter (3)' }).click();
   await expect(page.locator('.issues li')).toHaveCount(3);
