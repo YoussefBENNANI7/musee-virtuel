@@ -499,6 +499,25 @@ But : que l'ouverture d'un musée ne fige plus la page une quinzaine de secondes
 - **Vu sur le Mac du porteur** (24 novembre 2026, premier essai sur un appareil avec carte graphique) : après `git pull`, `npm run check` passe (321 tests) ; le musée des 120 ans, dont les salles ont la pierre et le badigeon, « s'affiche pareil », et l'éditeur n'affiche pas de bandeau « Lumière à recalculer ».
 - **Règle pour la suite** : ne plus flouter une grande texture avec le filtre du canvas ; passer par `nuages.ts` (fonction `clouds` de `textures.ts`).
 
+### Grand Livre : creux arrondi et pages bombées (24 novembre 2026)
+
+Demande du porteur : « sur les photos originales du livre, les feuilles sont légèrement arrondies à l'ouverture ; ce n'est pas le cas dans le musée ». Comparaison montrée et confirmée (« oui c'est ça ») : sur les photos IMG_4898 à 4900 (Drive, dossier hd), le papier s'enroule au pli et le creux du livre est rond ; dans le musée, les feuilles partaient en V serré, comme des planches.
+
+- **Travail dans le dépôt privé du musée** (`YoussefBENNANI7/musee-120-ans`, cloné ici, monté dans `public/museums/120-ans` le temps des essais), sur la branche **`claude/livre-arrondi`**, **pas encore versée dans `main`** du musée : le Mac du porteur ne la reçoit pas encore par `npm run musee -- synchroniser`.
+- **Ce qui change** (outil Blender `grand-livre.py`, repris de `livre-ouvert-outils.zip`) : la seule forme des feuilles. Au pli, chaque feuille part presque droite, penchée vers le milieu (125° pour la feuille du dessus), puis s'enroule au rayon de 10 à 12 cm avant de s'ouvrir ; les feuilles forment au pli des courbes emboîtées. La page continue de se bomber jusqu'à la tranche (75° à gauche, où elle forme une voûte ; 45° à droite). Pages imprimées, couverture, socle, place : inchangés. Le livre mesure 2,15 × 1,22 × **1,161 m** (1,195 avant) : champ `height` de l'œuvre `grand-livre` mis à jour.
+- **Méthode** : trois réglages essayés, rendus par Blender sous les angles des trois photos et mis côte à côte (`rendu.py`, `planche.py`) ; le troisième retenu.
+- **Lumière** : la hauteur du livre entre dans l'empreinte de la chambre forte ; sa lumière a été recalculée ici (`npm run lumiere -- 120-ans --salle chambre-forte`, 4 minutes). Le porteur n'a rien à recalculer.
+- **Vérifié** : captures dans la chambre forte, avant et après, de face, de l'avant droit et de l'avant gauche, et sur téléphone ; aucune erreur dans la page, pas d'alerte de lumière.
+- **Aperçu remis au porteur** : https://claude.ai/artifact/4x1XJKrA95dBHQp683CAuq. **Outils** : `livre-arrondi-outils.zip` (Drive, « Essais ») : `grand-livre.py` avec les réglages retenus, `rendu.py`, `planche.py`, notice et comparaisons.
+
+### Voix de la commissaire : révision (24 novembre 2026)
+
+Demande du porteur : réviser les dix extraits « Écouter la commissaire » du musée des 120 ans (fichiers `audio/commissaire-*.fr.mp3`, tirés du film de l'exposition) et en couper quelques anomalies.
+
+- **Page d'écoute** remise au porteur : https://claude.ai/artifact/9pGU9WPVXbfKBVCnEyPKUh. Chaque extrait a sa forme d'onde ; on y marque les passages à couper (boutons « Début » et « Fin », ou en glissant), on les écoute, et « Écouter sans les coupes » fait entendre le résultat. Les coupes sont enregistrées dans la page (base de l'artifact, collections `coupes` et `extraits`) : une conversation les lit directement. Repères automatiques : silences de plus de 1,2 s, début abrupt (balance), fin abrupte (généalogie, quotidien bancaire).
+- **Transcription minutée non faite** : Gemini a répondu « 402 » (crédit prépayé épuisé) ; les modèles libres de transcription ne sont pas joignables depuis l'environnement de travail.
+- **Résultat du 24 novembre 2026** : le porteur a coché « J'ai tout écouté » pour les dix extraits ; **aucune coupe n'est enregistrée**. À confirmer avec lui : rien à couper, ou des coupes qui n'ont pas été enregistrées.
+
 ### Fontaine du patio marocain : refaite (24 novembre 2026)
 
 Demande du porteur, le 24 novembre 2026 : retravailler le design de la fontaine du Patio marocain. Diagnostic donné sur captures : eau vert opaque sans reflet, pas de jet alors qu'on entend l'eau, vasque lisse « en bain d'oiseaux », zellige identique à celui des murs et trop grand pour des parois de 42 cm, margelle plate sans épaisseur, trous noirs dans les creux de l'étoile vue de près (le bassin n'avait pas de parois intérieures). Trois pistes proposées (A : garder la fontaine et la soigner ; B : bassin de médersa plus sobre ; C : fontaine murale). **Le porteur a choisi la piste A.** Travail fait sur la branche `claude/adoring-keller-1rlnk8`, **versé dans `main` le 24 novembre 2026** sur le feu vert du porteur, qui a vu l'aperçu (« c'est validé »).
@@ -799,6 +818,8 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
+- **Son avis sur le Grand Livre arrondi** (24 novembre 2026), sur l'aperçu https://claude.ai/artifact/4x1XJKrA95dBHQp683CAuq, puis son feu vert pour verser la branche `claude/livre-arrondi` dans `main` du dépôt du musée ; il le recevra ensuite par `npm run musee -- synchroniser`.
+- **Voix de la commissaire** : dire s'il n'y a rien à couper (les dix extraits sont cochés « écoutés », aucune coupe enregistrée), ou refaire ses marques sur https://claude.ai/artifact/9pGU9WPVXbfKBVCnEyPKUh en appuyant sur « Enregistrer la coupe ».
 - ~~Son avis sur la nouvelle fontaine du patio~~ : validée le 24 novembre 2026 sur l'aperçu https://claude.ai/artifact/9GcKcuHRtXaLJFbAeA6Gxs, et versée dans `main` le même jour. Sur son Mac : `git checkout main`, puis `git pull`. Restent ouverts, s'il le souhaite : couleurs du zellige, hauteur du jet, teinte de l'eau, forme de la vasque.
 - ~~Dépôt privé du musée des 120 ans~~ : fait le 24 novembre 2026, voir « Dépôt privé pour chaque musée client ». Le musée est relié à `YoussefBENNANI7/musee-120-ans` ; plus de paquets par le Drive pour ce musée. **Sa nouvelle habitude** : `npm run musee -- synchroniser` (dans `~/musee-virtuel`) après avoir travaillé sur le musée (éditeur, lumière), et quand une conversation lui dit avoir changé le musée. Le jeton de son Mac expire le 24 novembre 2027.
 - ~~Nuages des textures : regarder l'aperçu avant/après~~ : fait le 24 novembre 2026 (« aucune différence visible ») ; lot versé dans `main` le même jour. Fait aussi sur son Mac le même jour : `git pull`, `npm run check` (321 tests), et le musée des 120 ans « s'affiche pareil, pas de bandeau ».
