@@ -17,7 +17,8 @@
     "licences": "node scripts/licences.mjs",
     "lumiere": "node scripts/lumiere.mjs",
     "lumiere:installer": "node scripts/lumiere-installer.mjs",
-    "maj": "node scripts/maj.mjs"
+    "maj": "node scripts/maj.mjs",
+    "musee": "node scripts/musee.mjs"
   },
   "dependencies": {
     "three": "^0.187.0"

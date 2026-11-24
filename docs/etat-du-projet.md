@@ -1,6 +1,6 @@
 # Musée virtuel personnalisable : état du projet
 
-Mis à jour le 21 novembre 2026. Ce document permet de reprendre le projet dans une nouvelle conversation sans rien perdre : vision, décisions prises, avancement, points en attente et organisation du code.
+Mis à jour le 24 novembre 2026. Ce document permet de reprendre le projet dans une nouvelle conversation sans rien perdre : vision, décisions prises, avancement, points en attente et organisation du code.
 
 ---
 
@@ -461,6 +461,16 @@ Demande du porteur, le 23 novembre 2026 : « que les pages du livre soient plus 
 - **Vérifié** : trois essais comparés aux trois photos ; captures dans la chambre forte, avant et après, sur ordinateur et sur téléphone (musées d'essai sans billets ni monnaies, faute de leurs images ici). Paquet essayé sur une copie du musée dans l'état du paquet n° 19 : seuls le modèle et la hauteur du livre changent ; une seconde application ne change rien de plus.
 - **Paquet n° 21** (`maj-120-ans-21.zip`, Drive, « Mises-a-jour », 1,2 Mo) : `models/grand-livre.glb` et `height` de l'œuvre `grand-livre`. Sans changement de moteur. **Appliqué sur son Mac le 23 novembre 2026.** Outils, réglages et comparaisons : `livre-ouvert-outils.zip` (Drive, « Essais »).
 
+### Dépôt privé pour chaque musée client (24 novembre 2026)
+
+- **Décision du porteur (24 novembre 2026)** : chaque musée client a son propre dépôt GitHub privé, qui devient son seul endroit de référence. Le dépôt du moteur reste public et ne reçoit jamais de contenu client. Raison : les paquets passés par le Drive se sont perdus en route (n° 9 à 17 jamais appliqués, téléchargements groupés que `npm run maj` ne lit pas), et le musée était éparpillé entre le Mac, le Drive, la copie du Bureau, les sauvegardes et les paquets. Avec un dépôt, une seule commande le met à jour dans les deux sens, et chaque changement est gardé dans l'historique.
+- **Poids mesuré sur le Mac (24 novembre 2026)** : 51 Mo pour le musée des 120 ans, aucun fichier au-delà de 50 Mo (GitHub refuse un fichier de plus de 100 Mo). La démonstration (129 Mo) reste dans le dépôt du moteur.
+- **Installation retenue** : le dossier `public/museums/<musée>/` devient lui-même la copie de travail du dépôt privé. Le moteur, l'éditeur et les scripts (`maj`, `lumiere`, `images`…) n'ont rien à changer : le musée reste à sa place. Le dépôt du moteur ignore ce dossier (`.gitignore`) et ne voit donc pas le dépôt qu'il contient.
+- **Faille trouvée et corrigée avant toute installation** : le serveur du musée (`npm run dev`, ouvert à tout le réseau local) servait à qui le demandait un dossier `.git` placé dans `public/`, c'est-à-dire tout l'historique du musée et l'adresse de son dépôt ; `npm run build` le recopiait dans la version publiable. Vite ne protège que le `.git` du moteur. Corrigé par `scripts/protection-depots.mjs`, branché en tête de `vite.config.ts` : toute adresse qui mène à un `.git` reçoit « introuvable » (404), même encodée ou en majuscules, sur le serveur du musée comme sur l'aperçu de la version publiable, et la version publiable perd ses `.git` à la fin de sa fabrication. Vérifié : 200 sans la protection, 404 avec.
+- **Commande du porteur** (`scripts/musee.mjs`) : `npm run musee -- relier 120-ans <adresse>`, une fois par ordinateur, envoie tout le musée dans le dépôt vide ; si l'envoi échoue, le dossier redevient exactement comme avant. Sur un ordinateur qui n'a pas le musée, la même commande le télécharge. Ensuite `npm run musee -- synchroniser` enregistre les changements du Mac, reçoit ceux faits ailleurs et envoie le tout ; si le même fichier a changé des deux côtés, elle s'arrête sans rien écraser. Les fichiers propres au Mac (`.DS_Store`) ne partent jamais. Le musée de démonstration ne peut pas être relié.
+- **Tests** : 36 tests unitaires (adresses refusées et servies, nettoyage de la version publiable sans suivre les liens symboliques ; envoi, réception, réunion des deux côtés, conflit, refus et retour à l'état d'avant) et 2 tests dans un navigateur (serveur du musée et version publiée).
+- **Reste à faire** : (1) le porteur crée le dépôt privé vide `musee-120-ans` et y donne accès à l'application Claude ; (2) verser ce lot dans `main`, sur son feu vert ; (3) sur son Mac : `git pull`, un jeton GitHub limité à ce dépôt, puis `npm run musee -- relier 120-ans <adresse du dépôt>` ; (4) vérifier depuis une conversation que le dépôt contient tout le musée ; (5) les conversations travaillent ensuite directement dans ce dépôt, sans paquets ; (6) le nettoyage (branches déjà versées dans `main`, sauvegardes, copies du Bureau, paquets téléchargés), sur une liste validée par le porteur.
+
 ### Voix de l'audioguide : décisions prises, production à venir
 
 Le moteur lit déjà un enregistrement par œuvre et par langue quand on lui en fournit un (champ `audio` de l'œuvre) ; sans lui, il fait lire le texte par la voix du navigateur. Il ne manque que les fichiers.
@@ -743,6 +753,7 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
+- **Dépôt privé du musée des 120 ans** (24 novembre 2026), voir « Dépôt privé pour chaque musée client » : créer sur GitHub le dépôt privé vide `musee-120-ans` (sans README) et y donner accès à l'application Claude, puis donner son feu vert pour verser le lot dans `main`, puis relier le musée sur son Mac (commandes données dans la conversation, avec un jeton GitHub limité à ce dépôt).
 - ~~Appliquer le paquet n° 21 (Grand Livre plus ouvert)~~ : fait sur son Mac le 23 novembre 2026 (« c'est fait, ça marche ! »). Reste ouvert : un réglage plus ou moins ouvert s'il le souhaite (la page de droite cache un peu la vitrine de 1904 vue de l'entrée).
 - ~~Appliquer les paquets n° 9 à 20~~ : fait le 23 novembre 2026, voir « Rattrapage des paquets 9 à 20 ».
 - **Chambre forte et Grand Livre** (22 novembre 2026) : lot versé dans `main` le 22 novembre 2026 sur son feu vert ; appliquer les paquets n° 19 et 20 (bloc ci-dessous, essayé sur une copie dans l'état d'avant, deux fois : il applique puis reconnaît les paquets déjà appliqués) sur son Mac (bloc dans « Chambre forte : direction B retenue, coupole atténuée ; Grand Livre reconstruit ») et dire si la salle et le livre lui conviennent. À faire valider par la commissaire : les titres des séries de billets et des vitrines ; le « dès 2024 » de la légende du livre. S'il veut des photos du livre plus nettes : recharger son crédit Google (AI Studio), ou fournir les images d'origine du livre.
@@ -767,7 +778,7 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
   Puis `npm run lumiere -- 120-ans --salle chambre-forte`, `npm run dev` et http://localhost:5173/?m=120-ans.
 - **Hall des Guichets, direction B retouchée** (22 novembre 2026) : lot versé dans `main` le 22 novembre 2026 sur son feu vert (un premier essai sur son Mac, avant ce versement, avait été arrêté net par la vérification du bloc : le musée n'a pas bougé). **Paquet n° 18 appliqué sur son Mac le 22 novembre 2026 (« la salle est réaménagée »).** Premier essai manqué : il avait écrit « la salle s'affiche », mais sa capture montrait l'ancien hall ; le paquet n'avait jamais été téléchargé depuis le Drive, et l'ancien bloc ne le disait pas clairement. Bloc corrigé ci-dessous : il trouve le paquet sous toutes ses formes (archive, dossier décompressé par Safari), ne l'applique qu'une fois, et dit si la salle est réaménagée. **Leçon : toujours demander le texte affiché par le Terminal avant de considérer un paquet comme appliqué.** Son avis sur la salle est attendu. À relire avec lui : les quatre titres de groupe et le texte d'introduction, provisoires ; la photographie d'archive de la fresque et sa légende, à préciser avec la commissaire. Ensuite : décliner la charte dans les autres salles (l'écrin pour la chambre forte), faire entrer les options de mise en scène dans l'éditeur, rendre les cartels lisibles.
-- **Confirmer la sauvegarde `musees-sauvegarde-v2`** sur son Bureau (l'étiquette `v2`, elle, est créée et vérifiée).
+- ~~Confirmer la sauvegarde `musees-sauvegarde-v2`~~ : présente sur son Bureau (vue le 24 novembre 2026), avec `musees-sauvegarde-v1`. L'étiquette `v2` est créée et vérifiée.
 - **Appliquer le paquet n° 8** (`npm run maj -- 120-ans ~/Downloads/maj-120-ans-08.zip`, puis `npm run lumiere -- 120-ans --salle guichets`) et dire si l'ensemble lui convient : niveau de détail, hauteur des socles, implantation.
 - **Objets plats** (posés à plat sur leur socle, comme dans l'exposition) : les garder ainsi, ou les présenter inclinés sur un petit pupitre ? L'examen les montre déjà de dessus.
 - **Confirmer les machines phares** proposées par Claude pour le niveau détaillé (voir « Objets en 3D »).
@@ -900,13 +911,15 @@ src/engine/...              Contrôles, plan, mobilier, sculptures, textures, re
 scripts/images.mjs          Préparation des images d'un musée
 scripts/modeles.mjs         Préparation des modèles 3D d'un musée
 scripts/maj.mjs             Paquets de mise à jour d'un musée de l'ordinateur (« npm run maj »)
+scripts/musee.mjs           Dépôt privé d'un musée client : le relier, puis le synchroniser (« npm run musee »)
+scripts/protection-depots.mjs  Le dossier .git d'un musée n'est jamais servi, ni copié dans la version publiable
 scripts/vignettes.mjs       Photos des sculptures pour la vue simplifiée
 scripts/lumiere.mjs         Lumière précalculée des salles (« npm run lumiere »), calcul par Blender dans scripts/lumiere/
 scripts/lumiere-installer.mjs  Prépare un ordinateur pour ce calcul (« npm run lumiere:installer »)
 scripts/editeur-serveur.mjs Service d'écriture de l'éditeur, ajouté au serveur de développement : musées, images,
                             page de choix et couvertures, calcul de la lumière, rétablissement de la démonstration
-tests/unit/                 Tests unitaires (Vitest) : 222 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 98 tests
+tests/unit/                 Tests unitaires (Vitest) : 312 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 109 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration
@@ -958,12 +971,15 @@ npm run vignettes -- demo         # photographie les sculptures (le musée doit 
 npm run lumiere:installer        # une fois par ordinateur : installe Blender pour le calcul de la lumière
 npm run lumiere -- demo           # calcule la lumière des salles modifiées, avec Blender (docs/lumiere.md)
 npm run maj -- 120-ans paquet.zip # applique un paquet de mise à jour à un musée de l'ordinateur
+npm run musee -- relier 120-ans <adresse>  # une fois par ordinateur : relie un musée client à son dépôt privé
+npm run musee -- synchroniser     # reçoit et envoie les changements des musées reliés
 ```
 
 ## 8. Méthode de travail retenue
 
 - **Tout en français** : interface, commentaires du code, messages de commit, documentation. Les textes du musée existent en français et en anglais.
 - **Le dépôt GitHub est public** : aucun contenu client n'y entre (photos, cartels, textes, voix, notes sur une exposition, noms de personnes). Le code du moteur, lui, peut y aller. Pour transmettre du code fait sur le Mac sans GitHub : `git format-patch` limité au code, déposé sur le Drive du porteur.
+- **Musées clients : un dépôt privé chacun** (décidé le 24 novembre 2026) : le dossier `public/museums/<musée>/` est la copie de travail de ce dépôt. Dès que ce dépôt est en place, une conversation dans le cloud travaille directement dedans : joindre le dépôt à la session, le télécharger dans `public/museums/<musée>/` (`npm run musee -- relier <musée> <adresse>`), puis enregistrer et envoyer ses changements ; le porteur les reçoit par `npm run musee -- synchroniser`. Plus de paquets par le Drive pour ce musée.
 - **Le porteur du projet n'est pas développeur** : commandes exactes à copier, explications simples, sur Mac.
 - **Avant et après chaque modification du moteur** : les tests doivent passer, puis le rendu est vérifié par des captures sur ordinateur et sur téléphone.
 - **Tests dans un navigateur** : attendre une condition que le moteur expose (par exemple `controls.gliding`, vrai tant qu'un déplacement en douceur est en cours), jamais un délai fixe ni « deux positions identiques de suite ». Le rendu des tests est calculé par le processeur : une image prend 100 ms ou plus, et sous charge celle qui suit un clic peut tarder, si bien que deux relevés rapprochés sont identiques avant même que le visiteur ait bougé. Pour savoir où un obstacle arrête le visiteur, l'aide `walkUntilBlocked` fait elle-même avancer le temps, à grands pas, au lieu d'attendre les images ; elle vérifie ensuite que de tout petits pas ne déplacent plus le visiteur, ce qui prouve à chaque appel qu'il s'est arrêté au ras de l'obstacle. Pour qu'un vrai geste (souris, clavier, doigt) arrive à un instant précis d'un déplacement en douceur, l'aide `holdClock` tient l'horloge de la visite : le visiteur ne bouge plus que lorsque le test fait avancer le temps.
