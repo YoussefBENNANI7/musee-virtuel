@@ -137,7 +137,7 @@ Contrôle le code et lance les tests rapides (quelques secondes).
 npm run test:e2e
 ```
 
-Ouvre le musée dans un vrai navigateur et le parcourt automatiquement (environ 3 minutes). La première fois, installer ce navigateur de test :
+Ouvre le musée dans un vrai navigateur et le parcourt automatiquement (une dizaine de minutes). La première fois, installer ce navigateur de test :
 
 ```bash
 npx playwright install chromium

@@ -30,7 +30,7 @@ const saved = (page: Page) => expect(page.locator('#status')).toHaveText('Enregi
 
 /**
  * Remplace l'aperçu en 3D par une page vide. Sans carte graphique, chaque rechargement de l'aperçu
- * coûte une quinzaine de secondes aux tests ; ceux qui ne vérifient que l'éditeur s'en passent.
+ * coûte encore environ deux secondes aux tests (le rendu 3D) ; ceux qui ne vérifient que l'éditeur s'en passent.
  */
 const withoutPreview = (page: Page) => page.route(/\/\?m=[^&]+&apercu=1/, (route) => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Aperçu coupé</title>' }));
 
