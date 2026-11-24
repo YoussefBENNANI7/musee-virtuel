@@ -499,6 +499,24 @@ But : que l'ouverture d'un musée ne fige plus la page une quinzaine de secondes
 - **Vu sur le Mac du porteur** (24 novembre 2026, premier essai sur un appareil avec carte graphique) : après `git pull`, `npm run check` passe (321 tests) ; le musée des 120 ans, dont les salles ont la pierre et le badigeon, « s'affiche pareil », et l'éditeur n'affiche pas de bandeau « Lumière à recalculer ».
 - **Règle pour la suite** : ne plus flouter une grande texture avec le filtre du canvas ; passer par `nuages.ts` (fonction `clouds` de `textures.ts`).
 
+### Fontaine du patio marocain : refaite (24 novembre 2026)
+
+Demande du porteur, le 24 novembre 2026 : retravailler le design de la fontaine du Patio marocain. Diagnostic donné sur captures : eau vert opaque sans reflet, pas de jet alors qu'on entend l'eau, vasque lisse « en bain d'oiseaux », zellige identique à celui des murs et trop grand pour des parois de 42 cm, margelle plate sans épaisseur, trous noirs dans les creux de l'étoile vue de près (le bassin n'avait pas de parois intérieures). Trois pistes proposées (A : garder la fontaine et la soigner ; B : bassin de médersa plus sobre ; C : fontaine murale). **Le porteur a choisi la piste A.** Travail fait sur la branche `claude/adoring-keller-1rlnk8`, **pas encore versé dans `main`** : il attend l'avis du porteur sur l'aperçu.
+
+- **Même place, même encombrement** : bassin en étoile à huit branches de 2,60 m (`FOUNTAIN_RADIUS`, 1,30 m, pointes de la margelle comprises), au centre du patio. La configuration ne change pas (`"fountain": { "position": [0, 0] }`) : la règle de marche, le contrôle du musée et le son restent les mêmes.
+- **Ce qui change** (`src/engine/fontaine.ts`, qui remplace l'ancienne fonction de `furniture.ts`) :
+  - *Margelle* de marbre veiné, 15 cm de large et 6,4 cm d'épaisseur, arêtes arrondies ; elle déborde de 3 cm sur le zellige et de 1,5 cm au-dessus de l'eau.
+  - *Zellige des parois* dessiné pour la fontaine, trois motifs par côté de l'étoile (un motif tous les 17 cm, deux fois plus fin que les murs) : plinthe sombre, frise de dents de scie, trois rangs d'étoiles blanches et bleues sur fond vert profond, frise renversée. Carreaux émaillés, éclairés comme les objets (ils renvoient un peu de lumière).
+  - *Intérieur du bassin* : parois et fond en carreaux turquoise ; au fond, une rosace d'étoiles emboîtées qui reprend la forme du bassin. Sous l'eau, le dessin ondule au gré des rides, et des lueurs mouvantes passent au fond.
+  - *Eau* (dessinée par un petit programme pour la carte graphique) : transparente ; plus le chemin de la lumière jusqu'au fond est long, plus elle cache le fond (26 cm d'eau dans le bassin) ; elle reflète la salle selon l'angle du regard (soubassement, murs, plafond de cèdre, verrière droit au-dessus) et scintille au soleil.
+  - *Vasque* de marbre à douze godrons, bord festonné, sur un balustre mouluré posé sur un socle à huit pans au fond du bassin ; son bord est à 1 m du sol. Son eau est plus claire (fond de marbre).
+  - *Jet* : un filet de 17,5 cm qui retombe en couronne de gouttes dans la vasque. La vasque déborde par la pointe de ses douze lobes : douze filets tombent selon la vraie trajectoire de l'eau (sortie à 25 cm/s) et touchent le bassin à 63 cm du centre, avec de l'écume et des rides qui s'éloignent du point de chute.
+- **Animation** : l'eau bouge (vagues, rides, filets, jet, lueurs du fond). La visite ne redessine l'image que si la fontaine est en vue, à moins de 20 m, et à 30 images par seconde au plus ; ailleurs, un visiteur immobile ne fait toujours rien calculer. Pour qui a demandé moins d'animations (réglage du système), et au niveau de qualité le plus bas, l'eau reste immobile sur un instant choisi. En casque, elle bouge à chaque image.
+- **Lumière précalculée** : l'empreinte d'une salle ne dépend que de la position de la fontaine, pas de son dessin ; l'atlas du patio restait donc valable. Il a quand même été recalculé, pour que l'ombre de la nouvelle fontaine (vasque plus large et plus haute) soit juste : `npm run lumiere -- demo --salle riad`, 6 minutes de calcul dans l'environnement de travail (Blender réinstallé par `npm run lumiere:installer`).
+- **Vérifié** : 7 tests unitaires (`tests/unit/fontaine.test.ts` : étoile de deux carrés, retrait des côtés, margelle dans le rayon de la fontaine, sens des parois et motifs entiers par côté, godrons, tour refermé sans couture, filets qui tombent dans l'eau) et 1 test dans un navigateur (l'eau bouge face à la fontaine, au plus 30 images par seconde ; dos à la fontaine, rien n'est redessiné ; immobile avec « moins d'animations »). Le test unitaire du tour sans couture a trouvé une vraie erreur pendant le travail : les faces de la vasque et du balustre étaient tournées vers l'intérieur. Suite complète : 328 tests unitaires et 110 tests dans un navigateur. Après le nouveau calcul de lumière, les tests de la lumière et de la démonstration repassent (19 tests). Captures avant (ancien code, même niveau de qualité) et après, sur ordinateur et sur téléphone, et une courte vidéo de l'eau.
+- **Aperçu remis au porteur** : https://claude.ai/artifact/9GcKcuHRtXaLJFbAeA6Gxs.
+- **Limites** : l'eau ne déforme pas ce qu'on voit à travers elle (seul le dessin du fond ondule) et ses reflets imitent la salle sans la montrer vraiment ; la fontaine reste un objet éclairé par formule, comme les autres objets (seuls murs, sols et plafonds lisent l'atlas).
+
 ### Voix de l'audioguide : décisions prises, production à venir
 
 Le moteur lit déjà un enregistrement par œuvre et par langue quand on lui en fournit un (champ `audio` de l'œuvre) ; sans lui, il fait lire le texte par la voix du navigateur. Il ne manque que les fichiers.
@@ -616,7 +634,7 @@ Ce que le moteur a appris pour elle :
 - **Frise de plâtre sculpté** en haut des murs (`frieze`), sur trois registres : petits arcs festonnés, réseau d'étoiles, merlons. Le même plâtre encadre l'arc d'entrée, côté patio.
 - **Plafond de cèdre peint**, à solives et caissons ornés d'étoiles (`cedar`).
 - **Lanternes de laiton** suspendues, avec leur halo (`lanterns` sur la salle).
-- **Fontaine** à bassin en étoile, que le visiteur contourne (`fountain` sur la salle).
+- **Fontaine** à bassin en étoile, que le visiteur contourne (`fountain` sur la salle) : margelle de marbre, zellige propre, eau transparente et animée, vasque à godrons, jet et filets de débordement (refaite le 24 novembre 2026, voir « Fontaine du patio marocain : refaite »).
 - **Objets accrochés sans cadre** (`frameless`) et à la hauteur voulue (`y`) : une porte posée presque au sol, un tapis de 4,70 m.
 - Le décor `riad` réunit le tout : chaux blanche, zellige, plâtre, plafond de cèdre peint, lumière chaude.
 
@@ -626,7 +644,7 @@ Treize pièces y sont exposées, toutes en domaine public : la paire de portes m
 
 Limites de cette salle pilote :
 
-- Le zellige, le plâtre et la fontaine sont dessinés par le code : ce sont des motifs justes mais simples, loin de la finesse d'une vraie médersa.
+- Le zellige et le plâtre sont dessinés par le code : ce sont des motifs justes mais simples, loin de la finesse d'une vraie médersa. La fontaine aussi, mais elle a été refaite avec plus de soin le 24 novembre 2026.
 - Les objets en volume de la sélection (plat, poignard, instruments, bijoux) ne sont pas exposés : ils n'existent qu'en photographie. Les modèles 3D d'artistes (lanterne, théière, tajine) attendent la clé Sketchfab.
 - La largeur du tapis vient de son image : elle dépasse celle que donne le musée (1,79 m).
 
@@ -781,6 +799,7 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
+- **Son avis sur la nouvelle fontaine du patio** (24 novembre 2026, piste A), sur l'aperçu https://claude.ai/artifact/9GcKcuHRtXaLJFbAeA6Gxs : couleurs du zellige, hauteur du jet, teinte de l'eau, forme de la vasque. Puis son feu vert pour verser la branche `claude/adoring-keller-1rlnk8` dans `main`.
 - ~~Dépôt privé du musée des 120 ans~~ : fait le 24 novembre 2026, voir « Dépôt privé pour chaque musée client ». Le musée est relié à `YoussefBENNANI7/musee-120-ans` ; plus de paquets par le Drive pour ce musée. **Sa nouvelle habitude** : `npm run musee -- synchroniser` (dans `~/musee-virtuel`) après avoir travaillé sur le musée (éditeur, lumière), et quand une conversation lui dit avoir changé le musée. Le jeton de son Mac expire le 24 novembre 2027.
 - ~~Nuages des textures : regarder l'aperçu avant/après~~ : fait le 24 novembre 2026 (« aucune différence visible ») ; lot versé dans `main` le même jour. Fait aussi sur son Mac le même jour : `git pull`, `npm run check` (321 tests), et le musée des 120 ans « s'affiche pareil, pas de bandeau ».
 - ~~Branche `claude/tender-meitner-pdj4fs`~~ (autre conversation du 24 novembre 2026 : le test de l'éditeur « créer un musée, y déposer des photos » ne dépend plus des gels de l'aperçu) : réunie avec `main` et versée le 24 novembre 2026, à la demande du porteur. Sa rubrique « Tests de l'éditeur et aperçu » et celle du lot « Nuages des textures » n'en font plus qu'une (section 8), avec les durées d'après ce lot ; sa rubrique « Répéter un test de l'éditeur sous charge » est gardée telle quelle.
@@ -937,6 +956,7 @@ src/engine/vitrines.ts      Vitrines à pièces de monnaie : la pièce, ses deux
 src/engine/relief.ts        Relief d'une pièce de monnaie, déduit de sa photo (sans rendu pour le calcul, testé seul)
 src/engine/lettrage.ts      Lettrage mural : titres de section et textes d'introduction posés sur un mur
 src/engine/nuages.ts        Nuages des textures (pierre, badigeon, béton) : taches floutées sur une grille, sans filtre du canvas (sans rendu, testé seul)
+src/engine/fontaine.ts      Fontaine de patio : bassin en étoile, margelle, zellige, eau animée, vasque à godrons, jet et filets
 src/engine/...              Contrôles, plan, mobilier, sculptures, textures, reflets, images
 
 scripts/images.mjs          Préparation des images d'un musée
@@ -949,8 +969,8 @@ scripts/lumiere.mjs         Lumière précalculée des salles (« npm run lumier
 scripts/lumiere-installer.mjs  Prépare un ordinateur pour ce calcul (« npm run lumiere:installer »)
 scripts/editeur-serveur.mjs Service d'écriture de l'éditeur, ajouté au serveur de développement : musées, images,
                             page de choix et couvertures, calcul de la lumière, rétablissement de la démonstration
-tests/unit/                 Tests unitaires (Vitest) : 321 tests
-tests/e2e/                  Tests dans un navigateur (Playwright) : 109 tests
+tests/unit/                 Tests unitaires (Vitest) : 328 tests
+tests/e2e/                  Tests dans un navigateur (Playwright) : 110 tests
 tests/fixtures/             Musée de test figé, indépendant de la démo
 docs/selection-oeuvres.md   Sélection d'œuvres réelles : source et licence de chaque pièce
 docs/selection-oeuvres.json Les mêmes données, pour l'intégration
