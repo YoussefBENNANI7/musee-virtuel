@@ -16,6 +16,10 @@ import { $, metaLine, renderCredit, renderSourcePhoto, type App, type View } fro
 import { setupVR } from './vr';
 import { setupZoom } from './zoom';
 
+/** L'eau d'une fontaine s'anime à 30 images par seconde, quand elle est en vue à moins de 20 m. */
+const WATER_FPS = 30;
+const WATER_RANGE = 20;
+
 /** Visite en 3D : déplacement libre, fiches d'œuvres, plan, parcours et audioguide. */
 export function startVisit(app: App): View {
   const { museum, guide } = app;
@@ -667,6 +671,23 @@ export function startVisit(app: App): View {
   new ResizeObserver(resize).observe(canvas);
   resize();
 
+  // L'eau des fontaines bouge : tant qu'une fontaine est en vue, l'image est redessinée, même si le visiteur
+  // ne bouge pas, mais au plus 30 fois par seconde. Elle reste immobile pour qui a demandé moins d'animations,
+  // et sur un appareil modeste.
+  const frustum = new THREE.Frustum();
+  const viewProjection = new THREE.Matrix4();
+  const eye = new THREE.Vector3();
+  let lastWater = 0;
+  const waterInView = () => {
+    if (calm || !world.fountains.length) return false;
+    camera.getWorldPosition(eye);
+    frustum.setFromProjectionMatrix(viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+    return world.fountains.some((f) => f.bounds.center.distanceTo(eye) < WATER_RANGE && frustum.intersectsSphere(f.bounds));
+  };
+  const flow = (now: number) => {
+    for (const f of world.fountains) f.flow(now / 1000);
+  };
+
   const timer = new THREE.Timer();
   let lastPose = '';
   let slowTime = 0;
@@ -677,6 +698,7 @@ export function startVisit(app: App): View {
     const dt = Math.min(raw, 0.1);
     if (renderer.xr.isPresenting) {
       vr.update(dt);
+      if (!calm) flow(performance.now());
       renderer.render(scene, camera);
       return;
     }
@@ -721,7 +743,15 @@ export function startVisit(app: App): View {
       walking = false;
       showMarker(null);
     }
-    if (performance.now() > renderUntil) return;
+    const now = performance.now();
+    const rendering = now <= renderUntil;
+    let waterFrame = false;
+    if ((rendering || now - lastWater >= 1000 / WATER_FPS) && waterInView()) {
+      lastWater = now;
+      waterFrame = true;
+      flow(now);
+    }
+    if (!rendering && !waterFrame) return;
     renderer.render(scene, camera);
 
     // Si l'appareil reste sous 36 images par seconde en mouvement, on allège l'image par paliers.

@@ -51,8 +51,6 @@ import type { Baseboard, MuseumConfig, RoomConfig, WallId } from './types';
  */
 export interface Building {
   group: THREE.Group;
-  /** Matière de zellige, pour le mobilier paré de carreaux. */
-  zellige(): THREE.Material;
   wall(roomId: string, wall: WallId): { holder: THREE.Group; frame: WallFrame };
   light(roomId: string): RoomLight;
 }
@@ -508,7 +506,6 @@ export function buildBuilding(museum: MuseumConfig, layout: Layout, style: Style
 
   return {
     group,
-    zellige: () => once('zellige:mobilier', () => new THREE.MeshBasicMaterial({ map: zelligeTexture(WALL_ZELLIGE, quality), toneMapped: false })),
     wall: (roomId, wall) => walls.get(`${roomId}:${wall}`)!,
     light: (roomId) => lights.get(roomId)!,
   };

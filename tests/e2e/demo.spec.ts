@@ -292,6 +292,46 @@ test('démo : l’eau de la fontaine s’entend plus fort de près, se coupe et 
   expect(errors).toEqual([]);
 });
 
+test('démo : l’eau de la fontaine bouge tant qu’on la regarde, et reste immobile pour qui a demandé moins d’animations', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  page.on('pageerror', (e) => errors.push(String(e)));
+  /** Images dessinées en une seconde, visiteur immobile, et instant montré par l'eau avant et après. */
+  const still = async (x: number, z: number, yaw: number) => {
+    await page.evaluate(([x, z, yaw]) => (window as any).__museum.controls.teleport(x, z, yaw), [x, z, yaw]);
+    // Le temps que la visite finisse de redessiner après le déplacement.
+    await page.waitForTimeout(3500);
+    return page.evaluate(async () => {
+      const m = (window as any).__museum;
+      const water = () => {
+        let t = NaN;
+        m.world.fountains[0].group.traverse((o: any) => {
+          if (o.material?.uniforms?.time) t = o.material.uniforms.time.value;
+        });
+        return t;
+      };
+      const [frame, time] = [m.renderer.info.render.frame, water()];
+      await new Promise((done) => setTimeout(done, 1000));
+      return { frames: m.renderer.info.render.frame - frame, flowed: water() !== time };
+    });
+  };
+  await page.goto('/?q=medium&accueil=non');
+  await page.waitForSelector('body.ready');
+  // À l'entrée du patio, face à la fontaine : l'eau s'anime, au plus 30 images par seconde.
+  const facing = await still(0, -23.6, 0);
+  expect(facing.flowed).toBe(true);
+  expect(facing.frames).toBeGreaterThan(3);
+  expect(facing.frames).toBeLessThanOrEqual(31);
+  // Dos à la fontaine, rien ne bouge : la visite ne redessine rien.
+  expect(await still(0, -23.6, Math.PI)).toEqual({ frames: 0, flowed: false });
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.reload();
+  await page.waitForSelector('body.ready');
+  expect(await still(0, -23.6, 0)).toEqual({ frames: 0, flowed: false });
+  expect(errors).toEqual([]);
+});
+
 test('sans musée dans l\'adresse, une page propose les musées ; chacun s\'ouvre, et un lien y ramène', async ({ page }) => {
   // La liste des musées proposés est propre à chaque ordinateur (museums/index.json, hors du dépôt) :
   // le test en fournit une, avec le musée de démonstration et le musée de test.

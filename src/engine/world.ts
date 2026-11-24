@@ -3,7 +3,8 @@ import { fixtureMaterial, hangPainting, placeSculpture, TRACK_DISTANCE, type Art
 import { FRAMES } from './cadres';
 import { buildBuilding } from './building';
 import { clearHeight, resolveDecor, type Decor } from './decors';
-import { COUNTER, FOUNTAIN_RADIUS, benchFootprint, buildBench, buildCounter, buildFountain, buildLantern, buildPhotoCubes, buildZone, lanternHeight } from './furniture';
+import { COUNTER, benchFootprint, buildBench, buildCounter, buildLantern, buildPhotoCubes, buildZone, lanternHeight } from './furniture';
+import { FOUNTAIN_RADIUS, buildFountain, type Fountain } from './fontaine';
 import { bendLettering, buildLettering, drawLettering, letteringColor } from './lettrage';
 import { EYE_HEIGHT, WALLS, buildLayout, inside, roomRect, wallFrame, type Layout } from './layout';
 import type { Quality } from './quality';
@@ -22,6 +23,8 @@ export interface World {
   artworks: PlacedArtwork[];
   /** Décor de chaque salle, par identifiant. */
   decors: Map<string, Decor>;
+  /** Fontaines : leur eau bouge, la visite l'anime tant qu'elles sont en vue. */
+  fountains: Fountain[];
   /** Le visiteur peut-il se tenir en ce point (murs, portes et socles compris) ? */
   walkable(x: number, z: number): boolean;
   roomAt(x: number, z: number): RoomConfig | null;
@@ -79,6 +82,7 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
   /** Zones occupées par le mobilier et les socles : le visiteur les contourne. */
   const blocked: ((x: number, z: number) => boolean)[] = [];
   const artworks: PlacedArtwork[] = [];
+  const fountains: Fountain[] = [];
   /**
    * Lettrages muraux : leur texte est redessiné quand la langue change. `curve` : rayon du mur courbe qui les porte ;
    * `fit` : largeur à ne pas dépasser (le titre d'une vitrine tient sur la face de son socle).
@@ -111,7 +115,9 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
       blocked.push((x, z) => Math.abs(x - bx) < hx + 0.3 && Math.abs(z - bz) < hz + 0.3);
     }
     if (room.fountain) {
-      group.add(buildFountain(room.fountain.position, room, decor, building.zellige()));
+      const fountain = buildFountain(room.fountain.position, room, decor, quality, options.env);
+      group.add(fountain.group);
+      fountains.push(fountain);
       const fx = room.position[0] + room.fountain.position[0];
       const fz = room.position[1] + room.fountain.position[1];
       blocked.push((x, z) => Math.hypot(x - fx, z - fz) < FOUNTAIN_RADIUS + 0.3);
@@ -194,6 +200,7 @@ export function buildWorld(museum: MuseumConfig, options: WorldOptions): World {
     layout,
     decors,
     artworks,
+    fountains,
     walkable: (x, z) => layout.walkable(x, z) && !blocked.some((hit) => hit(x, z)),
     roomAt: layout.roomAt,
     spawn: layout.spawn,
