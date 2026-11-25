@@ -38,11 +38,11 @@ const KEY = 'musee-virtuel:son';
 const VOLUME = 0.9;
 const DUCKED = 0.25;
 /**
- * Volume de la musique, pour un fichier égalisé à -23 LUFS : environ 16 dB sous les voix enregistrées
- * (-18 LUFS), réglage écouté et retenu par le porteur le 25 novembre 2026. Sous une voix, elle baisse encore
- * de 12 dB (DUCKED), comme l'eau.
+ * Volume de la musique, pour un fichier égalisé à -23 LUFS : environ 13 dB sous les voix enregistrées
+ * (-18 LUFS), l'écart de l'essai écouté et retenu par le porteur le 25 novembre 2026 (musique à -29 LUFS,
+ * voix à -16). Sous une voix, elle baisse encore de 12 dB (DUCKED), comme l'eau.
  */
-const MUSIC = 0.25;
+const MUSIC = 0.45;
 /** Temps du fondu d'une musique dans la suivante, en secondes (constante de temps : le fondu est fait en trois fois plus). */
 const FADE = 1.2;
 /**

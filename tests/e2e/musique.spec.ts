@@ -29,12 +29,12 @@ test('chaque salle a sa musique : elle se fond dans la suivante, baisse sous les
   expect((await state()).started).toBe(false);
   await page.mouse.click(640, 300);
   await expect.poll(async () => (await state()).music ?? '').toMatch(/musique-a\.mp3$/);
-  expect((await state()).musicGain).toBeCloseTo(0.9 * 0.25, 3);
+  expect((await state()).musicGain).toBeCloseTo(0.9 * 0.45, 3);
 
   // Dans la galerie, la musique de la galerie, à son volume ; dans le cabinet, aucune.
   await go(10, 0);
   await expect.poll(async () => (await state()).music ?? '').toMatch(/musique-b\.mp3$/);
-  expect((await state()).musicGain).toBeCloseTo(0.9 * 0.25 * 0.5, 3);
+  expect((await state()).musicGain).toBeCloseTo(0.9 * 0.45 * 0.5, 3);
   await expect(button).toHaveAttribute('title', 'Musique et son d’ambiance');
   await go(0, -8.5);
   await expect.poll(async () => (await state()).music).toBeNull();
@@ -45,7 +45,7 @@ test('chaque salle a sa musique : elle se fond dans la suivante, baisse sous les
 
   // Sous une voix, elle baisse de 12 dB ; coupée, elle se tait.
   await page.evaluate(() => (window as any).__museum.ambiance.duck(true));
-  expect((await state()).musicGain).toBeCloseTo(0.25 * 0.25, 3);
+  expect((await state()).musicGain).toBeCloseTo(0.25 * 0.45, 3);
   await page.evaluate(() => (window as any).__museum.ambiance.duck(false));
   await button.click();
   expect((await state()).musicGain).toBe(0);
