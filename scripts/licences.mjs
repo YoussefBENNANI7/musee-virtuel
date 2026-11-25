@@ -37,6 +37,7 @@ const flagged = works.filter(({ art }) => restricted(art));
 
 const voicesPath = new URL(`public/museums/${museumId}/audio/voix.json`, root);
 const voices = existsSync(voicesPath) ? JSON.parse(readFileSync(voicesPath, 'utf8')) : null;
+const musics = museum.rooms.filter((r) => r.music);
 const soundsPath = new URL('public/sons/LISEZMOI.md', root);
 const sounds = existsSync(soundsPath) ? readFileSync(soundsPath, 'utf8').split('\n').filter((l) => l.startsWith('| `')) : [];
 
@@ -115,6 +116,14 @@ ${
   voices
     ? `Produites par le service de voix de Google (modèle \`${voices.model}\`, voix \`${voices.voice}\`), ${Object.keys(voices.files).length} fichiers. Leur usage dépend des conditions du service Google au moment de la production, et du compte qui les a produites : à vérifier avant une vente de ce musée. Le moteur ne contient que la commande \`npm run voix\` ; chaque musée produit ses voix avec son propre compte.`
     : 'Ce musée n’a pas de voix enregistrées.'
+}
+
+### Musiques des salles
+
+${
+  musics.length
+    ? table(['Salle', 'Fichier', 'Œuvre et droits'], musics.map((r) => [fr(r.name), `\`${r.music.src}\``, r.music.credit ? fr(r.music.credit) : '**mention manquante**']))
+    : 'Aucune.'
 }
 
 ### Textes

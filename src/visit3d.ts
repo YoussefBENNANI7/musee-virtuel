@@ -135,14 +135,21 @@ export function startVisit(app: App): View {
       // Stockage indisponible : on part de l'entrée.
     }
   }
-  // Ambiance sonore : l'eau des fontaines, plus forte à mesure qu'on s'en approche.
+  // Ambiance sonore : l'eau des fontaines, plus forte à mesure qu'on s'en approche, et la musique de chaque salle.
+  const museumUrl = new URL(app.base, location.href);
   const ambiance = setupAmbiance(
     museum.rooms.filter((r) => r.fountain).map((r) => ({ x: r.position[0] + r.fountain!.position[0], z: r.position[1] + r.fountain!.position[1], room: r.id })),
     new URL('sons/fontaine.mp3', document.baseURI).href,
+    new Map(museum.rooms.filter((r) => r.music).map((r) => [r.id, { url: new URL(r.music!.src, museumUrl).href, volume: r.music!.volume ?? 1, loop: r.music!.loop }])),
   );
   const hear = () => ambiance.update({ x: camera.position.x, z: camera.position.z, yaw: controls.yaw, room: world.roomAt(camera.position.x, camera.position.z)?.id ?? null });
   const soundButton = $('sound');
-  soundButton.hidden = !museum.rooms.some((r) => r.fountain);
+  soundButton.hidden = !museum.rooms.some((r) => r.fountain || r.music);
+  /** Au survol du bouton de son : la mention de la musique de la salle, s'il y en a une. */
+  const soundTitle = () => {
+    const credit = room?.music?.credit;
+    soundButton.title = credit ? `${ui().sound} · ${tr(credit, app.lang)}` : ui().sound;
+  };
   soundButton.setAttribute('aria-pressed', String(!ambiance.muted));
   soundButton.addEventListener('click', () => soundButton.setAttribute('aria-pressed', String(!ambiance.toggle())));
   // Le son ne peut commencer qu'après un geste du visiteur.
@@ -632,6 +639,7 @@ export function startVisit(app: App): View {
     $('map-open').textContent = ui().map;
     $('minimap').setAttribute('aria-label', ui().mapTitle);
     soundButton.setAttribute('aria-label', ui().sound);
+    soundTitle();
     $('map-title').textContent = ui().mapTitle;
     $('map-hint').textContent = ui().mapHint;
     $('tours-open').textContent = ui().tours;
@@ -715,6 +723,7 @@ export function startVisit(app: App): View {
     const here = world.roomAt(p.x, p.z);
     if (here && here !== room) {
       room = here;
+      soundTitle();
       $('room-name').textContent = tr(room.name, app.lang);
       renderExtras();
       map.setCurrent(room.id);

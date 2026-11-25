@@ -238,6 +238,21 @@ export interface RotundaConfig {
   niches?: boolean;
 }
 
+/** Musique de fond d'une salle. Le fichier est égalisé à -23 LUFS : le moteur le joue bas, sous les voix. */
+export interface MusicConfig {
+  /** Fichier, dans le dossier du musée (par exemple "audio/musique-hall.mp3"). */
+  src: string;
+  /** Volume, de 0 à 2 : 1 par défaut. */
+  volume?: number;
+  /**
+   * Boucle sans couture : début et fin, en secondes, de la partie qui se répète (une ambiance composée).
+   * Sans elle, tout le fichier se répète (une pièce de musique, qui reprend du début une fois finie).
+   */
+  loop?: [number, number];
+  /** Mention de l'œuvre, de l'interprète et des droits, montrée au survol du bouton de son. */
+  credit?: L10n;
+}
+
 /** Vitrine sur socle : une cloche de verre sur des cubes noirs, pour une à cinq pièces de monnaie. */
 export interface VitrineConfig {
   id: string;
@@ -373,6 +388,8 @@ export interface RoomConfig {
   cubes?: { position: [number, number]; images: string[] };
   /** Présentation de la salle, que le visiteur écoute en y entrant. `audio` : enregistrement par langue. */
   intro?: { text: L10n; audio?: L10n };
+  /** Musique de fond de la salle : elle se fond dans celle de la salle suivante, et baisse sous les voix. */
+  music?: MusicConfig;
   /** Salle en rotonde : voir RotundaConfig. */
   rotunda?: RotundaConfig;
   /** Vitrines à pièces de monnaie. */

@@ -92,7 +92,9 @@ describe.skipIf(!existsSync(new URL('audio/voix.json', demo)))('voix enregistré
     const { museum, manifest } = load();
     const expected = museum.rooms.flatMap((r) => r.artworks).flatMap((a) => museum.langs.map((lang) => `audio/${a.id}.${lang}.mp3`)).sort();
     expect(Object.keys(manifest.files).sort()).toEqual(expected);
-    expect(readdirSync(new URL('audio/', root)).filter((f) => f.endsWith('.mp3')).map((f) => `audio/${f}`).sort()).toEqual(expected);
+    // Le dossier audio contient aussi les musiques des salles, qui ne sont pas des voix.
+    const music = museum.rooms.flatMap((r) => (r.music ? [r.music.src] : []));
+    expect(readdirSync(new URL('audio/', root)).filter((f) => f.endsWith('.mp3')).map((f) => `audio/${f}`).sort()).toEqual([...expected, ...music].sort());
   });
 
   it('chaque voix correspond au texte actuel de l’œuvre', () => {

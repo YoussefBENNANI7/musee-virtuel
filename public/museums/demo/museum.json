@@ -28,6 +28,13 @@
         "fr": "Atrium",
         "en": "Atrium"
       },
+      "music": {
+        "src": "audio/musique-gymnopedie-1.mp3",
+        "credit": {
+          "fr": "Erik Satie, Gymnopédie n° 1 (1888) ; piano : Robin Alciatore (Musopen). Domaine public.",
+          "en": "Erik Satie, Gymnopédie No. 1 (1888); piano: Robin Alciatore (Musopen). Public domain."
+        }
+      },
       "position": [
         0,
         0
@@ -724,6 +731,13 @@
         "fr": "Cabinet des Couleurs",
         "en": "Colour Cabinet"
       },
+      "music": {
+        "src": "audio/musique-gnossienne-1.mp3",
+        "credit": {
+          "fr": "Erik Satie, Gnossienne n° 1 (1893) ; piano : La Pianista. Domaine public.",
+          "en": "Erik Satie, Gnossienne No. 1 (1893); piano: La Pianista. Public domain."
+        }
+      },
       "position": [
         0,
         -18
@@ -1087,6 +1101,17 @@
       "name": {
         "fr": "Galerie des Lignes",
         "en": "Gallery of Lines"
+      },
+      "music": {
+        "src": "audio/musique-lignes.mp3",
+        "loop": [
+          0.5,
+          96.5
+        ],
+        "credit": {
+          "fr": "« Lignes », ambiance composée pour le musée.",
+          "en": "“Lines”, an ambience composed for the museum."
+        }
       },
       "position": [
         9,

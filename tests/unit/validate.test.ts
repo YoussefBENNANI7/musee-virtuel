@@ -432,6 +432,13 @@ describe('scénographie : éclairage d’accent, cloche, zones au sol, lettrage 
     expect(errorsOf(flat)).toEqual(['Salle "rotonde", lettrage n° 1 : placé par un angle, mais la salle n\'est pas une rotonde']);
   });
 
+  it('musique d’une salle : fichier, volume, boucle et mention', () => {
+    expect(errorsOf(staged((room) => (room.music = { src: 'audio/musique.mp3', volume: 0.8, loop: [0.5, 96.5], credit: { fr: 'Domaine public', en: 'Public domain' } })))).toEqual([]);
+    expect(errorsOf(staged((room) => (room.music = { src: '../musique.mp3' })))).toEqual(['Salle "rotonde" : musique : fichier invalide (attendu : un chemin dans le dossier du musée, par exemple "audio/musique-hall.mp3")']);
+    expect(errorsOf(staged((room) => (room.music = { src: 'audio/musique.mp3', volume: 3 })))).toEqual(['Salle "rotonde" : musique : volume invalide (entre 0 et 2)']);
+    expect(errorsOf(staged((room) => (room.music = { src: 'audio/musique.mp3', loop: [10, 5] })))).toEqual(['Salle "rotonde" : musique : boucle invalide (attendu : [début, fin] en secondes, la fin après le début)']);
+  });
+
   it('accepte une verrière à traverses fines, et refuse un autre mot', () => {
     expect(errorsOf(staged((room) => (room.ceiling = { type: 'skylight', bars: 'fine' })))).toEqual([]);
     const museum = staged((room) => (room.ceiling = { type: 'skylight', bars: 'épaisses' as 'fine' }));

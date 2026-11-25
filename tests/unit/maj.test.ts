@@ -300,6 +300,14 @@ describe('paquet de mise à jour d’un musée', () => {
     expect(readFileSync(join(museums, 'essai', 'museum.json'), 'utf8')).toBe(before);
   });
 
+  it('donne une musique à une salle : son fichier doit être dans le musée ou dans le paquet', () => {
+    makePackage({ musee: 'essai', salles: { salle: { music: { src: 'audio/musique.mp3' } } } });
+    expect(() => applyUpdate('essai', pack, options())).toThrow("la salle « salle » attendrait un fichier qui n'existe pas : audio/musique.mp3");
+    makePackage({ musee: 'essai', fichiers: ['audio/musique.mp3'], salles: { salle: { music: { src: 'audio/musique.mp3', credit: { fr: 'Domaine public' } } } } }, { 'audio/musique.mp3': 'son' });
+    applyUpdate('essai', pack, options());
+    expect(config().rooms[0].music).toEqual({ src: 'audio/musique.mp3', credit: { fr: 'Domaine public' } });
+  });
+
   it('refuse de retoucher la rotonde d’une salle qui n’en est pas une', () => {
     makePackage({ musee: 'essai', salles: { salle: { rotunda: { dome: 0.3 } } } });
     expect(() => applyUpdate('essai', pack, options())).toThrow("la salle « salle » n'est pas une rotonde");

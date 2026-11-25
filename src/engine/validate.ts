@@ -93,6 +93,17 @@ function check(museum: MuseumConfig, style: Style, error: Report, warning: Repor
     }
     const round = rotundaShape(room);
     if (round && round.radius < 3) error(where, 'salle trop petite pour une rotonde (rayon minimal : 3 m)');
+    if (room.music !== undefined) {
+      const music = room.music;
+      if (typeof music?.src !== 'string' || !/^[\w./-]+\.(mp3|m4a|ogg|wav)$/i.test(music.src) || music.src.split('/').includes('..')) {
+        error(where, 'musique : fichier invalide (attendu : un chemin dans le dossier du musée, par exemple "audio/musique-hall.mp3")');
+      }
+      if (music?.volume !== undefined && !(music.volume >= 0 && music.volume <= 2)) error(where, 'musique : volume invalide (entre 0 et 2)');
+      if (music?.loop !== undefined && !(Array.isArray(music.loop) && music.loop.length === 2 && music.loop[0] >= 0 && music.loop[1] > music.loop[0] + 1)) {
+        error(where, 'musique : boucle invalide (attendu : [début, fin] en secondes, la fin après le début)');
+      }
+      if (music?.credit !== undefined) translated(where, 'mention de la musique', music.credit);
+    }
     if (room.rotunda && round) {
       for (const key of ['dome', 'safes'] as const) {
         const value = room.rotunda[key];

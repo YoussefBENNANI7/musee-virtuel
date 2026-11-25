@@ -129,6 +129,14 @@ Ce musée est une démonstration. Il ne fait pas partie du moteur.
 
 Produites par le service de voix de Google (modèle `gemini-3.8-flash-tts`, voix `fr:fr-fr-tutor-4+en:en-gb-tutor-11`), 94 fichiers. Leur usage dépend des conditions du service Google au moment de la production, et du compte qui les a produites : à vérifier avant une vente de ce musée. Le moteur ne contient que la commande `npm run voix` ; chaque musée produit ses voix avec son propre compte.
 
+### Musiques des salles
+
+| Salle | Fichier | Œuvre et droits |
+| --- | --- | --- |
+| Atrium | `audio/musique-gymnopedie-1.mp3` | Erik Satie, Gymnopédie n° 1 (1888) ; piano : Robin Alciatore (Musopen). Domaine public. |
+| Cabinet des Couleurs | `audio/musique-gnossienne-1.mp3` | Erik Satie, Gnossienne n° 1 (1893) ; piano : La Pianista. Domaine public. |
+| Galerie des Lignes | `audio/musique-lignes.mp3` | « Lignes », ambiance composée pour le musée. |
+
 ### Textes
 
 Les cartels, commentaires, détails et parcours de ce musée ont été rédigés pour le projet avec l'aide

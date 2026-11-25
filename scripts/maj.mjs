@@ -46,7 +46,7 @@ export const MUSEUMS_DIR = join(ROOT, 'public', 'museums');
 export const BACKUP_DIR = join(ROOT, 'musees-sauvegardes');
 
 /** Champs d'une salle qu'un paquet peut retoucher : sa mise en scène, pas son plan ni ses œuvres. */
-const ROOM_FIELDS = ['name', 'intro', 'decor', 'wall', 'ceiling', 'light', 'benches', 'lanterns', 'counters', 'cubes', 'zones', 'lettering', 'autoHang'];
+const ROOM_FIELDS = ['name', 'intro', 'decor', 'wall', 'ceiling', 'light', 'benches', 'lanterns', 'counters', 'cubes', 'zones', 'lettering', 'autoHang', 'music'];
 
 /** Réglages d'une rotonde qu'un paquet peut retoucher : sa mise en scène, pas sa forme ni sa porte. */
 const ROTUNDA_FIELDS = ['dome', 'safes', 'frieze', 'niches'];
@@ -234,10 +234,10 @@ export function planUpdate(museumId, packageDir, museumsDir = MUSEUMS_DIR) {
         for (const file of filesOf(art))
           if (!arriving.has(file) && !existsSync(join(folder, file))) throw new Error(`l'œuvre « ${art.id} » attendrait un fichier qui n'existe pas : ${file}`);
 
-  // Une salle retouchée doit, elle aussi, trouver ses fichiers (photographies des cubes, voix de l'introduction).
+  // Une salle retouchée doit, elle aussi, trouver ses fichiers (photographies des cubes, voix de l'introduction, musique).
   for (const room of updated.rooms) {
     if (!roomPatches[room.id]) continue;
-    const files = [...(room.cubes?.images ?? []), ...(isPlain(room.intro?.audio) ? Object.values(room.intro.audio) : [])];
+    const files = [...(room.cubes?.images ?? []), ...(isPlain(room.intro?.audio) ? Object.values(room.intro.audio) : []), ...(isPlain(room.music) ? [room.music.src] : [])];
     for (const file of files)
       if (typeof file === 'string' && !arriving.has(file) && !existsSync(join(folder, file))) throw new Error(`la salle « ${room.id} » attendrait un fichier qui n'existe pas : ${file}`);
   }
