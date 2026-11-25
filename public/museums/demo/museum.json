@@ -308,6 +308,13 @@
         "fr": "Salle des Horizons",
         "en": "Horizons Room"
       },
+      "music": {
+        "src": "audio/musique-gymnopedie-2.mp3",
+        "credit": {
+          "fr": "Erik Satie, Gymnopédie n° 2 (1888) ; piano : Kevin MacLeod (incompetech.com). Licence Creative Commons BY 3.0.",
+          "en": "Erik Satie, Gymnopédie No. 2 (1888); piano: Kevin MacLeod (incompetech.com). Licensed under Creative Commons BY 3.0."
+        }
+      },
       "position": [
         0,
         -9.5
@@ -1543,6 +1550,13 @@
       "name": {
         "fr": "Cour des Sculptures",
         "en": "Sculpture Court"
+      },
+      "music": {
+        "src": "audio/musique-gymnopedie-3.mp3",
+        "credit": {
+          "fr": "Erik Satie, Gymnopédie n° 3 (1888) ; piano : Kevin MacLeod (incompetech.com). Licence Creative Commons BY 3.0.",
+          "en": "Erik Satie, Gymnopédie No. 3 (1888); piano: Kevin MacLeod (incompetech.com). Licensed under Creative Commons BY 3.0."
+        }
       },
       "position": [
         -11,

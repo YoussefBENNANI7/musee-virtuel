@@ -134,8 +134,10 @@ Produites par le service de voix de Google (modèle `gemini-3.8-flash-tts`, voix
 | Salle | Fichier | Œuvre et droits |
 | --- | --- | --- |
 | Atrium | `audio/musique-gymnopedie-1.mp3` | Erik Satie, Gymnopédie n° 1 (1888) ; piano : Robin Alciatore (Musopen). Domaine public. |
+| Salle des Horizons | `audio/musique-gymnopedie-2.mp3` | Erik Satie, Gymnopédie n° 2 (1888) ; piano : Kevin MacLeod (incompetech.com). Licence Creative Commons BY 3.0. |
 | Cabinet des Couleurs | `audio/musique-gnossienne-1.mp3` | Erik Satie, Gnossienne n° 1 (1893) ; piano : La Pianista. Domaine public. |
 | Galerie des Lignes | `audio/musique-lignes.mp3` | « Lignes », ambiance composée pour le musée. |
+| Cour des Sculptures | `audio/musique-gymnopedie-3.mp3` | Erik Satie, Gymnopédie n° 3 (1888) ; piano : Kevin MacLeod (incompetech.com). Licence Creative Commons BY 3.0. |
 
 ### Textes
 
