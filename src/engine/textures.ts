@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { imageUrl } from './images';
+import { applyLayers, blurredBlots, type Blot, type RGB } from './nuages';
 import { TIERS, type Quality } from './quality';
 import type { ImageSource } from './types';
 
@@ -226,6 +227,20 @@ export function artworkTexture(image: ImageSource, ratio: number, base: string, 
   return tex;
 }
 
+const WHITE: RGB = [255, 255, 255];
+const BLACK: RGB = [0, 0, 0];
+
+/**
+ * Pose des nuages sur la texture déjà dessinée : pour chaque couche, des taches floutées de `sigma` pixels
+ * (l'écart type, comme `blur(…px)`), chacune dans l'une des couleurs de la couche, posées dans l'ordre.
+ * Le résultat est celui d'un filtre de flou du canvas, calculé bien plus vite sans carte graphique (voir nuages.ts).
+ */
+function clouds(g: CanvasRenderingContext2D, size: number, layers: { sigma: number; blots: Blot[]; colors: RGB[] }[]) {
+  const image = g.getImageData(0, 0, size, size);
+  applyLayers(image.data, size, layers.map(({ sigma, blots, colors }) => ({ layer: blurredBlots(size, sigma, blots, colors.length), colors })));
+  g.putImageData(image, 0, 0);
+}
+
 /** Sol à motif répétable. */
 function tiling(c: HTMLCanvasElement, quality: Quality): THREE.Texture {
   const tex = new THREE.CanvasTexture(c);
@@ -245,24 +260,17 @@ export function concreteTexture(color: string, quality: Quality = TIERS.high): T
   const r = rng(41);
   g.fillStyle = color;
   g.fillRect(0, 0, size, size);
-  // Nuages : de grandes taches floues, plus claires ou plus sombres. Dessinées aussi
-  // de l'autre côté du bord, elles se raccordent quand la texture se répète.
-  g.filter = `blur(${Math.round(size * 0.05)}px)`;
+  // Nuages : de grandes taches floues, plus claires ou plus sombres. Elles passent d'un bord
+  // à l'autre : la texture se raccorde quand elle se répète.
+  const blots: Blot[] = [];
   for (let i = 0; i < 40; i++) {
     const x = r() * size;
     const y = r() * size;
     const rad = size * (0.05 + r() * 0.12);
-    g.fillStyle = r() > 0.5 ? '#ffffff' : '#000000';
-    g.globalAlpha = 0.01 + r() * 0.018;
-    for (const dx of [-size, 0, size]) {
-      for (const dy of [-size, 0, size]) {
-        g.beginPath();
-        g.arc(x + dx, y + dy, rad, 0, Math.PI * 2);
-        g.fill();
-      }
-    }
+    const ink = r() > 0.5 ? 0 : 1;
+    blots.push({ shape: 'ellipse', x, y, rx: rad, ry: rad, angle: 0, ink, alpha: 0.01 + r() * 0.018 });
   }
-  g.filter = 'none';
+  clouds(g, size, [{ sigma: Math.round(size * 0.05), blots, colors: [WHITE, BLACK] }]);
   // Grain fin du béton.
   for (let i = 0; i < size * 14; i++) {
     g.fillStyle = r() > 0.5 ? '#ffffff' : '#000000';
@@ -698,24 +706,17 @@ export function stoneTexture(color: string, quality: Quality = TIERS.high): THRE
   });
   // Nuages de la pierre : de larges plages floues, communes à toutes les dalles.
   const r = rng(211);
-  g.filter = `blur(${Math.round(size * 0.03)}px)`;
+  const blots: Blot[] = [];
   for (let i = 0; i < 60; i++) {
     const x = r() * size;
     const y = r() * size;
     const rx = size * (0.04 + r() * 0.1);
     const ry = rx * (0.4 + r() * 0.6);
     const angle = r() * Math.PI;
-    g.fillStyle = r() > 0.5 ? '#ffffff' : '#3a3024';
-    g.globalAlpha = 0.02 + r() * 0.035;
-    for (const dx of [-size, 0, size]) {
-      for (const dy of [-size, 0, size]) {
-        g.beginPath();
-        g.ellipse(x + dx, y + dy, rx, ry, angle, 0, Math.PI * 2);
-        g.fill();
-      }
-    }
+    const ink = r() > 0.5 ? 0 : 1;
+    blots.push({ shape: 'ellipse', x, y, rx, ry, angle, ink, alpha: 0.02 + r() * 0.035 });
   }
-  g.filter = 'none';
+  clouds(g, size, [{ sigma: Math.round(size * 0.03), blots, colors: [WHITE, [0x3a, 0x30, 0x24]] }]);
   // Veines : une ou deux lignes pâles et sinueuses par dalle.
   eachSlab((x, y, rs) => {
     rs();
@@ -780,45 +781,34 @@ export function limewashTexture(quality: Quality = TIERS.high): THREE.Texture {
   const r = rng(73);
   g.fillStyle = '#f7f7f7';
   g.fillRect(0, 0, size, size);
-  const wrapped = (draw: (dx: number, dy: number) => void) => {
-    for (const dx of [-size, 0, size]) for (const dy of [-size, 0, size]) draw(dx, dy);
-  };
   // Nuages : des plages molles, à peine plus claires ou plus sombres que le fond.
-  g.filter = `blur(${Math.round(size * 0.05)}px)`;
+  const patches: Blot[] = [];
   for (let i = 0; i < 90; i++) {
     const x = r() * size;
     const y = r() * size;
     const rx = size * (0.04 + r() * 0.14);
     const ry = rx * (0.6 + r() * 0.8);
     const angle = r() * Math.PI;
-    g.fillStyle = r() > 0.45 ? '#000000' : '#ffffff';
-    g.globalAlpha = 0.004 + r() * 0.007;
-    wrapped((dx, dy) => {
-      g.beginPath();
-      g.ellipse(x + dx, y + dy, rx, ry, angle, 0, Math.PI * 2);
-      g.fill();
-    });
+    const ink = r() > 0.45 ? 0 : 1;
+    patches.push({ shape: 'ellipse', x, y, rx, ry, angle, ink, alpha: 0.004 + r() * 0.007 });
   }
-  // Passes de brosse : de courts traits en tous sens, presque invisibles un à un.
-  g.filter = `blur(${Math.round(size * 0.012)}px)`;
-  g.lineCap = 'round';
+  // Passes de brosse : de courts traits en tous sens, aux bouts arrondis, presque invisibles un à un.
+  const strokes: Blot[] = [];
   for (let i = 0; i < 260; i++) {
     const x = r() * size;
     const y = r() * size;
     const length = size * (0.03 + r() * 0.07);
     const angle = r() * Math.PI;
-    g.strokeStyle = r() > 0.5 ? '#000000' : '#ffffff';
-    g.globalAlpha = 0.006 + r() * 0.01;
-    g.lineWidth = size * (0.01 + r() * 0.02);
-    wrapped((dx, dy) => {
-      g.beginPath();
-      g.moveTo(x + dx, y + dy);
-      g.lineTo(x + dx + Math.cos(angle) * length, y + dy + Math.sin(angle) * length);
-      g.stroke();
-    });
+    const ink = r() > 0.5 ? 0 : 1;
+    const alpha = 0.006 + r() * 0.01;
+    const width = size * (0.01 + r() * 0.02);
+    strokes.push({ shape: 'stroke', x0: x, y0: y, x1: x + Math.cos(angle) * length, y1: y + Math.sin(angle) * length, width, ink, alpha });
   }
-  g.filter = 'none';
-  g.globalAlpha = 1;
+  // Les taches passent d'un bord à l'autre : la texture se raccorde quand elle se répète.
+  clouds(g, size, [
+    { sigma: Math.round(size * 0.05), blots: patches, colors: [BLACK, WHITE] },
+    { sigma: Math.round(size * 0.012), blots: strokes, colors: [BLACK, WHITE] },
+  ]);
   limewash = tiling(c, quality);
   return limewash;
 }

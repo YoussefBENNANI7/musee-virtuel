@@ -95,12 +95,12 @@
       "soleil": true,
       "samples": 256,
       "scale": {
-        "sol": 0.9891,
+        "sol": 0.9879,
         "plafond": 0.9952,
-        "murs": 0.9918
+        "murs": 0.9942
       },
-      "accent": 0.55327,
-      "peak": 1.271,
+      "accent": 0.55299,
+      "peak": 1.274,
       "settings": {}
     }
   }

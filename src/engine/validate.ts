@@ -1,7 +1,8 @@
 import { DECORS, coveOf, isDecorId, resolveDecor, type Decor } from './decors';
 import { frameMargin } from './accrochage';
 import { FRAMES, isFrameId } from './cadres';
-import { FOUNTAIN_RADIUS, benchFootprint } from './furniture';
+import { FOUNTAIN_RADIUS } from './fontaine';
+import { benchFootprint } from './furniture';
 import { ART_CENTER_Y, MIN_DOOR_WIDTH, WALLS, buildLayout, inside, roomRect, wallFrame } from './layout';
 import { LETTERING, lineHeight } from './lettrage';
 import { isStyleId, type Style } from './styles';
