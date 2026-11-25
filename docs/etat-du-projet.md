@@ -530,6 +530,16 @@ Idée du porteur : une musique adaptée à chaque salle de chaque musée. Avis d
 - **Page d'écoute remise** : https://claude.ai/artifact/1tPsBrokuqqyPgr4bLbGXv. Outils : `musique-essai-outils.zip` (Drive, « Essais »). Claude ne peut pas écouter : le porteur juge à l'oreille.
 - **Rien dans le moteur ni dans le musée avant son choix.** Ensuite : champ de musique par salle, fondu enchaîné entre salles, baisse automatique sous les voix, bouton « couper la musique » mémorisé, mention dans les crédits ; puis les autres salles et le musée de démonstration.
 
+### Musique de fond : dans le moteur, et dans les deux musées (25 novembre 2026)
+
+Choix du porteur après l'essai : **hall A** (Gymnopédie n° 1), **chambre forte A** (« Le coffre »), **le niveau convient** ; « finalise le son de tous les musées dans le même style », feu vert.
+
+- **Moteur** : champ `music` d'une salle (voir « Configurer un musée »). Niveau : gain 0,25 sur des fichiers à -23 LUFS, soit environ 16 dB sous les voix ; -12 dB de plus pendant une voix ; fondu de 1,2 s entre salles ; la même musique dans deux salles voisines continue ; bouton de son commun avec la fontaine (« Musique et son d'ambiance »), mention de la musique au survol ; `npm run maj` accepte `salles.<salle>.music` ; `npm run licences` liste les musiques. Test : `tests/e2e/musique.spec.ts`.
+- **Style retenu** : piano de Satie, calme, dans les salles claires ; ambiance composée par programme (boucle de 96 s sans couture) dans les salles sombres ; la fontaine seule dans le patio marocain.
+- **Démonstration** : Atrium, Gymnopédie n° 1 ; Cabinet des Couleurs, Gnossienne n° 1 ; Galerie des Lignes (décor de nuit), « Lignes », ambiance composée. Salle des Horizons et Cour des Sculptures : en attente des Gymnopédies n° 2 et 3 (Wikimedia limite fortement les téléchargements).
+- **120 ans** : deux paquets sur le Drive (« Mises-a-jour ») : `maj-120-ans-musique-hall.zip` (Hall des Guichets) et `maj-120-ans-musique-coffre.zip` (Chambre forte), à appliquer avec `npm run maj` puis `npm run musee -- synchroniser`. Un seul paquet dépassait la limite d'envoi de 3,1 Mo ; le porteur a choisi deux paquets. Galerie des 120 ans : en attente des Gymnopédies n° 2 et 3.
+- **Sources** : enregistrements du domaine public sur Wikimedia Commons (Alciatore pour Musopen ; La Pianista). Les ambiances sont composées par programme, sans échantillon emprunté. Outils dans le dossier de travail de la session (`ambiances.py`, `egaliser.sh`).
+
 ### Fontaine du patio marocain : refaite (24 novembre 2026)
 
 Demande du porteur, le 24 novembre 2026 : retravailler le design de la fontaine du Patio marocain. Diagnostic donné sur captures : eau vert opaque sans reflet, pas de jet alors qu'on entend l'eau, vasque lisse « en bain d'oiseaux », zellige identique à celui des murs et trop grand pour des parois de 42 cm, margelle plate sans épaisseur, trous noirs dans les creux de l'étoile vue de près (le bassin n'avait pas de parois intérieures). Trois pistes proposées (A : garder la fontaine et la soigner ; B : bassin de médersa plus sobre ; C : fontaine murale). **Le porteur a choisi la piste A.** Travail fait sur la branche `claude/adoring-keller-1rlnk8`, **versé dans `main` le 24 novembre 2026** sur le feu vert du porteur, qui a vu l'aperçu (« c'est validé »).
@@ -830,7 +840,7 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 
 ## 4. En attente du porteur du projet
 
-- **Musique des salles** (25 novembre 2026) : choisir sur https://claude.ai/artifact/1tPsBrokuqqyPgr4bLbGXv une musique pour le hall (A, B ou aucune) et pour la chambre forte (A, B, C ou aucune), et dire si le niveau sous la voix convient. Voir « Musique de fond par salle ».
+- **Musique des salles** (25 novembre 2026) : appliquer les deux paquets de musique des 120 ans (hall, chambre forte) et écouter ; la Galerie des 120 ans, la Salle des Horizons et la Cour des Sculptures suivront. Voir « Musique de fond : dans le moteur, et dans les deux musées ».
 - **Recevoir le Grand Livre arrondi sur son Mac** : validé le 24 novembre 2026 et versé dans `main` du dépôt du musée ; dans `~/musee-virtuel`, lancer `npm run musee -- synchroniser`, puis vérifier dans la chambre forte (pas de bandeau « Lumière à recalculer » attendu : la lumière a été recalculée).
 - **Voix de la commissaire** : dire s'il n'y a rien à couper (les dix extraits sont cochés « écoutés », aucune coupe enregistrée), ou refaire ses marques sur https://claude.ai/artifact/9pGU9WPVXbfKBVCnEyPKUh en appuyant sur « Enregistrer la coupe ».
 - ~~Son avis sur la nouvelle fontaine du patio~~ : validée le 24 novembre 2026 sur l'aperçu https://claude.ai/artifact/9GcKcuHRtXaLJFbAeA6Gxs, et versée dans `main` le même jour. Sur son Mac : `git checkout main`, puis `git pull`. Restent ouverts, s'il le souhaite : couleurs du zellige, hauteur du jet, teinte de l'eau, forme de la vasque.
