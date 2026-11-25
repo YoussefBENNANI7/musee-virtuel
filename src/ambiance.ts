@@ -69,7 +69,8 @@ export function setupAmbiance(sources: { x: number; z: number; room: string }[],
   /** Musiques décodées, par adresse : chacune n'est chargée qu'une fois, à la première salle qui la demande. */
   const buffers = new Map<string, Promise<AudioBuffer | null>>();
   /** La musique qui joue (ou qui se fond vers le volume voulu), et celles qui s'éteignent. */
-  type Track = { url: string; source: AudioBufferSourceNode | null; gain: GainNode };
+  /** Musique en cours : `volume` est celui de la salle où l'on est, qui peut différer d'une salle voisine jouant le même morceau. */
+  type Track = { url: string; source: AudioBufferSourceNode | null; gain: GainNode; volume: number };
   let track: Track | null = null;
   let wanted: RoomMusic | null = null;
 
@@ -95,6 +96,11 @@ export function setupAmbiance(sources: { x: number; z: number; room: string }[],
     const next = (room !== null && music.get(room)) || null;
     if (!ctx || !master || (next?.url ?? null) === (track?.url ?? null)) {
       wanted = next;
+      // Le même morceau continue dans la salle voisine, au volume de celle-ci.
+      if (ctx && track && next && track.volume !== next.volume) {
+        track.volume = next.volume;
+        if (track.source) track.gain.gain.setTargetAtTime(MUSIC * next.volume, ctx.currentTime, FADE);
+      }
       return;
     }
     wanted = next;
@@ -114,7 +120,7 @@ export function setupAmbiance(sources: { x: number; z: number; room: string }[],
     const gain = context.createGain();
     gain.gain.value = 0;
     gain.connect(master);
-    const current: Track = { url: next.url, source: null, gain };
+    const current: Track = { url: next.url, source: null, gain, volume: next.volume };
     track = current;
     void load(context, next.url).then((buffer) => {
       // Entre-temps, le visiteur a pu changer de salle : on ne lance que la musique encore voulue.
@@ -129,7 +135,7 @@ export function setupAmbiance(sources: { x: number; z: number; room: string }[],
       source.connect(gain);
       source.start(0, next.loop ? next.loop[0] : 0);
       current.source = source;
-      gain.gain.setTargetAtTime(MUSIC * next.volume, context.currentTime, FADE);
+      gain.gain.setTargetAtTime(MUSIC * current.volume, context.currentTime, FADE);
     });
   }
 
@@ -163,7 +169,7 @@ export function setupAmbiance(sources: { x: number; z: number; room: string }[],
       return muted;
     },
     get state() {
-      const musicGain = track && wanted ? (muted ? 0 : (ducked ? DUCKED : VOLUME) * MUSIC * wanted.volume) : 0;
+      const musicGain = track && wanted ? (muted ? 0 : (ducked ? DUCKED : VOLUME) * MUSIC * track.volume) : 0;
       return { started: ctx !== null, muted, level, pan, music: track?.url ?? null, musicGain };
     },
     start() {

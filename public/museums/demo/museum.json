@@ -1952,6 +1952,14 @@
         "fr": "Patio marocain",
         "en": "Moroccan Courtyard"
       },
+      "music": {
+        "src": "audio/musique-gnossienne-1.mp3",
+        "volume": 0.7,
+        "credit": {
+          "fr": "Erik Satie, Gnossienne n° 1 (1893) ; piano : La Pianista. Domaine public.",
+          "en": "Erik Satie, Gnossienne No. 1 (1893); piano: La Pianista. Public domain."
+        }
+      },
       "position": [
         0,
         -27.5

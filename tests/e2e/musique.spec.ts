@@ -12,6 +12,8 @@ test('chaque salle a sa musique : elle se fond dans la suivante, baisse sous les
   const room = (id: string) => museum.rooms.find((r: any) => r.id === id);
   room('hall').music = { src: 'audio/musique-a.mp3', credit: { fr: 'Pièce A, domaine public', en: 'Piece A, public domain' } };
   room('galerie').music = { src: 'audio/musique-b.mp3', volume: 0.5, loop: [0.3, 20.3] };
+  // Le cabinet prolonge la musique du hall, plus bas.
+  room('cabinet').music = { src: 'audio/musique-a.mp3', volume: 0.6 };
   const loaded: string[] = [];
   await page.route('**/museums/fixture/audio/musique-*.mp3', (route) => {
     loaded.push(route.request().url().split('/').pop()!);
@@ -31,13 +33,17 @@ test('chaque salle a sa musique : elle se fond dans la suivante, baisse sous les
   await expect.poll(async () => (await state()).music ?? '').toMatch(/musique-a\.mp3$/);
   expect((await state()).musicGain).toBeCloseTo(0.9 * 0.45, 3);
 
-  // Dans la galerie, la musique de la galerie, à son volume ; dans le cabinet, aucune.
+  // Dans le cabinet, la même musique continue, à son volume à lui.
+  await go(0, -8.5);
+  await expect.poll(async () => (await state()).musicGain).toBeCloseTo(0.9 * 0.45 * 0.6, 3);
+  expect((await state()).music).toMatch(/musique-a\.mp3$/);
+  await go(0, 2.5);
+  await expect.poll(async () => (await state()).musicGain).toBeCloseTo(0.9 * 0.45, 3);
+  // Dans la galerie, la musique de la galerie, à son volume.
   await go(10, 0);
   await expect.poll(async () => (await state()).music ?? '').toMatch(/musique-b\.mp3$/);
   expect((await state()).musicGain).toBeCloseTo(0.9 * 0.45 * 0.5, 3);
   await expect(button).toHaveAttribute('title', 'Musique et son d’ambiance');
-  await go(0, -8.5);
-  await expect.poll(async () => (await state()).music).toBeNull();
   // De retour dans le hall, la musique reprend sans être rechargée.
   await go(0, 2.5);
   await expect.poll(async () => (await state()).music ?? '').toMatch(/musique-a\.mp3$/);
