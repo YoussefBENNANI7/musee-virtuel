@@ -1,6 +1,6 @@
 # Musée virtuel personnalisable : état du projet
 
-Mis à jour le 24 novembre 2026. Ce document permet de reprendre le projet dans une nouvelle conversation sans rien perdre : vision, décisions prises, avancement, points en attente et organisation du code.
+Mis à jour le 27 novembre 2026. Ce document permet de reprendre le projet dans une nouvelle conversation sans rien perdre : vision, décisions prises, avancement, points en attente et organisation du code.
 
 ---
 
@@ -838,7 +838,20 @@ Le porteur veut pouvoir **offrir ou vendre le moteur personnalisable seul**, san
 - **Conditions de Google sur les voix** : non lues (le site n'est plus joignable depuis l'environnement de travail). Elles ne concernent pas le moteur, qui ne contient que la commande de production : chaque musée produit ses voix avec son propre compte.
 - **Ce qui manque pour livrer le moteur seul** : retirer ou remplacer le musée de démonstration (l'éditeur sait maintenant créer un musée vide), et ajouter un fichier de licence à la racine du dépôt. L'outil d'administration existe en première version.
 
+### Audit complet des deux musées (27 novembre 2026)
+
+- **Audit en lecture seule**, demandé par le porteur : ni le code, ni les musées, ni les réglages n'ont été modifiés. Visite réelle des deux musées (550 captures, ordinateur 1440 × 900 et iPhone émulé en portrait et en paysage), 30 mesures d'ouverture sur la version publiable (méthode de la section 8, trois niveaux de qualité), grille de référence et tableau du marché établis par recherche, six analyses par groupe de domaines, puis une relecture critique par un regard neuf. Page de restitution, privée : https://claude.ai/artifact/UxUDJ1rA4v8E7R5yD5TCZ5 (résumé, notes par domaine, dix priorités, constats filtrables, repères du marché, feuille de route, décisions à rediscuter, méthode).
+- **État de départ relevé** : 330 tests unitaires réussis ; 111 tests dans un navigateur, dont 110 réussis (le test de l'eau de la fontaine échoue quand la machine est chargée : fragile, pas cassé) ; `npm run build` en 4,7 s, avec un avertissement (un seul fichier JavaScript de 878 Ko).
+- **128 constats** : 5 critiques, 69 importants, 54 de confort. Notes de 2 à 3,5 sur 5 selon le domaine et le musée.
+- **Limites de l'audit** : rien n'a été vu sur un vrai téléphone, un vrai casque ni un vrai lecteur d'écran ; le réseau de la session n'ouvre que les sites de collections autorisés, si bien que les repères externes viennent des extraits des résultats de recherche (prix à revérifier).
+- **Lots proposés, aucun lancé** (chacun de 1 à 3 jours, sauf mention ; « identité » = attend l'avis du porteur sur un aperçu) :
+  - *Temps 1, irréprochable pour la présentation* : P1 Rien de privé ne sort · P2 Fiches du musée client · P3 Images, panneaux et voix du musée client · P4 Défauts visibles et clic fantôme · P5 Pannes propres (identité) · P6 Démonstration exacte et sans réserve · P7 Échelle et accrochage (identité) · P8 Finitions du décor (identité) · P9 Cartels lisibles, salles qui parlent, texte lu (identité) · P10 Lecteur audio et son (identité) · P11 Accessibilité : clavier, focus, mouvements (identité) · P12 Téléphone : interface et légèreté (identité) · P13 Répétition générale sur de vrais appareils.
+  - *Temps 2, prêt à vendre* : V1 Publier un musée · V2 Éditeur sans perte de travail · V3 Marque blanche et pages légales (identité) · V4 Éditeur complet · V5 Chargement par salle et mémoire · V6 Statistiques de visite · V7 Qualité continue et documentation · V8 Partage, plein écran, mode borne (identité) · V9 Casque complet (identité) · V10 Langues (identité) · V11 Vers la plateforme (chantier long).
+- **Aucun lot ne démarre sans l'accord du porteur.** Première question à trancher : la confidentialité du dépôt public (détail dans la page, lot P1).
+
 ## 4. En attente du porteur du projet
+
+- **Audit complet du 27 novembre 2026** : lire la page de restitution (https://claude.ai/artifact/UxUDJ1rA4v8E7R5yD5TCZ5), répondre aux questions de sa partie 7, puis dire quels lots lancer et dans quel ordre.
 
 - **Recevoir le Grand Livre arrondi sur son Mac** : validé le 24 novembre 2026 et versé dans `main` du dépôt du musée ; dans `~/musee-virtuel`, lancer `npm run musee -- synchroniser`, puis vérifier dans la chambre forte (pas de bandeau « Lumière à recalculer » attendu : la lumière a été recalculée).
 - **Voix de la commissaire** : dire s'il n'y a rien à couper (les dix extraits sont cochés « écoutés », aucune coupe enregistrée), ou refaire ses marques sur https://claude.ai/artifact/9pGU9WPVXbfKBVCnEyPKUh en appuyant sur « Enregistrer la coupe ».
